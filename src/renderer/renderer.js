@@ -3,6 +3,7 @@ console.log('🚀 Renderer.js loaded - Version 2.0 with fixed action handling');
 let currentDirectory = null;
 let currentDirectoryContents = [];
 let currentAction = null;
+let currentFilePath = null;
 let isProcessing = false;
 
 // DOM elements
@@ -61,7 +62,47 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStatusTime();
     setInterval(updateStatusTime, 1000);
     updateStatus('Ready');
+    
+    // Setup menu event listeners
+    setupMenuListeners();
 });
+
+// Setup menu event listeners
+function setupMenuListeners() {
+    // Listen for preferences menu item
+    window.electronAPI.onShowPreferences(() => {
+        console.log('Menu: Show preferences triggered');
+        showPreferences();
+    });
+    
+    // Listen for select directory menu item
+    window.electronAPI.onSelectDirectoryMenu(() => {
+        console.log('Menu: Select directory triggered');
+        selectDirectory();
+    });
+    
+    // Listen for show about menu item
+    window.electronAPI.onShowAbout(() => {
+        console.log('Menu: Show about triggered');
+        showPreferences();
+        // Switch to about tab
+        setTimeout(() => {
+            const aboutTab = document.querySelector('[data-tab="about"]');
+            if (aboutTab) {
+                aboutTab.click();
+            }
+        }, 100);
+    });
+    
+    // Also listen for Cmd+, shortcut directly in renderer
+    document.addEventListener('keydown', (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === ',') {
+            event.preventDefault();
+            console.log('Keyboard: Cmd+, shortcut triggered');
+            showPreferences();
+        }
+    });
+}
 
 // Directory selection
 async function selectDirectory() {
@@ -141,12 +182,12 @@ function renderFileList() {
                 </div>
                 <div class="file-actions">
                     ${!isDirectory && !isEncrypted ? `
-                        <button class="file-action-btn" onclick="encryptSingleFile('${item.path}')">
+                        <button class="file-action-btn encrypt-file-btn" data-file-path="${item.path}">
                             <i class="fas fa-lock"></i> Encrypt
                         </button>
                     ` : ''}
                     ${!isDirectory && isEncrypted ? `
-                        <button class="file-action-btn" onclick="decryptSingleFile('${item.path}')">
+                        <button class="file-action-btn decrypt-file-btn" data-file-path="${item.path}">
                             <i class="fas fa-unlock"></i> Decrypt
                         </button>
                     ` : ''}
@@ -156,6 +197,36 @@ function renderFileList() {
     }).join('');
 
     fileList.innerHTML = fileItems;
+    
+    // Add staggered animation to file items
+    const items = fileList.querySelectorAll('.file-item');
+    items.forEach((item, index) => {
+        item.style.animationDelay = `${index * 0.05}s`;
+        item.classList.add('file-item-animate');
+    });
+    
+    // Add event listeners for single file encrypt/decrypt buttons
+    setupFileActionListeners();
+}
+
+function setupFileActionListeners() {
+    // Add event listeners for encrypt buttons
+    document.querySelectorAll('.encrypt-file-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const filePath = btn.getAttribute('data-file-path');
+            showSingleFilePasswordModal('encrypt', filePath);
+        });
+    });
+    
+    // Add event listeners for decrypt buttons
+    document.querySelectorAll('.decrypt-file-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const filePath = btn.getAttribute('data-file-path');
+            showSingleFilePasswordModal('decrypt', filePath);
+        });
+    });
 }
 
 // Password modal functions
@@ -174,7 +245,20 @@ function closePasswordModal() {
     console.log(`Renderer: closePasswordModal called, currentAction was: ${currentAction}`);
     passwordModal.classList.remove('show');
     currentAction = null;
+    currentFilePath = null;
     passwordInput.value = '';
+}
+
+function showSingleFilePasswordModal(action, filePath) {
+    console.log(`Renderer: showSingleFilePasswordModal called with action: ${action}, file: ${filePath}`);
+    currentAction = action;
+    currentFilePath = filePath;
+    const fileName = filePath.split('/').pop();
+    modalTitle.textContent = action === 'encrypt' ? `Encrypt File: ${fileName}` : `Decrypt File: ${fileName}`;
+    passwordInput.value = '';
+    passwordModal.classList.add('show');
+    passwordInput.focus();
+    checkPasswordStrength();
 }
 
 function togglePasswordVisibility() {
@@ -242,26 +326,48 @@ async function handlePasswordConfirm() {
         return;
     }
 
-    if (!currentDirectory) {
-        showNotification('Error', 'No directory selected', 'error');
-        return;
-    }
-
-    // Store the action before closing modal (which resets currentAction)
-    const actionToPerform = currentAction;
-    console.log(`Renderer: Stored action: ${actionToPerform}`);
-    
-    closePasswordModal();
-    
-    if (actionToPerform === 'encrypt') {
-        console.log('Renderer: Starting encryption process...');
-        await encryptDirectory(password);
-    } else if (actionToPerform === 'decrypt') {
-        console.log('Renderer: Starting decryption process...');
-        await decryptDirectory(password);
+    // Check if this is a single file operation or directory operation
+    if (currentFilePath) {
+        // Single file operation
+        const actionToPerform = currentAction;
+        const fileToProcess = currentFilePath;
+        console.log(`Renderer: Single file operation - Action: ${actionToPerform}, File: ${fileToProcess}`);
+        
+        closePasswordModal();
+        
+        if (actionToPerform === 'encrypt') {
+            console.log('Renderer: Starting single file encryption...');
+            await encryptSingleFile(fileToProcess, password);
+        } else if (actionToPerform === 'decrypt') {
+            console.log('Renderer: Starting single file decryption...');
+            await decryptSingleFile(fileToProcess, password);
+        } else {
+            console.error('Renderer: Unknown single file action:', actionToPerform);
+            showNotification('Error', `Unknown action: ${actionToPerform}`, 'error');
+        }
     } else {
-        console.error('Renderer: Unknown action:', actionToPerform);
-        showNotification('Error', `Unknown action: ${actionToPerform}`, 'error');
+        // Directory operation
+        if (!currentDirectory) {
+            showNotification('Error', 'No directory selected', 'error');
+            return;
+        }
+
+        // Store the action before closing modal (which resets currentAction)
+        const actionToPerform = currentAction;
+        console.log(`Renderer: Stored action: ${actionToPerform}`);
+        
+        closePasswordModal();
+        
+        if (actionToPerform === 'encrypt') {
+            console.log('Renderer: Starting encryption process...');
+            await encryptDirectory(password);
+        } else if (actionToPerform === 'decrypt') {
+            console.log('Renderer: Starting decryption process...');
+            await decryptDirectory(password);
+        } else {
+            console.error('Renderer: Unknown action:', actionToPerform);
+            showNotification('Error', `Unknown action: ${actionToPerform}`, 'error');
+        }
     }
 }
 
@@ -333,17 +439,21 @@ async function decryptDirectory(password) {
 }
 
 // Single file encryption/decryption
-async function encryptSingleFile(filePath) {
-    const password = prompt('Enter password to encrypt this file:');
-    if (!password) return;
-
+async function encryptSingleFile(filePath, password) {
+    if (isProcessing) return;
+    
+    console.log(`Renderer: Starting single file encryption for ${filePath}`);
+    
+    isProcessing = true;
+    disableButtons();
     showProgress('Encrypting file...');
     
     try {
         const result = await window.electronAPI.encryptFile(filePath, password);
         
         if (result.success) {
-            showNotification('Success', 'File encrypted successfully', 'success');
+            const fileName = filePath.split('/').pop();
+            showNotification('Success', `File "${fileName}" encrypted successfully`, 'success');
             await loadDirectoryContents();
         } else {
             showNotification('Error', result.error || 'Encryption failed', 'error');
@@ -352,21 +462,27 @@ async function encryptSingleFile(filePath) {
         console.error('File encryption error:', error);
         showNotification('Error', 'Failed to encrypt file', 'error');
     } finally {
+        isProcessing = false;
+        enableButtons();
         hideProgress();
     }
 }
 
-async function decryptSingleFile(filePath) {
-    const password = prompt('Enter password to decrypt this file:');
-    if (!password) return;
-
+async function decryptSingleFile(filePath, password) {
+    if (isProcessing) return;
+    
+    console.log(`Renderer: Starting single file decryption for ${filePath}`);
+    
+    isProcessing = true;
+    disableButtons();
     showProgress('Decrypting file...');
     
     try {
         const result = await window.electronAPI.decryptFile(filePath, password);
         
         if (result.success) {
-            showNotification('Success', 'File decrypted successfully', 'success');
+            const fileName = filePath.split('/').pop();
+            showNotification('Success', `File "${fileName}" decrypted successfully`, 'success');
             await loadDirectoryContents();
         } else {
             showNotification('Error', result.error || 'Decryption failed', 'error');
@@ -375,6 +491,8 @@ async function decryptSingleFile(filePath) {
         console.error('File decryption error:', error);
         showNotification('Error', 'Failed to decrypt file', 'error');
     } finally {
+        isProcessing = false;
+        enableButtons();
         hideProgress();
     }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "maraikka-encryptor",
+  "name": "maraikka",
   "version": "1.0.0",
   "description": "A beautiful desktop app for encrypting and decrypting files",
   "main": "src/main.js",
@@ -31,7 +31,7 @@
   },
   "build": {
     "appId": "com.maraikka.encryptor",
-    "productName": "Maraikka Encryptor",
+    "productName": "Maraikka",
     "directories": {
       "output": "dist"
     },

@@ -378,6 +378,63 @@ body {
     color: #e0e0e0;
 }
 
+/* Grid View */
+.file-list.grid-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.file-list.grid-view .file-item {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+    height: 120px;
+    justify-content: center;
+}
+
+.file-list.grid-view .file-icon {
+    font-size: 32px;
+    width: auto;
+    margin-bottom: 8px;
+}
+
+.file-list.grid-view .file-info {
+    align-items: center;
+    text-align: center;
+}
+
+.file-list.grid-view .file-name {
+    font-size: 12px;
+    margin-bottom: 4px;
+    word-break: break-word;
+    line-height: 1.2;
+}
+
+.file-list.grid-view .file-meta {
+    font-size: 10px;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+}
+
+.file-list.grid-view .file-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.file-list.grid-view .file-item:hover .file-actions {
+    opacity: 1;
+}
+
+.file-list.grid-view .file-action-btn {
+    font-size: 10px;
+    padding: 2px 6px;
+}
+
 /* Empty State */
 .empty-state {
     display: flex;
@@ -744,12 +801,44 @@ body {
     }
 }
 
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
 .fade-in {
     animation: fadeIn 0.3s ease;
 }
 
 .slide-up {
     animation: slideUp 0.3s ease;
+}
+
+/* File Item Animations */
+.file-item-animate {
+    opacity: 0;
+    animation: slideInLeft 0.4s ease forwards;
+}
+
+.file-list.grid-view .file-item-animate {
+    animation: scaleIn 0.4s ease forwards;
 }
 
 /* Preferences Modal */
@@ -1173,6 +1262,17 @@ body.light-theme {
     color: #212529;
 }
 
+/* Light Theme Grid View */
+.light-theme .file-list.grid-view .file-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+
+.light-theme .file-list.grid-view .file-item:hover {
+    background: #ffffff;
+    border-color: #4ade80;
+}
+
 .light-theme .status-bar {
     background: #f8f9fa;
     border-top: 1px solid #e9ecef;
@@ -1483,6 +1583,33 @@ body.glass-light-theme::before {
 .glass-light-theme .stat-value {
     color: #1e293b;
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+/* Glass Theme Grid View */
+.glass-dark-theme .file-list.grid-view .file-item {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.glass-dark-theme .file-list.grid-view .file-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.glass-light-theme .file-list.grid-view .file-item {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.glass-light-theme .file-list.grid-view .file-item:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 /* Removed old glass-theme selectors - now using glass-dark-theme and glass-light-theme */

@@ -6,5 +6,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   encryptDirectory: (dirPath, password) => ipcRenderer.invoke('encrypt-directory', dirPath, password),
   decryptDirectory: (dirPath, password) => ipcRenderer.invoke('decrypt-directory', dirPath, password),
   encryptFile: (filePath, password) => ipcRenderer.invoke('encrypt-file', filePath, password),
-  decryptFile: (filePath, password) => ipcRenderer.invoke('decrypt-file', filePath, password)
+  decryptFile: (filePath, password) => ipcRenderer.invoke('decrypt-file', filePath, password),
+  
+  // Menu event listeners
+  onShowPreferences: (callback) => ipcRenderer.on('show-preferences', callback),
+  onSelectDirectoryMenu: (callback) => ipcRenderer.on('select-directory-menu', callback),
+  onShowAbout: (callback) => ipcRenderer.on('show-about', callback),
+  
+  // Remove listeners
+  removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)
 }); 
