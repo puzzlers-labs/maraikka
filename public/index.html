@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Maraikka - Secure File Encryption</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="Professional file encryption software with hardware authentication support. Secure your files with YubiKey, Touch ID, and FIDO2 devices.">
+    <link href="./style.css" rel="stylesheet">
+</head>
+
+<body class="font-inter antialiased bg-white text-zinc-900 tracking-tight">
+
+    <!-- Page wrapper -->
+    <div class="flex flex-col min-h-screen overflow-hidden supports-[overflow:clip]:overflow-clip">
+
+        <!-- Site header -->
+        <header class="absolute top-2 md:top-6 w-full z-30">
+            <div class="px-4 sm:px-6">
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex items-center justify-between h-14 border border-transparent [background:linear-gradient(var(--color-white),var(--color-white))_padding-box,linear-gradient(120deg,var(--color-zinc-300),var(--color-zinc-100),var(--color-zinc-300))_border-box] rounded-lg px-3">
+            
+                        <!-- Site branding -->
+                        <div class="shrink-0 mr-4">
+                            <!-- Logo -->
+                            <div class="flex items-center justify-center bg-gradient-to-br from-violet-500 to-purple-600 w-8 h-8 rounded-sm shadow-xs shadow-zinc-950/20">
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+            
+                        <!-- Desktop navigation -->
+                        <nav class="flex grow">
+                            <!-- Navigation links -->
+                            <ul class="flex grow justify-center flex-wrap items-center">
+                                <li>
+                                    <a class="text-sm font-medium text-zinc-500 hover:text-zinc-900 px-3 lg:px-5 py-2 flex items-center transition" href="#features">Features</a>
+                                </li>
+                                <li>
+                                    <a class="text-sm font-medium text-zinc-500 hover:text-zinc-900 px-3 lg:px-5 py-2 flex items-center transition" href="#security">Security</a>
+                                </li>
+                                <li>
+                                    <a class="text-sm font-medium text-zinc-500 hover:text-zinc-900 px-3 lg:px-5 py-2 flex items-center transition" href="#download">Download</a>
+                                </li>
+                            </ul>
+            
+                            <!-- Desktop sign in links -->
+                            <ul class="flex grow justify-end flex-wrap items-center">
+                                <li class="ml-1">
+                                    <a class="btn-sm text-zinc-100 bg-violet-600 hover:bg-violet-700 w-full shadow-sm" href="#download">Download Free</a>
+                                </li>
+                            </ul>
+            
+                        </nav>
+            
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page content -->
+        <main class="grow">
+            
+            <!-- Hero -->
+            <section class="relative before:absolute before:inset-0 before:h-80 before:pointer-events-none before:bg-linear-to-b before:from-zinc-100 before:-z-10">
+                <div class="pt-32 pb-12 md:pt-40 md:pb-20">
+                    <!-- Section content -->
+                    <div class="px-4 sm:px-6">
+                        <div class="max-w-3xl mx-auto">
+                            <div class="text-center pb-12 md:pb-16">
+                                <h1 class="font-inter-tight text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-linear-to-r from-zinc-500 via-zinc-900 to-zinc-900 pb-4">Enterprise-grade
+                                    <em class="italic relative inline-flex justify-center items-center text-zinc-900">
+                                        file encryption
+                                        <svg class="absolute fill-violet-300 w-[calc(100%+1rem)] -z-10" xmlns="http://www.w3.org/2000/svg" width="223" height="62" viewBox="0 0 223 62" aria-hidden="true" preserveAspectRatio="none">
+                                            <path d="M45.654 53.62c17.666 3.154 35.622 4.512 53.558 4.837 17.94.288 35.91-.468 53.702-2.54 8.89-1.062 17.742-2.442 26.455-4.352 8.684-1.945 17.338-4.3 25.303-7.905 3.94-1.81 7.79-3.962 10.634-6.777 1.38-1.41 2.424-2.994 2.758-4.561.358-1.563-.078-3.143-1.046-4.677-.986-1.524-2.43-2.96-4.114-4.175a37.926 37.926 0 0 0-5.422-3.32c-3.84-1.977-7.958-3.563-12.156-4.933-8.42-2.707-17.148-4.653-25.95-6.145-8.802-1.52-17.702-2.56-26.622-3.333-17.852-1.49-35.826-1.776-53.739-.978-8.953.433-17.898 1.125-26.79 2.22-8.887 1.095-17.738 2.541-26.428 4.616-4.342 1.037-8.648 2.226-12.853 3.676-4.197 1.455-8.314 3.16-12.104 5.363-1.862 1.13-3.706 2.333-5.218 3.829-1.52 1.47-2.79 3.193-3.285 5.113-.528 1.912-.127 3.965.951 5.743 1.07 1.785 2.632 3.335 4.348 4.68 2.135 1.652 3.2 2.672 2.986 3.083-.18.362-1.674.114-4.08-1.638-1.863-1.387-3.63-3.014-4.95-5.09C.94 35.316.424 34.148.171 32.89c-.275-1.253-.198-2.579.069-3.822.588-2.515 2.098-4.582 3.76-6.276 1.673-1.724 3.612-3.053 5.57-4.303 3.96-2.426 8.177-4.278 12.457-5.868 4.287-1.584 8.654-2.89 13.054-4.036 8.801-2.292 17.74-3.925 26.716-5.19C70.777 2.131 79.805 1.286 88.846.723c18.087-1.065 36.236-.974 54.325.397 9.041.717 18.07 1.714 27.042 3.225 8.972 1.485 17.895 3.444 26.649 6.253 4.37 1.426 8.697 3.083 12.878 5.243a42.11 42.11 0 0 1 6.094 3.762c1.954 1.44 3.823 3.2 5.283 5.485a12.515 12.515 0 0 1 1.63 3.88c.164.706.184 1.463.253 2.193-.063.73-.094 1.485-.247 2.195-.652 2.886-2.325 5.141-4.09 6.934-3.635 3.533-7.853 5.751-12.083 7.688-8.519 3.778-17.394 6.09-26.296 7.998-8.917 1.86-17.913 3.152-26.928 4.104-18.039 1.851-36.17 2.295-54.239 1.622-18.062-.713-36.112-2.535-53.824-6.23-5.941-1.31-5.217-2.91.361-1.852" />
+                                        </svg>
+                                    </em>
+                                made simple</h1>
+                                <p class="text-lg text-zinc-500 mb-8">
+                                    Secure your sensitive files with military-grade encryption and hardware authentication. Support for YubiKey, Touch ID, Windows Hello, and traditional passwords.
+                                </p>
+                                <div class="max-w-xs mx-auto sm:max-w-none sm:inline-flex sm:justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                                    <div>
+                                        <a class="btn text-zinc-100 bg-violet-600 hover:bg-violet-700 w-full shadow-sm" href="#download">Download Free</a>
+                                    </div>
+                                    <div>
+                                        <a class="btn text-zinc-600 bg-white hover:text-zinc-900 w-full shadow-sm" href="#features">Learn More</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Hero Image -->
+                    <div class="max-w-6xl mx-auto px-4 sm:px-6 flex justify-center pb-12 md:pb-20 relative before:absolute before:-top-12 before:w-96 before:h-96 before:bg-violet-600 before:opacity-[.15] before:rounded-full before:blur-3xl before:-z-10">
+                        <div class="relative bg-gradient-to-br from-violet-50 to-purple-50 p-8 rounded-2xl shadow-2xl border border-violet-100">
+                            <div class="bg-white rounded-lg p-6 shadow-lg">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                        <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                    </div>
+                                    <div class="text-sm text-zinc-500">Maraikka v1.0.0</div>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex items-center space-x-3 p-3 bg-zinc-50 rounded-lg">
+                                        <div class="w-8 h-8 bg-violet-600 rounded flex items-center justify-center">
+                                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="text-sm font-medium">financial_report.pdf</div>
+                                            <div class="text-xs text-zinc-500">2.4 MB • Encrypted</div>
+                                        </div>
+                                        <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                                            <svg class="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-3 p-3 bg-zinc-50 rounded-lg">
+                                        <div class="w-8 h-8 bg-emerald-600 rounded flex items-center justify-center">
+                                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="text-sm font-medium">vacation_photos.zip</div>
+                                            <div class="text-xs text-zinc-500">45.2 MB • Encrypted</div>
+                                        </div>
+                                        <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                                            <svg class="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center justify-center space-x-2 p-3 bg-violet-50 rounded-lg">
+                                    <svg class="w-5 h-5 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                    <span class="text-sm font-medium text-violet-700">Hardware Authentication Active</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Stats -->
+                    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+                        <div class="max-w-sm mx-auto grid gap-12 sm:grid-cols-2 md:grid-cols-4 md:-mx-5 md:gap-0 items-start md:max-w-none">
+
+                            <!-- 1st item -->
+                            <div class="relative text-center md:px-5 after:hidden md:after:block after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:w-px after:h-8 after:border-l after:border-zinc-300 after:border-dashed last:after:hidden">
+                                <h4 class="font-inter-tight text-2xl md:text-3xl font-bold tabular-nums mb-2">AES-256</h4>
+                                <p class="text-sm text-zinc-500">Military-grade encryption standard used by governments worldwide.</p>
+                            </div>
+
+                            <!-- 2nd item -->
+                            <div class="relative text-center md:px-5 after:hidden md:after:block after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:w-px after:h-8 after:border-l after:border-zinc-300 after:border-dashed last:after:hidden">
+                                <h4 class="font-inter-tight text-2xl md:text-3xl font-bold tabular-nums mb-2">FIDO2</h4>
+                                <p class="text-sm text-zinc-500">Hardware authentication with YubiKey, Touch ID, and Windows Hello.</p>
+                            </div>
+
+                            <!-- 3rd item -->
+                            <div class="relative text-center md:px-5 after:hidden md:after:block after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:w-px after:h-8 after:border-l after:border-zinc-300 after:border-dashed last:after:hidden">
+                                <h4 class="font-inter-tight text-2xl md:text-3xl font-bold tabular-nums mb-2">Zero-Trust</h4>
+                                <p class="text-sm text-zinc-500">Files never stored unencrypted. In-memory decryption only.</p>
+                            </div>
+
+                            <!-- 4th item -->
+                            <div class="relative text-center md:px-5 after:hidden md:after:block after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:w-px after:h-8 after:border-l after:border-zinc-300 after:border-dashed last:after:hidden">
+                                <h4 class="font-inter-tight text-2xl md:text-3xl font-bold tabular-nums mb-2">Cross-Platform</h4>
+                                <p class="text-sm text-zinc-500">Works on macOS, Windows, and Linux with native performance.</p>
+                            </div>                        
+
+                        </div>                          
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features -->
+            <section id="features" class="relative bg-zinc-50">
+                <div class="py-12 md:py-20">
+                    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+                        <div class="max-w-3xl mx-auto text-center pb-12">
+                            <h2 class="font-inter-tight text-3xl md:text-4xl font-bold text-zinc-900 mb-4">Security features that go beyond encryption</h2>
+                            <p class="text-lg text-zinc-500">Maraikka combines military-grade encryption with modern hardware authentication for unparalleled file security.</p>
+                        </div>
+                        <div x-data="{ tab: '1' }">
+                            <!-- Tabs buttons -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                                <button
+                                    :class="tab !== '1' ? 'bg-zinc-100 opacity-60 hover:opacity-100 transition' : '[background:linear-gradient(var(--color-white),var(--color-white))_padding-box,linear-gradient(120deg,var(--color-zinc-300),var(--color-zinc-100),var(--color-zinc-300))_border-box] shadow-xs rotate-1'"
+                                    class="text-left px-4 py-5 border border-transparent rounded-sm"
+                                    @click.prevent="tab = '1'"
+                                >
+                                    <div class="flex items-center justify-between mb-1">
+                                        <div class="font-inter-tight font-semibold text-zinc-900">Hardware Auth</div>
+                                        <svg :class="tab !== '1' ? 'hidden' : ''" class="fill-zinc-400 shrink-0 ml-2" xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                                            <path d="M8.667.186H2.675a.999.999 0 0 0 0 1.998h3.581L.971 7.469a.999.999 0 1 0 1.412 1.412l5.285-5.285v3.58a.999.999 0 1 0 1.998 0V1.186a.999.999 0 0 0-.999-.999Z" />
+                                        </svg>
+                                    </div>
+                                    <div class="text-sm text-zinc-500">Use YubiKey, Touch ID, or Windows Hello for passwordless security.</div>
+                                </button>
+                                <button
+                                    :class="tab !== '2' ? 'bg-zinc-100 opacity-60 hover:opacity-100 transition' : '[background:linear-gradient(var(--color-white),var(--color-white))_padding-box,linear-gradient(120deg,var(--color-zinc-300),var(--color-zinc-100),var(--color-zinc-300))_border-box] shadow-xs rotate-1'"
+                                    class="text-left px-4 py-5 border border-transparent rounded-sm"
+                                    @click.prevent="tab = '2'"
+                                >
+                                    <div class="flex items-center justify-between mb-1">
+                                        <div class="font-inter-tight font-semibold text-zinc-900">File Preview</div>
+                                        <svg :class="tab !== '2' ? 'hidden' : ''" class="fill-zinc-400 shrink-0 ml-2" xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                                            <path d="M8.667.186H2.675a.999.999 0 0 0 0 1.998h3.581L.971 7.469a.999.999 0 1 0 1.412 1.412l5.285-5.285v3.58a.999.999 0 1 0 1.998 0V1.186a.999.999 0 0 0-.999-.999Z" />
+                                        </svg>
+                                    </div>
+                                    <div class="text-sm text-zinc-500">Preview encrypted files in-memory without writing to disk.</div>
+                                </button>
+                                <button
+                                    :class="tab !== '3' ? 'bg-zinc-100 opacity-60 hover:opacity-100 transition' : '[background:linear-gradient(var(--color-white),var(--color-white))_padding-box,linear-gradient(120deg,var(--color-zinc-300),var(--color-zinc-100),var(--color-zinc-300))_border-box] shadow-xs rotate-1'"
+                                    class="text-left px-4 py-5 border border-transparent rounded-sm"
+                                    @click.prevent="tab = '3'"
+                                >
+                                    <div class="flex items-center justify-between mb-1">
+                                        <div class="font-inter-tight font-semibold text-zinc-900">Bulk Operations</div>
+                                        <svg :class="tab !== '3' ? 'hidden' : ''" class="fill-zinc-400 shrink-0 ml-2" xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                                            <path d="M8.667.186H2.675a.999.999 0 0 0 0 1.998h3.581L.971 7.469a.999.999 0 1 0 1.412 1.412l5.285-5.285v3.58a.999.999 0 1 0 1.998 0V1.186a.999.999 0 0 0-.999-.999Z" />
+                                        </svg>
+                                    </div>
+                                    <div class="text-sm text-zinc-500">Encrypt or decrypt entire directories with progress tracking.</div>
+                                </button>
+                                <button
+                                    :class="tab !== '4' ? 'bg-zinc-100 opacity-60 hover:opacity-100 transition' : '[background:linear-gradient(var(--color-white),var(--color-white))_padding-box,linear-gradient(120deg,var(--color-zinc-300),var(--color-zinc-100),var(--color-zinc-300))_border-box] shadow-xs rotate-1'"
+                                    class="text-left px-4 py-5 border border-transparent rounded-sm"
+                                    @click.prevent="tab = '4'"
+                                >
+                                    <div class="flex items-center justify-between mb-1">
+                                        <div class="font-inter-tight font-semibold text-zinc-900">Cross-Platform</div>
+                                        <svg :class="tab !== '4' ? 'hidden' : ''" class="fill-zinc-400 shrink-0 ml-2" xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                                            <path d="M8.667.186H2.675a.999.999 0 0 0 0 1.998h3.581L.971 7.469a.999.999 0 1 0 1.412 1.412l5.285-5.285v3.58a.999.999 0 1 0 1.998 0V1.186a.999.999 0 0 0-.999-.999Z" />
+                                        </svg>
+                                    </div>
+                                    <div class="text-sm text-zinc-500">Native performance on macOS, Windows, and Linux systems.</div>
+                                </button>
+                            </div>
+                            <!-- Tab panels -->
+                            <div class="max-w-4xl mx-auto mt-12 md:mt-16">
+                                <div class="relative">
+                                    <!-- Panel 1 -->
+                                    <div :class="tab !== '1' ? 'opacity-0 invisible' : 'opacity-100 visible'" class="bg-white p-6 md:p-8 rounded-lg shadow-lg transition-all duration-150 absolute inset-0 w-full h-full">
+                                        <div class="md:flex items-center space-y-4 md:space-y-0 md:space-x-8">
+                                            <div class="md:w-1/2">
+                                                <h3 class="font-inter-tight text-xl font-bold text-zinc-900 mb-4">Hardware Authentication</h3>
+                                                <p class="text-zinc-500 mb-6">Eliminate passwords with FIDO2/WebAuthn support. Use your YubiKey, Touch ID, Windows Hello, or any FIDO2 security key to unlock your encrypted files securely.</p>
+                                                <ul class="text-sm text-zinc-500 space-y-2">
+                                                    <li class="flex items-center">
+                                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        YubiKey 5 Series Support
+                                                    </li>
+                                                    <li class="flex items-center">
+                                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        Touch ID & Windows Hello
+                                                    </li>
+                                                    <li class="flex items-center">
+                                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        Password Fallback
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="md:w-1/2">
+                                                <div class="bg-gradient-to-br from-violet-50 to-purple-50 p-6 rounded-lg">
+                                                    <div class="flex items-center justify-center mb-4">
+                                                        <div class="w-16 h-16 bg-violet-600 rounded-full flex items-center justify-center">
+                                                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd" />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-center">
+                                                        <div class="text-sm font-medium text-violet-700 mb-2">Hardware Authentication</div>
+                                                        <div class="text-xs text-violet-600">Touch your YubiKey or use Touch ID</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Panel 2 -->
+                                    <div :class="tab !== '2' ? 'opacity-0 invisible' : 'opacity-100 visible'" class="bg-white p-6 md:p-8 rounded-lg shadow-lg transition-all duration-150 absolute inset-0 w-full h-full">
+                                        <div class="md:flex items-center space-y-4 md:space-y-0 md:space-x-8">
+                                            <div class="md:w-1/2">
+                                                <h3 class="font-inter-tight text-xl font-bold text-zinc-900 mb-4">Secure File Preview</h3>
+                                                <p class="text-zinc-500 mb-6">Preview encrypted files without saving them to disk. Images, videos, PDFs, and text files are decrypted in memory only, ensuring maximum security.</p>
+                                                <ul class="text-sm text-zinc-500 space-y-2">
+                                                    <li class="flex items-center">
+                                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        In-memory decryption only
+                                                    </li>
+                                                    <li class="flex items-center">
+                                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        10MB file size limit
+                                                    </li>
+                                                    <li class="flex items-center">
+                                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        Image zoom & pan controls
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="md:w-1/2">
+                                                <div class="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 rounded-lg">
+                                                    <div class="space-y-3">
+                                                        <div class="flex items-center space-x-3 p-3 bg-white rounded-lg shadow-sm">
+                                                            <div class="w-8 h-8 bg-emerald-600 rounded flex items-center justify-center">
+                                                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                                                                </svg>
+                                                            </div>
+                                                            <div class="flex-1">
+                                                                <div class="text-sm font-medium">image.jpg</div>
+                                                                <div class="text-xs text-zinc-500">Encrypted • Preview</div>
+                                                            </div>
+                                                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                                                <svg class="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-center text-xs text-emerald-600">Files never saved to disk during preview</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Panel 3 -->
+                                    <div :class="tab !== '3' ? 'opacity-0 invisible' : 'opacity-100 visible'" class="bg-white p-6 md:p-8 rounded-lg shadow-lg transition-all duration-150 absolute inset-0 w-full h-full">
+                                        <div class="md:flex items-center space-y-4 md:space-y-0 md:space-x-8">
+                                            <div class="md:w-1/2">
+                                                <h3 class="font-inter-tight text-xl font-bold text-zinc-900 mb-4">Bulk Operations</h3>
+                                                <p class="text-zinc-500 mb-6">Process entire directories with real-time progress tracking. Encrypt or decrypt hundreds of files with a single operation while maintaining security.</p>
+                                                <ul class="text-sm text-zinc-500 space-y-2">
+                                                    <li class="flex items-center">
+                                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        Directory-level operations
+                                                    </li>
+                                                    <li class="flex items-center">
+                                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        Real-time progress tracking
+                                                    </li>
+                                                    <li class="flex items-center">
+                                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        Individual file operations
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="md:w-1/2">
+                                                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg">
+                                                    <div class="space-y-4">
+                                                        <div class="flex items-center justify-between">
+                                                            <span class="text-sm font-medium text-blue-700">Encrypting Directory...</span>
+                                                            <span class="text-sm text-blue-600">68%</span>
+                                                        </div>
+                                                        <div class="w-full bg-blue-200 rounded-full h-2">
+                                                            <div class="bg-blue-600 h-2 rounded-full" style="width: 68%"></div>
+                                                        </div>
+                                                        <div class="text-xs text-blue-600 text-center">247 of 364 files processed</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Panel 4 -->
+                                    <div :class="tab !== '4' ? 'opacity-0 invisible' : 'opacity-100 visible'" class="bg-white p-6 md:p-8 rounded-lg shadow-lg transition-all duration-150 absolute inset-0 w-full h-full">
+                                        <div class="md:flex items-center space-y-4 md:space-y-0 md:space-x-8">
+                                            <div class="md:w-1/2">
+                                                <h3 class="font-inter-tight text-xl font-bold text-zinc-900 mb-4">Cross-Platform Support</h3>
+                                                <p class="text-zinc-500 mb-6">Native Electron application runs seamlessly on macOS, Windows, and Linux with consistent performance and user experience across all platforms.</p>
+                                                <ul class="text-sm text-zinc-500 space-y-2">
+                                                    <li class="flex items-center">
+                                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        macOS (Intel & Apple Silicon)
+                                                    </li>
+                                                    <li class="flex items-center">
+                                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        Windows 10 & 11
+                                                    </li>
+                                                    <li class="flex items-center">
+                                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        Linux (Ubuntu, Debian, Arch)
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="md:w-1/2">
+                                                <div class="bg-gradient-to-br from-slate-50 to-gray-50 p-6 rounded-lg">
+                                                    <div class="grid grid-cols-3 gap-4">
+                                                        <div class="text-center">
+                                                            <div class="w-12 h-12 mx-auto bg-gray-800 rounded-lg flex items-center justify-center mb-2">
+                                                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                                                    <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.621 5.367 11.987 11.987 11.987S24 18.608 24 11.987C24 5.367 18.634.001 12.017.001zM12 18.956c-3.833 0-6.935-3.102-6.935-6.935S8.167 5.085 12 5.085s6.936 3.103 6.936 6.936S15.833 18.956 12 18.956z"/>
+                                                                </svg>
+                                                            </div>
+                                                            <div class="text-xs font-medium">macOS</div>
+                                                        </div>
+                                                        <div class="text-center">
+                                                            <div class="w-12 h-12 mx-auto bg-blue-600 rounded-lg flex items-center justify-center mb-2">
+                                                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                                                    <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-13.051-1.351"/>
+                                                                </svg>
+                                                            </div>
+                                                            <div class="text-xs font-medium">Windows</div>
+                                                        </div>
+                                                        <div class="text-center">
+                                                            <div class="w-12 h-12 mx-auto bg-orange-500 rounded-lg flex items-center justify-center mb-2">
+                                                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                                                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.568 7.432a.75.75 0 11-.736 1.304l-4.764-2.69a.75.75 0 01.736-1.304l4.764 2.69zM12 18.75c-3.728 0-6.75-3.022-6.75-6.75S8.272 5.25 12 5.25s6.75 3.022 6.75 6.75-3.022 6.75-6.75 6.75z"/>
+                                                                </svg>
+                                                            </div>
+                                                            <div class="text-xs font-medium">Linux</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Panel background placeholder (maintains height) -->
+                                    <div class="bg-white p-6 md:p-8 rounded-lg shadow-lg opacity-0">
+                                        <div class="md:flex items-center space-y-4 md:space-y-0 md:space-x-8">
+                                            <div class="md:w-1/2">
+                                                <h3 class="font-inter-tight text-xl font-bold text-zinc-900 mb-4">Placeholder</h3>
+                                                <p class="text-zinc-500 mb-6">This content maintains the height of the tabs container.</p>
+                                            </div>
+                                            <div class="md:w-1/2">
+                                                <div class="bg-gradient-to-br from-slate-50 to-gray-50 p-6 rounded-lg">
+                                                    <div class="h-32"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Security Section -->
+            <section id="security" class="relative">
+                <div class="py-12 md:py-20">
+                    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+                        <div class="max-w-3xl mx-auto text-center pb-12">
+                            <h2 class="font-inter-tight text-3xl md:text-4xl font-bold text-zinc-900 mb-4">Bank-level security standards</h2>
+                            <p class="text-lg text-zinc-500">Maraikka implements the same security standards used by financial institutions and government agencies worldwide.</p>
+                        </div>
+                        <div class="grid md:grid-cols-3 gap-8">
+                            <!-- Security feature 1 -->
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto bg-green-100 rounded-2xl flex items-center justify-center mb-4">
+                                    <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <h3 class="font-inter-tight text-xl font-semibold text-zinc-900 mb-2">AES-256 Encryption</h3>
+                                <p class="text-zinc-500">Military-grade encryption standard approved by NSA for protecting classified information up to TOP SECRET level.</p>
+                            </div>
+                            <!-- Security feature 2 -->
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
+                                    <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <h3 class="font-inter-tight text-xl font-semibold text-zinc-900 mb-2">Hardware Authentication</h3>
+                                <p class="text-zinc-500">FIDO2/WebAuthn support eliminates password vulnerabilities with phishing-resistant authentication.</p>
+                            </div>
+                            <!-- Security feature 3 -->
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto bg-purple-100 rounded-2xl flex items-center justify-center mb-4">
+                                    <svg class="w-8 h-8 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                                    </svg>
+                                </div>
+                                <h3 class="font-inter-tight text-xl font-semibold text-zinc-900 mb-2">Zero-Trust Architecture</h3>
+                                <p class="text-zinc-500">Files are never stored unencrypted. Preview functionality uses in-memory decryption only.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Download Section -->
+            <section id="download" class="relative bg-zinc-50">
+                <div class="py-12 md:py-20">
+                    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+                        <div class="max-w-3xl mx-auto text-center pb-12">
+                            <h2 class="font-inter-tight text-3xl md:text-4xl font-bold text-zinc-900 mb-4">Get started today</h2>
+                            <p class="text-lg text-zinc-500 mb-8">Download Maraikka for free and start securing your files with enterprise-grade encryption.</p>
+                        </div>
+                        
+                        <div class="max-w-4xl mx-auto">
+                            <div class="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
+                                <div class="grid md:grid-cols-3 gap-8">
+                                    <!-- macOS -->
+                                    <div class="text-center">
+                                        <div class="w-20 h-20 mx-auto bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                                            <svg class="w-12 h-12 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.621 5.367 11.987 11.987 11.987S24 18.608 24 11.987C24 5.367 18.634.001 12.017.001zM12 18.956c-3.833 0-6.935-3.102-6.935-6.935S8.167 5.085 12 5.085s6.936 3.103 6.936 6.936S15.833 18.956 12 18.956z"/>
+                                            </svg>
+                                        </div>
+                                        <h3 class="font-inter-tight text-xl font-semibold text-zinc-900 mb-2">macOS</h3>
+                                        <p class="text-zinc-500 mb-4">For Intel and Apple Silicon Macs<br>macOS 10.15 or later</p>
+                                        <a href="#" class="btn text-zinc-100 bg-violet-600 hover:bg-violet-700 w-full">Download for Mac</a>
+                                    </div>
+                                    
+                                    <!-- Windows -->
+                                    <div class="text-center">
+                                        <div class="w-20 h-20 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
+                                            <svg class="w-12 h-12 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-13.051-1.351"/>
+                                            </svg>
+                                        </div>
+                                        <h3 class="font-inter-tight text-xl font-semibold text-zinc-900 mb-2">Windows</h3>
+                                        <p class="text-zinc-500 mb-4">For Windows 10 and 11<br>64-bit x86 processors</p>
+                                        <a href="#" class="btn text-zinc-100 bg-violet-600 hover:bg-violet-700 w-full">Download for Windows</a>
+                                    </div>
+                                    
+                                    <!-- Linux -->
+                                    <div class="text-center">
+                                        <div class="w-20 h-20 mx-auto bg-orange-100 rounded-2xl flex items-center justify-center mb-4">
+                                            <svg class="w-12 h-12 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.568 7.432a.75.75 0 11-.736 1.304l-4.764-2.69a.75.75 0 01.736-1.304l4.764 2.69zM12 18.75c-3.728 0-6.75-3.022-6.75-6.75S8.272 5.25 12 5.25s6.75 3.022 6.75 6.75-3.022 6.75-6.75 6.75z"/>
+                                            </svg>
+                                        </div>
+                                        <h3 class="font-inter-tight text-xl font-semibold text-zinc-900 mb-2">Linux</h3>
+                                        <p class="text-zinc-500 mb-4">AppImage for all distributions<br>64-bit x86 processors</p>
+                                        <a href="#" class="btn text-zinc-100 bg-violet-600 hover:bg-violet-700 w-full">Download for Linux</a>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-12 p-6 bg-zinc-50 rounded-xl">
+                                    <div class="text-center">
+                                        <h4 class="font-inter-tight text-lg font-semibold text-zinc-900 mb-2">Open Source & Free</h4>
+                                        <p class="text-zinc-500 mb-4">Maraikka is completely free to use with no restrictions. View the source code on GitHub.</p>
+                                        <div class="flex justify-center space-x-4">
+                                            <a href="#" class="btn text-zinc-600 bg-white hover:text-zinc-900 shadow-sm">
+                                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                                                </svg>
+                                                View on GitHub
+                                            </a>
+                                            <a href="#" class="btn text-zinc-600 bg-white hover:text-zinc-900 shadow-sm">
+                                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Release Notes
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Site footer -->
+        <footer class="bg-zinc-900">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6">
+                <div class="py-12 md:py-16">
+                    <div class="grid sm:grid-cols-12 gap-8">
+                        <!-- Brand -->
+                        <div class="sm:col-span-12 lg:col-span-4">
+                            <div class="flex items-center mb-4">
+                                <div class="flex items-center justify-center bg-gradient-to-br from-violet-500 to-purple-600 w-8 h-8 rounded-sm shadow-xs mr-3">
+                                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <span class="text-xl font-bold text-white">Maraikka</span>
+                            </div>
+                            <div class="text-zinc-400 mb-6">
+                                Secure file encryption with hardware authentication. Protect your sensitive data with military-grade security standards.
+                            </div>
+                            <div class="flex space-x-4">
+                                <a href="#" class="text-zinc-400 hover:text-white transition">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- Links -->
+                        <div class="sm:col-span-6 md:col-span-3 lg:col-span-2">
+                            <h6 class="text-xs text-zinc-200 uppercase tracking-wider font-semibold mb-4">Product</h6>
+                            <ul class="text-sm space-y-3">
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#features">Features</a>
+                                </li>
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#security">Security</a>
+                                </li>
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#download">Download</a>
+                                </li>
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#">Release Notes</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="sm:col-span-6 md:col-span-3 lg:col-span-2">
+                            <h6 class="text-xs text-zinc-200 uppercase tracking-wider font-semibold mb-4">Support</h6>
+                            <ul class="text-sm space-y-3">
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#">Documentation</a>
+                                </li>
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#">Community</a>
+                                </li>
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#">Bug Reports</a>
+                                </li>
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#">Contact</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="sm:col-span-6 md:col-span-3 lg:col-span-2">
+                            <h6 class="text-xs text-zinc-200 uppercase tracking-wider font-semibold mb-4">Legal</h6>
+                            <ul class="text-sm space-y-3">
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#">License</a>
+                                </li>
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#">Terms of Service</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="sm:col-span-6 md:col-span-3 lg:col-span-2">
+                            <h6 class="text-xs text-zinc-200 uppercase tracking-wider font-semibold mb-4">Developer</h6>
+                            <ul class="text-sm space-y-3">
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#">Maraikka Labs</a>
+                                </li>
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#">GitHub</a>
+                                </li>
+                                <li>
+                                    <a class="text-zinc-400 hover:text-white transition" href="#">API Reference</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Bottom -->
+                    <div class="md:flex md:items-center md:justify-between pt-6 md:pt-8 border-t border-zinc-800">
+                        <ul class="flex mb-4 md:order-1 md:ml-4 md:mb-0">
+                            <li class="ml-4">
+                                <a class="text-zinc-400 hover:text-white transition" href="#">Privacy Policy</a>
+                            </li>
+                            <li class="ml-4">
+                                <a class="text-zinc-400 hover:text-white transition" href="#">Terms</a>
+                            </li>
+                        </ul>
+                        <div class="text-sm text-zinc-400">© 2024 Maraikka Labs. All rights reserved.</div>
+                    </div>
+                    
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Alpine.js and scripts -->
+    <script src="./js/vendors/alpinejs.min.js" defer></script>
+
+</body>
+</html> 

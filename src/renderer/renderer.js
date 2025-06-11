@@ -80,9 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Setup preferences event listeners
     setupPreferencesListeners();
+    setupHardwareAuthListeners();
     
     // Load saved preferences
     loadPreferences();
+    
+    // Initialize hardware authentication
+    initializeHardwareAuth();
 });
 
 // Setup menu event listeners
@@ -477,19 +481,26 @@ async function handlePasswordConfirm() {
 }
 
 // Encryption functions
-async function encryptDirectory(password) {
+async function encryptDirectory(password = null) {
     if (isProcessing) return;
     
     console.log(`Renderer: Starting directory encryption for ${currentDirectory}`);
-    console.log(`Password provided: ${password ? 'Yes' : 'No'}`);
     
     isProcessing = true;
     disableButtons();
     showProgress('Encrypting directory...');
     
     try {
+        let authKey = password;
+        
+        // If no password provided, get authentication method (hardware or password)
+        if (!authKey) {
+            const auth = await getAuthenticationMethod();
+            authKey = auth.key;
+        }
+        
         console.log('Renderer: Calling electronAPI.encryptDirectory...');
-        const result = await window.electronAPI.encryptDirectory(currentDirectory, password);
+        const result = await window.electronAPI.encryptDirectory(currentDirectory, authKey);
         
         console.log('Renderer: Encryption result:', result);
         
@@ -510,19 +521,26 @@ async function encryptDirectory(password) {
     }
 }
 
-async function decryptDirectory(password) {
+async function decryptDirectory(password = null) {
     if (isProcessing) return;
     
     console.log(`Renderer: Starting directory decryption for ${currentDirectory}`);
-    console.log(`Password provided: ${password ? 'Yes' : 'No'}`);
     
     isProcessing = true;
     disableButtons();
     showProgress('Decrypting directory...');
     
     try {
+        let authKey = password;
+        
+        // If no password provided, get authentication method (hardware or password)
+        if (!authKey) {
+            const auth = await getAuthenticationMethod();
+            authKey = auth.key;
+        }
+        
         console.log('Renderer: Calling electronAPI.decryptDirectory...');
-        const result = await window.electronAPI.decryptDirectory(currentDirectory, password);
+        const result = await window.electronAPI.decryptDirectory(currentDirectory, authKey);
         
         console.log('Renderer: Decryption result:', result);
         
@@ -544,7 +562,7 @@ async function decryptDirectory(password) {
 }
 
 // Single file encryption/decryption
-async function encryptSingleFile(filePath, password) {
+async function encryptSingleFile(filePath, password = null) {
     if (isProcessing) return;
     
     console.log(`Renderer: Starting single file encryption for ${filePath}`);
@@ -554,7 +572,15 @@ async function encryptSingleFile(filePath, password) {
     showProgress('Encrypting file...');
     
     try {
-        const result = await window.electronAPI.encryptFile(filePath, password);
+        let authKey = password;
+        
+        // If no password provided, get authentication method (hardware or password)
+        if (!authKey) {
+            const auth = await getAuthenticationMethod();
+            authKey = auth.key;
+        }
+        
+        const result = await window.electronAPI.encryptFile(filePath, authKey);
         
         if (result.success) {
             const fileName = filePath.split('/').pop();
@@ -573,7 +599,7 @@ async function encryptSingleFile(filePath, password) {
     }
 }
 
-async function decryptSingleFile(filePath, password) {
+async function decryptSingleFile(filePath, password = null) {
     if (isProcessing) return;
     
     console.log(`Renderer: Starting single file decryption for ${filePath}`);
@@ -583,7 +609,15 @@ async function decryptSingleFile(filePath, password) {
     showProgress('Decrypting file...');
     
     try {
-        const result = await window.electronAPI.decryptFile(filePath, password);
+        let authKey = password;
+        
+        // If no password provided, get authentication method (hardware or password)
+        if (!authKey) {
+            const auth = await getAuthenticationMethod();
+            authKey = auth.key;
+        }
+        
+        const result = await window.electronAPI.decryptFile(filePath, authKey);
         
         if (result.success) {
             const fileName = filePath.split('/').pop();
@@ -1456,4 +1490,364 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !previewPane.classList.contains('hidden')) {
         closePreviewPane();
     }
-}); 
+});
+
+// Hardware Authentication Functions
+let hardwareAuthConfig = {
+    isEnabled: false,
+    hasCredentials: false,
+    credentialIds: []
+};
+
+async function initializeHardwareAuth() {
+    try {
+        const config = await window.electronAPI.loadHardwareAuthConfig();
+        if (config.success) {
+            hardwareAuthConfig = config;
+            updateHardwareAuthUI();
+        }
+    } catch (error) {
+        console.error('Error loading hardware auth config:', error);
+    }
+}
+
+function updateHardwareAuthUI() {
+    const checkbox = document.getElementById('hardwareAuthEnabled');
+    const statusDiv = document.getElementById('hardwareAuthStatus');
+    const statusText = document.getElementById('hardwareAuthStatusText');
+    const registerBtn = document.getElementById('registerHardwareAuth');
+    const removeBtn = document.getElementById('removeHardwareAuth');
+    
+    if (checkbox) {
+        checkbox.checked = hardwareAuthConfig.isEnabled;
+        
+        if (hardwareAuthConfig.isEnabled && hardwareAuthConfig.hasCredentials) {
+            statusDiv.classList.remove('hidden');
+            statusText.textContent = 'Hardware authenticator registered';
+            statusText.parentElement.classList.add('success');
+            registerBtn.classList.add('hidden');
+            removeBtn.classList.remove('hidden');
+        } else if (hardwareAuthConfig.isEnabled) {
+            statusDiv.classList.remove('hidden');
+            statusText.textContent = 'No authenticator registered';
+            statusText.parentElement.classList.remove('success');
+            registerBtn.classList.remove('hidden');
+            removeBtn.classList.add('hidden');
+        } else {
+            statusDiv.classList.add('hidden');
+        }
+    }
+}
+
+function setupHardwareAuthListeners() {
+    const checkbox = document.getElementById('hardwareAuthEnabled');
+    const registerBtn = document.getElementById('registerHardwareAuth');
+    const removeBtn = document.getElementById('removeHardwareAuth');
+    
+    if (checkbox) {
+        checkbox.addEventListener('change', async (e) => {
+            if (e.target.checked) {
+                // Enable hardware auth
+                if (!hardwareAuthConfig.hasCredentials) {
+                    // Need to register first
+                    showHardwareAuthModal('register');
+                } else {
+                    hardwareAuthConfig.isEnabled = true;
+                    updateHardwareAuthUI();
+                }
+            } else {
+                // Disable hardware auth
+                hardwareAuthConfig.isEnabled = false;
+                updateHardwareAuthUI();
+            }
+        });
+    }
+    
+    if (registerBtn) {
+        registerBtn.addEventListener('click', () => {
+            showHardwareAuthModal('register');
+        });
+    }
+    
+    if (removeBtn) {
+        removeBtn.addEventListener('click', async () => {
+            if (confirm('Remove hardware authentication? You will need to re-register your authenticator to use this feature again.')) {
+                try {
+                    const result = await window.electronAPI.removeHardwareAuth();
+                    if (result.success) {
+                        hardwareAuthConfig = {
+                            isEnabled: false,
+                            hasCredentials: false,
+                            credentialIds: []
+                        };
+                        updateHardwareAuthUI();
+                        showNotification('Hardware Authentication', 'Authenticator removed successfully', 'success');
+                    } else {
+                        showNotification('Error', 'Failed to remove authenticator: ' + result.error, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error removing hardware auth:', error);
+                    showNotification('Error', 'Failed to remove authenticator', 'error');
+                }
+            }
+        });
+    }
+}
+
+function showHardwareAuthModal(mode = 'register') {
+    const modal = document.getElementById('hardwareAuthModal');
+    const title = document.getElementById('hardwareAuthModalTitle');
+    const content = document.getElementById('hardwareAuthContent');
+    const startBtn = document.getElementById('startHardwareAuth');
+    const cancelBtn = document.getElementById('cancelHardwareAuth');
+    
+    if (mode === 'register') {
+        title.textContent = 'Register Hardware Authenticator';
+        content.innerHTML = `
+            <i class="fas fa-key"></i>
+            <h3>Register Your Authenticator</h3>
+            <p>Use your FIDO2 device (YubiKey, Touch ID, Windows Hello) to secure your encryption keys.</p>
+            <div class="auth-progress hidden" id="authProgress">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Waiting for authenticator...</span>
+            </div>
+        `;
+        startBtn.textContent = 'Register';
+        startBtn.onclick = () => registerHardwareAuth();
+    } else if (mode === 'authenticate') {
+        title.textContent = 'Hardware Authentication';
+        content.innerHTML = `
+            <i class="fas fa-fingerprint"></i>
+            <h3>Authenticate</h3>
+            <p>Use your registered authenticator to unlock encryption.</p>
+            <div class="auth-progress" id="authProgress">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Waiting for authenticator...</span>
+            </div>
+        `;
+        startBtn.classList.add('hidden');
+        // Auto-start authentication
+        setTimeout(() => authenticateHardware(), 500);
+    }
+    
+    cancelBtn.onclick = () => closeHardwareAuthModal();
+    modal.classList.remove('hidden');
+}
+
+function closeHardwareAuthModal() {
+    const modal = document.getElementById('hardwareAuthModal');
+    modal.classList.add('hidden');
+    
+    // Reset checkbox if registration was cancelled
+    const checkbox = document.getElementById('hardwareAuthEnabled');
+    if (checkbox && !hardwareAuthConfig.hasCredentials) {
+        checkbox.checked = false;
+    }
+}
+
+async function registerHardwareAuth() {
+    const progressDiv = document.getElementById('authProgress');
+    const startBtn = document.getElementById('startHardwareAuth');
+    
+    try {
+        // Check if WebAuthn is available
+        if (!navigator.credentials || !navigator.credentials.create) {
+            throw new Error('WebAuthn is not supported in this browser');
+        }
+        
+        progressDiv.classList.remove('hidden');
+        startBtn.disabled = true;
+        
+        // Generate challenge
+        const challenge = new Uint8Array(32);
+        crypto.getRandomValues(challenge);
+        
+        // Create credential options
+        const publicKeyCredentialCreationOptions = {
+            challenge: challenge,
+            rp: {
+                name: "Maraikka",
+                id: "localhost",
+            },
+            user: {
+                id: crypto.getRandomValues(new Uint8Array(64)),
+                name: "maraikka-user",
+                displayName: "Maraikka User",
+            },
+            pubKeyCredParams: [
+                {
+                    alg: -7, // ES256
+                    type: "public-key"
+                },
+                {
+                    alg: -257, // RS256
+                    type: "public-key"
+                }
+            ],
+            authenticatorSelection: {
+                authenticatorAttachment: "cross-platform", // Allow both platform and roaming authenticators
+                userVerification: "preferred"
+            },
+            timeout: 60000,
+            attestation: "direct"
+        };
+        
+        // Create credential
+        const credential = await navigator.credentials.create({
+            publicKey: publicKeyCredentialCreationOptions
+        });
+        
+        if (credential) {
+            // Convert challenge to base64 for storage
+            const challengeBase64 = btoa(String.fromCharCode(...challenge));
+            const credentialId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+            
+            // Save credential to backend
+            const result = await window.electronAPI.saveHardwareAuthCredential(credentialId, challengeBase64);
+            
+            if (result.success) {
+                hardwareAuthConfig = {
+                    isEnabled: true,
+                    hasCredentials: true,
+                    credentialIds: [credentialId]
+                };
+                
+                updateHardwareAuthUI();
+                closeHardwareAuthModal();
+                showNotification('Hardware Authentication', 'Authenticator registered successfully!', 'success');
+            } else {
+                throw new Error(result.error);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Hardware auth registration error:', error);
+        progressDiv.classList.add('hidden');
+        startBtn.disabled = false;
+        
+        let errorMessage = 'Failed to register authenticator';
+        if (error.name === 'NotAllowedError') {
+            errorMessage = 'Authentication was cancelled or not allowed';
+        } else if (error.name === 'NotSupportedError') {
+            errorMessage = 'This authenticator is not supported';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        showNotification('Registration Failed', errorMessage, 'error');
+    }
+}
+
+async function authenticateHardware() {
+    const progressDiv = document.getElementById('authProgress');
+    
+    try {
+        if (!navigator.credentials || !navigator.credentials.get) {
+            throw new Error('WebAuthn is not supported in this browser');
+        }
+        
+        if (!hardwareAuthConfig.hasCredentials || hardwareAuthConfig.credentialIds.length === 0) {
+            throw new Error('No registered authenticators found');
+        }
+        
+        // Generate challenge
+        const challenge = new Uint8Array(32);
+        crypto.getRandomValues(challenge);
+        
+        // Convert credential IDs back to ArrayBuffer
+        const allowCredentials = hardwareAuthConfig.credentialIds.map(id => ({
+            id: Uint8Array.from(atob(id), c => c.charCodeAt(0)),
+            type: 'public-key'
+        }));
+        
+        const publicKeyCredentialRequestOptions = {
+            challenge: challenge,
+            allowCredentials: allowCredentials,
+            timeout: 60000,
+            userVerification: "preferred"
+        };
+        
+        const assertion = await navigator.credentials.get({
+            publicKey: publicKeyCredentialRequestOptions
+        });
+        
+        if (assertion) {
+            const challengeBase64 = btoa(String.fromCharCode(...challenge));
+            const credentialId = btoa(String.fromCharCode(...new Uint8Array(assertion.rawId)));
+            
+            // Verify with backend
+            const result = await window.electronAPI.verifyHardwareAuth(challengeBase64, credentialId);
+            
+            if (result.success) {
+                closeHardwareAuthModal();
+                return result.masterKey;
+            } else {
+                throw new Error(result.error);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Hardware auth authentication error:', error);
+        
+        let errorMessage = 'Authentication failed';
+        if (error.name === 'NotAllowedError') {
+            errorMessage = 'Authentication was cancelled or not allowed';
+        } else if (error.name === 'NotSupportedError') {
+            errorMessage = 'This authenticator is not supported';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        progressDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle"></i>
+            <span style="color: #ef4444;">${errorMessage}</span>
+        `;
+        
+        setTimeout(() => {
+            closeHardwareAuthModal();
+        }, 3000);
+        
+        throw error;
+    }
+}
+
+async function isHardwareAuthEnabled() {
+    try {
+        const config = await window.electronAPI.loadHardwareAuthConfig();
+        return config.success && config.isEnabled && config.hasCredentials;
+    } catch (error) {
+        console.error('Error checking hardware auth status:', error);
+        return false;
+    }
+}
+
+async function getAuthenticationMethod() {
+    const isHardwareEnabled = await isHardwareAuthEnabled();
+    
+    if (isHardwareEnabled) {
+        try {
+            showHardwareAuthModal('authenticate');
+            const masterKey = await authenticateHardware();
+            return { method: 'hardware', key: masterKey };
+        } catch (error) {
+            console.error('Hardware auth failed, falling back to password:', error);
+            // Fall back to password if hardware auth fails
+        }
+    }
+    
+    // Use password authentication
+    return new Promise((resolve) => {
+        const originalHandlePasswordConfirm = window.handlePasswordConfirm;
+        
+        window.handlePasswordConfirm = async () => {
+            const password = document.getElementById('passwordInput').value;
+            if (password) {
+                closePasswordModal();
+                resolve({ method: 'password', key: password });
+                window.handlePasswordConfirm = originalHandlePasswordConfirm;
+            }
+        };
+        
+        showPasswordModal('encrypt');
+    });
+}

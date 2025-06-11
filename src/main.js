@@ -532,6 +532,116 @@ function getMimeType(ext) {
   return mimeTypes[ext] || 'application/octet-stream';
 }
 
+// Hardware Authentication Storage
+const hardwareAuthStore = {
+  credentialIds: new Set(),
+  masterKey: null,
+  isEnabled: false
+};
+
+// Generate a master key from hardware authentication challenge
+function generateMasterKeyFromChallenge(challenge, credentialId) {
+  // Use PBKDF2 to derive a consistent key from the challenge and credential ID
+  const combined = challenge + credentialId;
+  return crypto.pbkdf2Sync(combined, 'maraikka-salt', 100000, 32, 'sha256').toString('hex');
+}
+
+// Hardware Authentication IPC Handlers
+ipcMain.handle('hardware-auth-available', async () => {
+  try {
+    // Check if WebAuthn is available in the renderer process
+    // We'll handle this check in the renderer since it has access to navigator.credentials
+    return { available: true };
+  } catch (error) {
+    return { available: false, error: error.message };
+  }
+});
+
+ipcMain.handle('save-hardware-auth-credential', async (event, credentialId, challenge) => {
+  try {
+    hardwareAuthStore.credentialIds.add(credentialId);
+    hardwareAuthStore.masterKey = generateMasterKeyFromChallenge(challenge, credentialId);
+    hardwareAuthStore.isEnabled = true;
+    
+    // Save to persistent storage (you might want to encrypt this)
+    const configPath = path.join(app.getPath('userData'), 'hardware-auth.json');
+    await fs.writeFile(configPath, JSON.stringify({
+      credentialIds: Array.from(hardwareAuthStore.credentialIds),
+      isEnabled: hardwareAuthStore.isEnabled
+    }));
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error saving hardware auth credential:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('load-hardware-auth-config', async () => {
+  try {
+    const configPath = path.join(app.getPath('userData'), 'hardware-auth.json');
+    
+    if (await fs.pathExists(configPath)) {
+      const config = JSON.parse(await fs.readFile(configPath, 'utf8'));
+      hardwareAuthStore.credentialIds = new Set(config.credentialIds || []);
+      hardwareAuthStore.isEnabled = config.isEnabled || false;
+      
+      return {
+        success: true,
+        isEnabled: hardwareAuthStore.isEnabled,
+        hasCredentials: hardwareAuthStore.credentialIds.size > 0,
+        credentialIds: Array.from(hardwareAuthStore.credentialIds)
+      };
+    }
+    
+    return { success: true, isEnabled: false, hasCredentials: false, credentialIds: [] };
+  } catch (error) {
+    console.error('Error loading hardware auth config:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('verify-hardware-auth', async (event, challenge, credentialId) => {
+  try {
+    if (!hardwareAuthStore.credentialIds.has(credentialId)) {
+      throw new Error('Credential not registered');
+    }
+    
+    const masterKey = generateMasterKeyFromChallenge(challenge, credentialId);
+    hardwareAuthStore.masterKey = masterKey;
+    
+    return { success: true, masterKey };
+  } catch (error) {
+    console.error('Error verifying hardware auth:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('remove-hardware-auth', async () => {
+  try {
+    hardwareAuthStore.credentialIds.clear();
+    hardwareAuthStore.masterKey = null;
+    hardwareAuthStore.isEnabled = false;
+    
+    const configPath = path.join(app.getPath('userData'), 'hardware-auth.json');
+    if (await fs.pathExists(configPath)) {
+      await fs.unlink(configPath);
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error removing hardware auth:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('get-hardware-auth-master-key', async () => {
+  if (hardwareAuthStore.isEnabled && hardwareAuthStore.masterKey) {
+    return { success: true, masterKey: hardwareAuthStore.masterKey };
+  }
+  return { success: false, error: 'Hardware authentication not active' };
+});
+
 // Encryption functions
 async function encryptFile(filePath, password) {
   try {

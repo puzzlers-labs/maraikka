@@ -10,6 +10,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readTextFile: (filePath) => ipcRenderer.invoke('read-text-file', filePath),
   decryptFileForPreview: (filePath, password) => ipcRenderer.invoke('decrypt-file-for-preview', filePath, password),
   
+  // Hardware Authentication APIs
+  hardwareAuthAvailable: () => ipcRenderer.invoke('hardware-auth-available'),
+  saveHardwareAuthCredential: (credentialId, challenge) => ipcRenderer.invoke('save-hardware-auth-credential', credentialId, challenge),
+  loadHardwareAuthConfig: () => ipcRenderer.invoke('load-hardware-auth-config'),
+  verifyHardwareAuth: (challenge, credentialId) => ipcRenderer.invoke('verify-hardware-auth', challenge, credentialId),
+  removeHardwareAuth: () => ipcRenderer.invoke('remove-hardware-auth'),
+  getHardwareAuthMasterKey: () => ipcRenderer.invoke('get-hardware-auth-master-key'),
+  
   // Menu event listeners
   onShowPreferences: (callback) => ipcRenderer.on('show-preferences', callback),
   onSelectDirectoryMenu: (callback) => ipcRenderer.on('select-directory-menu', callback),

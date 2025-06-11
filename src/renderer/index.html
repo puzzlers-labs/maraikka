@@ -209,6 +209,28 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Security</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="hardwareAuthEnabled" class="checkbox-input">
+                                <span class="checkbox-custom"></span>
+                                <div class="checkbox-text">
+                                    <span class="checkbox-title">Hardware Authentication</span>
+                                    <span class="checkbox-description">Use FIDO2/WebAuthn (YubiKey, Touch ID, Windows Hello) for encryption instead of passwords</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div id="hardwareAuthStatus" class="hardware-auth-status hidden">
+                            <div class="status-indicator">
+                                <i class="fas fa-key"></i>
+                                <span id="hardwareAuthStatusText">No authenticator registered</span>
+                            </div>
+                            <button id="registerHardwareAuth" class="btn btn-secondary btn-sm">Register Authenticator</button>
+                            <button id="removeHardwareAuth" class="btn btn-danger btn-sm hidden">Remove Authenticator</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- About Tab -->
@@ -252,6 +274,30 @@
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" onclick="closePreferences()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hardware Authentication Modal -->
+    <div id="hardwareAuthModal" class="modal-overlay hardware-auth-modal hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="hardwareAuthModalTitle">Hardware Authentication</h3>
+            </div>
+            <div class="modal-body">
+                <div id="hardwareAuthContent" class="auth-step">
+                    <i class="fas fa-key"></i>
+                    <h3>Register Your Authenticator</h3>
+                    <p>Use your FIDO2 device (YubiKey, Touch ID, Windows Hello) to secure your encryption keys.</p>
+                    <div class="auth-progress hidden" id="authProgress">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Waiting for authenticator...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelHardwareAuth">Cancel</button>
+                <button type="button" class="btn btn-primary" id="startHardwareAuth">Register</button>
             </div>
         </div>
     </div>
