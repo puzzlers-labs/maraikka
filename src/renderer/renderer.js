@@ -913,7 +913,13 @@ async function previewFile(filePath, isEncrypted = false) {
     try {
         currentPreviewFile = filePath;
         const fileName = filePath.split('/').pop();
-        previewFileName.textContent = fileName;
+        
+        // Clear existing content and set filename with proper structure
+        previewFileName.innerHTML = '';
+        const fileNameSpan = document.createElement('span');
+        fileNameSpan.className = 'preview-filename';
+        fileNameSpan.textContent = fileName;
+        previewFileName.appendChild(fileNameSpan);
         
         // Open preview pane
         openPreviewPane();
@@ -932,6 +938,29 @@ async function previewFile(filePath, isEncrypted = false) {
     } catch (error) {
         console.error('Error previewing file:', error);
         showPreviewError();
+    }
+}
+
+function updatePreviewFileNameWithPageCount(pageCount) {
+    if (currentPreviewFile && previewFileName) {
+        const fileName = currentPreviewFile.split('/').pop();
+        
+        // Clear existing content
+        previewFileName.innerHTML = '';
+        
+        // Create filename element (primary text)
+        const fileNameSpan = document.createElement('span');
+        fileNameSpan.className = 'preview-filename';
+        fileNameSpan.textContent = fileName;
+        
+        // Create page count element (secondary text)
+        const pageCountSpan = document.createElement('span');
+        pageCountSpan.className = 'preview-page-count';
+        pageCountSpan.textContent = `(${pageCount} pages)`;
+        
+        // Append both elements
+        previewFileName.appendChild(fileNameSpan);
+        previewFileName.appendChild(pageCountSpan);
     }
 }
 
@@ -971,7 +1000,7 @@ function showPreviewError() {
 
 function clearPreviewContent() {
     // Remove any existing content except loader and error
-    const existingContent = previewContent.querySelector('.preview-image-container, .preview-video, .preview-text, .preview-pdf, .preview-unsupported, .preview-password-prompt');
+    const existingContent = previewContent.querySelector('.preview-image-container, .preview-video-container, .preview-video, .preview-text, .preview-pdf, .preview-pdf-viewer, .preview-unsupported, .preview-password-prompt');
     if (existingContent) {
         existingContent.remove();
     }
@@ -1172,6 +1201,10 @@ async function renderDecryptedImagePreview(data, mimeType) {
 }
 
 async function renderDecryptedVideoPreview(data, mimeType) {
+    // Create container for video centering
+    const container = document.createElement('div');
+    container.className = 'preview-video-container';
+    
     const video = document.createElement('video');
     video.className = 'preview-video';
     video.controls = true;
@@ -1183,7 +1216,8 @@ async function renderDecryptedVideoPreview(data, mimeType) {
     video.src = videoUrl;
     
     video.onloadedmetadata = () => {
-        previewContent.appendChild(video);
+        container.appendChild(video);
+        previewContent.appendChild(container);
     };
     
     video.onerror = () => {
@@ -1209,34 +1243,18 @@ async function renderDecryptedTextPreview(data) {
 }
 
 async function renderDecryptedPDFPreview(data) {
-    // Convert buffer to blob and create object URL
-    const blob = new Blob([data], { type: 'application/pdf' });
-    const pdfUrl = URL.createObjectURL(blob);
-    
-    const iframe = document.createElement('iframe');
-    iframe.className = 'preview-pdf';
-    iframe.src = pdfUrl;
-    
-    iframe.onload = () => {
-        previewContent.appendChild(iframe);
-    };
-    
-    iframe.onerror = () => {
-        URL.revokeObjectURL(pdfUrl);
-        showPreviewError();
-    };
-    
-    // Clean up URL when preview closes
-    const originalClosePreview = closePreviewPane;
-    closePreviewPane = () => {
-        URL.revokeObjectURL(pdfUrl);
-        closePreviewPane = originalClosePreview;
-        originalClosePreview();
-    };
+    console.log('Rendering decrypted PDF with custom viewer');
+    // Use the custom PDF viewer for decrypted PDFs too
+    await createCustomPDFViewer(data);
 }
 
 async function renderPreviewContent(filePath, ext) {
     try {
+        console.log(`Rendering preview for ${filePath} with extension ${ext}`);
+        console.log('Preview content element:', previewContent);
+        console.log('Preview loader element:', previewLoader);
+        console.log('Preview error element:', previewError);
+        
         previewLoader.classList.add('hidden');
         previewError.classList.add('hidden');
         
@@ -1247,10 +1265,13 @@ async function renderPreviewContent(filePath, ext) {
         } else if (isTextFile(ext)) {
             await renderTextPreview(filePath);
         } else if (ext === 'pdf') {
+            console.log('Calling renderPDFPreview for:', filePath);
             await renderPDFPreview(filePath);
         } else {
+            console.log('Rendering unsupported preview for extension:', ext);
             renderUnsupportedPreview();
         }
+        console.log('Preview content rendered successfully');
     } catch (error) {
         console.error('Error rendering preview:', error);
         showPreviewError();
@@ -1479,6 +1500,10 @@ function setupImageZoomPan(container, img, controls) {
 }
 
 async function renderVideoPreview(filePath) {
+    // Create container for video centering
+    const container = document.createElement('div');
+    container.className = 'preview-video-container';
+    
     const video = document.createElement('video');
     video.className = 'preview-video';
     video.src = `file://${filePath}`;
@@ -1486,7 +1511,8 @@ async function renderVideoPreview(filePath) {
     video.preload = 'metadata';
     
     video.onloadedmetadata = () => {
-        previewContent.appendChild(video);
+        container.appendChild(video);
+        previewContent.appendChild(container);
     };
     
     video.onerror = () => {
@@ -1511,17 +1537,222 @@ async function renderTextPreview(filePath) {
 }
 
 async function renderPDFPreview(filePath) {
-    const iframe = document.createElement('iframe');
-    iframe.className = 'preview-pdf';
-    iframe.src = `file://${filePath}`;
-    
-    iframe.onload = () => {
-        previewContent.appendChild(iframe);
-    };
-    
-    iframe.onerror = () => {
+    try {
+        console.log('Loading custom PDF preview for:', filePath);
+        
+        // Check if readBinaryFile API is available
+        if (!window.electronAPI || !window.electronAPI.readBinaryFile) {
+            console.error('readBinaryFile API not available');
+            showPreviewError();
+            return;
+        }
+        
+        // Read the PDF file as binary data
+        const pdfData = await window.electronAPI.readBinaryFile(filePath);
+        console.log('PDF data loaded, size:', pdfData ? pdfData.length : 'null');
+        
+        if (!pdfData) {
+            console.error('No PDF data received');
+            showPreviewError();
+            return;
+        }
+        
+        // Create custom PDF viewer
+        await createCustomPDFViewer(pdfData);
+        
+    } catch (error) {
+        console.error('Error loading PDF:', error);
         showPreviewError();
-    };
+    }
+}
+
+async function createCustomPDFViewer(pdfData) {
+    // Hide loader and error states
+    previewLoader.classList.add('hidden');
+    previewError.classList.add('hidden');
+    
+    // Create PDF viewer container - start with just loading
+    const viewerContainer = document.createElement('div');
+    viewerContainer.className = 'preview-pdf-viewer';
+    
+    // PDF content area with loading state
+    const contentArea = document.createElement('div');
+    contentArea.className = 'pdf-content';
+    
+    // Loading state
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'pdf-loading';
+    loadingDiv.innerHTML = `
+        <i class="fas fa-spinner"></i>
+        <span>Loading PDF...</span>
+    `;
+    contentArea.appendChild(loadingDiv);
+    
+    // Start with just the content area - no toolbar yet
+    viewerContainer.appendChild(contentArea);
+    previewContent.appendChild(viewerContainer);
+    
+    // Initialize PDF.js
+    try {
+        console.log('Checking PDF.js availability...');
+        
+        // Check if PDF.js is available globally
+        if (typeof pdfjsLib === 'undefined') {
+            throw new Error('PDF.js library not loaded');
+        }
+        
+        console.log('PDF.js found, configuring worker...');
+        
+        // Set worker source for Electron
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        console.log('Worker configured, loading PDF document...');
+        
+        // Load PDF document
+        const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+        console.log('Loading task created, waiting for PDF...');
+        const pdf = await loadingTask.promise;
+        console.log('PDF loading promise resolved');
+        
+        console.log('PDF loaded successfully, pages:', pdf.numPages);
+        
+        // Update filename with page count
+        updatePreviewFileNameWithPageCount(pdf.numPages);
+        
+        // Hide loading, create scrollable pages container
+        loadingDiv.style.display = 'none';
+        
+        const pagesContainer = document.createElement('div');
+        pagesContainer.className = 'pdf-pages-container';
+        contentArea.appendChild(pagesContainer);
+        
+        // PDF viewer state
+        const zoom = 1.0; // Fixed zoom level
+        let renderTasks = []; // Track all render operations
+        let renderTimeout = null; // For debouncing render calls
+        
+        // Create all page containers
+        const pageElements = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const pageContainer = document.createElement('div');
+            pageContainer.className = 'pdf-page-container';
+            
+            const pageNumber = document.createElement('div');
+            pageNumber.className = 'pdf-page-number';
+            pageNumber.textContent = `Page ${i}`;
+            
+            const canvasContainer = document.createElement('div');
+            canvasContainer.className = 'pdf-canvas-container';
+            
+            const canvas = document.createElement('canvas');
+            canvas.className = 'pdf-canvas';
+            canvas.dataset.pageNumber = i;
+            
+            canvasContainer.appendChild(canvas);
+            pageContainer.appendChild(pageNumber);
+            pageContainer.appendChild(canvasContainer);
+            pagesContainer.appendChild(pageContainer);
+            
+            pageElements.push({
+                container: pageContainer,
+                canvas: canvas,
+                pageNumber: i
+            });
+        }
+        
+        // Render all pages function with debouncing
+        async function renderAllPages() {
+            // Clear any pending render timeout
+            if (renderTimeout) {
+                clearTimeout(renderTimeout);
+                renderTimeout = null;
+            }
+            
+            // Debounce rapid render calls
+            return new Promise((resolve) => {
+                renderTimeout = setTimeout(async () => {
+                    await doRenderAllPages();
+                    resolve();
+                }, 100); // 100ms debounce for all pages
+            });
+        }
+        
+        // Actual render all pages function
+        async function doRenderAllPages() {
+            try {
+                // Cancel all previous render tasks
+                renderTasks.forEach(task => {
+                    if (task && !task._destroyed) {
+                        task.cancel();
+                    }
+                });
+                renderTasks = [];
+                
+                console.log(`Rendering all ${pdf.numPages} pages at zoom ${zoom}`);
+                
+                // Render all pages
+                const renderPromises = pageElements.map(async (pageElement, index) => {
+                    try {
+                        const page = await pdf.getPage(pageElement.pageNumber);
+                        const viewport = page.getViewport({ scale: zoom });
+                        
+                        // Set canvas dimensions
+                        pageElement.canvas.width = viewport.width;
+                        pageElement.canvas.height = viewport.height;
+                        
+                        // Render page
+                        const ctx = pageElement.canvas.getContext('2d');
+                        const renderContext = {
+                            canvasContext: ctx,
+                            viewport: viewport
+                        };
+                        
+                        // Start render task
+                        const renderTask = page.render(renderContext);
+                        renderTasks.push(renderTask);
+                        await renderTask.promise;
+                        
+                        console.log(`Rendered page ${pageElement.pageNumber}`);
+                        
+                    } catch (error) {
+                        if (error.name === 'RenderingCancelledException') {
+                            console.log(`Render cancelled for page ${pageElement.pageNumber} (expected)`);
+                            return;
+                        }
+                        console.error(`Error rendering page ${pageElement.pageNumber}:`, error);
+                    }
+                });
+                
+                await Promise.all(renderPromises);
+                console.log('All pages rendered successfully');
+                
+            } catch (error) {
+                console.error('Error rendering pages:', error);
+                showPDFError(contentArea);
+            }
+        }
+        
+        // Initial render
+        await renderAllPages();
+        
+    } catch (error) {
+        console.error('Error initializing PDF viewer:', error);
+        showPDFError(contentArea);
+    }
+}
+
+function showPDFError(container, toolbar = null) {
+    // Remove toolbar if it exists
+    if (toolbar && toolbar.parentNode) {
+        toolbar.parentNode.removeChild(toolbar);
+    }
+    
+    container.innerHTML = `
+        <div class="pdf-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Failed to load PDF</h3>
+            <p>There was an error loading this PDF file.</p>
+        </div>
+    `;
 }
 
 function renderUnsupportedPreview() {

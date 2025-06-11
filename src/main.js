@@ -495,6 +495,33 @@ ipcMain.handle('read-text-file', async (event, filePath) => {
   }
 });
 
+ipcMain.handle('read-binary-file', async (event, filePath) => {
+  try {
+    if (!filePath) {
+      throw new Error('File path is required');
+    }
+    
+    // Check if file exists
+    if (!await fs.pathExists(filePath)) {
+      throw new Error(`File does not exist: ${filePath}`);
+    }
+    
+    // Read file content as buffer with size limit for safety
+    const stats = await fs.stat(filePath);
+    const maxSize = 50 * 1024 * 1024; // 50MB limit for binary files like PDFs
+    
+    if (stats.size > maxSize) {
+      throw new Error('File is too large to preview (max 50MB)');
+    }
+    
+    const buffer = await fs.readFile(filePath);
+    return buffer;
+  } catch (error) {
+    console.error('IPC: Read binary file error:', error);
+    throw new Error(`Failed to read file: ${error.message}`);
+  }
+});
+
 ipcMain.handle('decrypt-file-for-preview', async (event, filePath, password) => {
   try {
     if (!filePath) {

@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   encryptFile: (filePath, password) => ipcRenderer.invoke('encrypt-file', filePath, password),
   decryptFile: (filePath, password) => ipcRenderer.invoke('decrypt-file', filePath, password),
   readTextFile: (filePath) => ipcRenderer.invoke('read-text-file', filePath),
+  readBinaryFile: (filePath) => ipcRenderer.invoke('read-binary-file', filePath),
   decryptFileForPreview: (filePath, password) => ipcRenderer.invoke('decrypt-file-for-preview', filePath, password),
   
   // Hardware Authentication APIs
