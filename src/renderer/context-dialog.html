@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maraikka - Enter Password</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .context-dialog {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 2rem;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .context-dialog h2 {
+            margin-bottom: 1rem;
+            color: #111827;
+        }
+        
+        .dark .context-dialog h2 {
+            color: #f9fafb;
+        }
+        
+        .context-dialog p {
+            margin-bottom: 1.5rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .dark .context-dialog p {
+            color: #9ca3af;
+        }
+        
+        .context-form {
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .context-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .context-form .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .context-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+        
+        .context-buttons .btn {
+            flex: 1;
+            max-width: 120px;
+        }
+        
+        .file-path {
+            font-family: monospace;
+            background: #f3f4f6;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            word-break: break-all;
+            margin: 1rem 0;
+        }
+        
+        .dark .file-path {
+            background: #374151;
+            color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="dark">
+    <div class="context-dialog">
+        <h2 id="dialogTitle">Enter Password</h2>
+        <p id="dialogDescription">Enter your encryption password to proceed.</p>
+        <div class="file-path" id="filePath"></div>
+        
+        <form class="context-form" id="contextForm">
+            <div class="form-group">
+                <input 
+                    type="password" 
+                    id="passwordInput" 
+                    class="form-input" 
+                    placeholder="Enter password"
+                    required
+                    autofocus
+                >
+            </div>
+            
+            <div class="context-buttons">
+                <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="proceedBtn">Encrypt</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="context-dialog.js"></script>
+</body>
+</html> 

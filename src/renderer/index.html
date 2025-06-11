@@ -26,6 +26,9 @@
                         <img class="logo-icon" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMNCA2VjExQzQgMTYuNSA3LjM2IDIxLjY2IDEyIDIzQzE2LjY0IDIxLjY2IDIwIDE2LjUgMjAgMTFWNkwxMiAyWiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+" alt="Shield" />
                     </div>
                 </div>
+                <button id="sidebarToggle" class="sidebar-toggle-btn" title="Toggle Sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
             </div>
 
             <!-- Navigation Menu -->
@@ -34,23 +37,23 @@
                 <div class="nav-section">
                     <h3 class="nav-section-title">ACTIONS</h3>
                     <div class="nav-items">
-                        <button id="selectDirectoryBtn" class="nav-menu-item">
+                        <button id="selectDirectoryBtn" class="nav-menu-item" data-tooltip="Select Directory">
                             <i class="fas fa-folder-open nav-icon"></i>
                             <span class="nav-text">Select Directory</span>
                         </button>
-                        <button id="encryptBtn" class="nav-menu-item" disabled>
+                        <button id="encryptBtn" class="nav-menu-item" disabled data-tooltip="Encrypt Directory">
                             <i class="fas fa-lock nav-icon"></i>
                             <span class="nav-text">Encrypt Directory</span>
                         </button>
-                        <button id="decryptBtn" class="nav-menu-item" disabled>
+                        <button id="decryptBtn" class="nav-menu-item" disabled data-tooltip="Decrypt Directory">
                             <i class="fas fa-unlock nav-icon"></i>
                             <span class="nav-text">Decrypt Directory</span>
                         </button>
-                        <button id="refreshBtn" class="nav-menu-item" disabled>
+                        <button id="refreshBtn" class="nav-menu-item" disabled data-tooltip="Refresh">
                             <i class="fas fa-refresh nav-icon"></i>
                             <span class="nav-text">Refresh</span>
                         </button>
-                        <button id="preferencesBtn" class="nav-menu-item">
+                        <button id="preferencesBtn" class="nav-menu-item" data-tooltip="Preferences">
                             <i class="fas fa-cog nav-icon"></i>
                             <span class="nav-text">Preferences</span>
                         </button>
@@ -186,6 +189,10 @@
                     <i class="fas fa-cog"></i>
                     General
                 </button>
+                <button class="tab-btn" data-tab="license">
+                    <i class="fas fa-key"></i>
+                    License
+                </button>
                 <button class="tab-btn" data-tab="about">
                     <i class="fas fa-info-circle"></i>
                     About
@@ -211,6 +218,36 @@
                     </div>
                     
                     <div class="form-group">
+                        <label class="form-label">File Grid Density</label>
+                        <div class="density-slider-container">
+                            <div class="density-slider-header">
+                                <div class="density-icon-container">
+                                    <i class="fas fa-expand-arrows-alt density-icon" title="Spacious view"></i>
+                                </div>
+                                <div class="density-label">
+                                    <span id="densityLabel">Balanced</span>
+                                </div>
+                                <div class="density-icon-container">
+                                    <i class="fas fa-compress-arrows-alt density-icon" title="Dense view"></i>
+                                </div>
+                            </div>
+                            <div class="density-slider-track">
+                                <input type="range" id="densitySlider" class="density-range" min="1" max="5" value="3" step="1">
+                                <div class="density-steps">
+                                    <div class="density-step" data-step="1"></div>
+                                    <div class="density-step" data-step="2"></div>
+                                    <div class="density-step" data-step="3"></div>
+                                    <div class="density-step" data-step="4"></div>
+                                    <div class="density-step" data-step="5"></div>
+                                </div>
+                            </div>
+                            <div class="density-description">
+                                <span id="densityDescription">Comfortable spacing for most users</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
                         <label class="form-label">Security</label>
                         <div class="checkbox-group">
                             <label class="checkbox-label">
@@ -229,6 +266,83 @@
                             </div>
                             <button id="registerHardwareAuth" class="btn btn-secondary btn-sm">Register Authenticator</button>
                             <button id="removeHardwareAuth" class="btn btn-danger btn-sm hidden">Remove Authenticator</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- License Tab -->
+                <div id="licenseTab" class="tab-panel hidden">
+                    <div class="form-group">
+                        <label class="form-label">License Key</label>
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                            <input type="text" id="licenseKeyInput" class="form-input" 
+                                   placeholder="Enter your license key" style="flex: 1;">
+                            <button id="validateLicenseBtn" class="btn btn-primary">Validate</button>
+                        </div>
+                        <div id="licenseStatus" class="license-status">
+                            <div class="status-indicator" id="licenseStatusIndicator">
+                                <i class="fas fa-times-circle" style="color: #ef4444;"></i>
+                                <span id="licenseStatusText">No valid license</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Premium Features</label>
+                        <div class="feature-list">
+                            <div class="feature-item" id="fidoFeature">
+                                <div class="feature-info">
+                                    <i class="fas fa-key feature-icon"></i>
+                                    <div>
+                                        <h4>FIDO2 Hardware Authentication</h4>
+                                        <p>Use YubiKey, Touch ID, and Windows Hello for secure encryption</p>
+                                    </div>
+                                </div>
+                                <div class="feature-status" id="fidoStatus">
+                                    <i class="fas fa-lock" style="color: #ef4444;"></i>
+                                    <span>Locked</span>
+                                </div>
+                            </div>
+                            <div class="feature-item" id="bulkFeature">
+                                <div class="feature-info">
+                                    <i class="fas fa-layer-group feature-icon"></i>
+                                    <div>
+                                        <h4>Bulk Operations</h4>
+                                        <p>Encrypt/decrypt multiple files and folders simultaneously</p>
+                                    </div>
+                                </div>
+                                <div class="feature-status" id="bulkStatus">
+                                    <i class="fas fa-lock" style="color: #ef4444;"></i>
+                                    <span>Locked</span>
+                                </div>
+                            </div>
+                            <div class="feature-item" id="cloudFeature">
+                                <div class="feature-info">
+                                    <i class="fas fa-cloud feature-icon"></i>
+                                    <div>
+                                        <h4>Cloud Integration</h4>
+                                        <p>Seamlessly encrypt files stored in cloud services</p>
+                                    </div>
+                                </div>
+                                <div class="feature-status" id="cloudStatus">
+                                    <i class="fas fa-lock" style="color: #ef4444;"></i>
+                                    <span>Locked</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Test License Keys</label>
+                        <div class="test-keys">
+                            <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.75rem;">
+                                For testing purposes, use one of these demo keys:
+                            </p>
+                            <div class="key-examples">
+                                <code class="test-key" onclick="copyToLicense(this)">MRKK-DEMO-FIDO-2024</code>
+                                <code class="test-key" onclick="copyToLicense(this)">MRKK-TEST-BULK-2024</code>
+                                <code class="test-key" onclick="copyToLicense(this)">MRKK-FULL-PREM-2024</code>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -81,12 +81,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup preferences event listeners
     setupPreferencesListeners();
     setupHardwareAuthListeners();
+    setupLicenseListeners();
     
     // Load saved preferences
     loadPreferences();
     
     // Initialize hardware authentication
     initializeHardwareAuth();
+    
+    // Setup sidebar toggle
+    setupSidebarToggle();
+    
+    // Setup tooltips
+    setupTooltips();
+    
+    // Setup density slider
+    setupDensitySlider();
 });
 
 // Setup menu event listeners
@@ -1119,17 +1129,23 @@ async function renderDecryptedImagePreview(data, mimeType) {
     controls.className = 'preview-image-controls';
     controls.innerHTML = `
         <button class="zoom-out-btn" title="Zoom Out">
-            <i class="fas fa-minus"></i>
+            <i class="fas fa-search-minus"></i>
         </button>
+        <div class="zoom-level-container">
+            <div class="zoom-level" title="Click to select zoom level">100%</div>
+            <div class="zoom-options hidden">
+                <div class="zoom-option" data-zoom="0.5">50%</div>
+                <div class="zoom-option" data-zoom="0.75">75%</div>
+                <div class="zoom-option" data-zoom="1">100%</div>
+                <div class="zoom-option" data-zoom="1.5">150%</div>
+                <div class="zoom-option" data-zoom="2">200%</div>
+                <div class="zoom-option" data-zoom="3">300%</div>
+                <div class="zoom-option" data-zoom="4">400%</div>
+                <div class="zoom-option" data-zoom="5">500%</div>
+            </div>
+        </div>
         <button class="zoom-in-btn" title="Zoom In">
-            <i class="fas fa-plus"></i>
-        </button>
-        <button class="zoom-fit-btn" title="Fit to Window">
-            <i class="fas fa-expand-arrows-alt"></i>
-        </button>
-        <div class="zoom-level">100%</div>
-        <button class="zoom-reset-btn" title="Reset Zoom">
-            <i class="fas fa-undo"></i>
+            <i class="fas fa-search-plus"></i>
         </button>
     `;
     
@@ -1269,17 +1285,23 @@ async function renderImagePreview(filePath) {
     controls.className = 'preview-image-controls';
     controls.innerHTML = `
         <button class="zoom-out-btn" title="Zoom Out">
-            <i class="fas fa-minus"></i>
+            <i class="fas fa-search-minus"></i>
         </button>
+        <div class="zoom-level-container">
+            <div class="zoom-level" title="Click to select zoom level">100%</div>
+            <div class="zoom-options hidden">
+                <div class="zoom-option" data-zoom="0.5">50%</div>
+                <div class="zoom-option" data-zoom="0.75">75%</div>
+                <div class="zoom-option" data-zoom="1">100%</div>
+                <div class="zoom-option" data-zoom="1.5">150%</div>
+                <div class="zoom-option" data-zoom="2">200%</div>
+                <div class="zoom-option" data-zoom="3">300%</div>
+                <div class="zoom-option" data-zoom="4">400%</div>
+                <div class="zoom-option" data-zoom="5">500%</div>
+            </div>
+        </div>
         <button class="zoom-in-btn" title="Zoom In">
-            <i class="fas fa-plus"></i>
-        </button>
-        <button class="zoom-fit-btn" title="Fit to Window">
-            <i class="fas fa-expand-arrows-alt"></i>
-        </button>
-        <div class="zoom-level">100%</div>
-        <button class="zoom-reset-btn" title="Reset Zoom">
-            <i class="fas fa-undo"></i>
+            <i class="fas fa-search-plus"></i>
         </button>
     `;
     
@@ -1312,8 +1334,33 @@ function setupImageZoomPan(container, img, controls) {
     
     // Update transform
     function updateTransform() {
+        // Apply bounds checking to keep image within visible area
+        constrainImageBounds();
         img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
         controls.querySelector('.zoom-level').textContent = `${Math.round(scale * 100)}%`;
+    }
+    
+    // Constrain image bounds to keep it within the visible container
+    function constrainImageBounds() {
+        if (scale <= 1) {
+            // When zoomed out to 100% or less, center the image
+            translateX = 0;
+            translateY = 0;
+            return;
+        }
+        
+        // Get container and image dimensions
+        const containerRect = container.getBoundingClientRect();
+        const imgWidth = img.naturalWidth * scale;
+        const imgHeight = img.naturalHeight * scale;
+        
+        // Calculate maximum allowed translation to keep image visible
+        const maxTranslateX = Math.max(0, (imgWidth - containerRect.width) / 2);
+        const maxTranslateY = Math.max(0, (imgHeight - containerRect.height) / 2);
+        
+        // Constrain translation within bounds
+        translateX = Math.max(-maxTranslateX, Math.min(maxTranslateX, translateX));
+        translateY = Math.max(-maxTranslateY, Math.min(maxTranslateY, translateY));
     }
     
     // Zoom to fit
@@ -1372,6 +1419,17 @@ function setupImageZoomPan(container, img, controls) {
             const deltaY = e.clientY - dragStartY;
             translateX = lastTranslateX + deltaX;
             translateY = lastTranslateY + deltaY;
+            
+            // Apply bounds checking during drag
+            constrainImageBounds();
+            
+            // Update the drag start position to current constrained position
+            // This prevents accumulating errors when dragging against bounds
+            if (translateX !== lastTranslateX + deltaX || translateY !== lastTranslateY + deltaY) {
+                lastTranslateX = translateX - deltaX;
+                lastTranslateY = translateY - deltaY;
+            }
+            
             updateTransform();
         }
     });
@@ -1384,8 +1442,37 @@ function setupImageZoomPan(container, img, controls) {
     // Button controls
     controls.querySelector('.zoom-in-btn').addEventListener('click', () => zoom(scaleStep));
     controls.querySelector('.zoom-out-btn').addEventListener('click', () => zoom(-scaleStep));
-    controls.querySelector('.zoom-fit-btn').addEventListener('click', zoomToFit);
-    controls.querySelector('.zoom-reset-btn').addEventListener('click', resetZoom);
+    
+    // Zoom level dropdown functionality
+    const zoomLevel = controls.querySelector('.zoom-level');
+    const zoomOptions = controls.querySelector('.zoom-options');
+    const zoomOptionItems = controls.querySelectorAll('.zoom-option');
+    
+    // Toggle zoom options dropdown
+    zoomLevel.addEventListener('click', (e) => {
+        e.stopPropagation();
+        zoomOptions.classList.toggle('hidden');
+    });
+    
+    // Close dropdown when clicking elsewhere
+    document.addEventListener('click', (e) => {
+        if (!controls.contains(e.target)) {
+            zoomOptions.classList.add('hidden');
+        }
+    });
+    
+    // Handle zoom option selection
+    zoomOptionItems.forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const zoomValue = parseFloat(option.dataset.zoom);
+            scale = zoomValue;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+            zoomOptions.classList.add('hidden');
+        });
+    });
     
     // Initial zoom at 100%
     updateTransform();
@@ -1468,7 +1555,9 @@ function handleResize(e) {
     
     // Apply min/max constraints
     const minWidth = 320; // 20rem
-    const maxWidth = 800; // 50rem
+    const maxWidthRem = 800; // 50rem
+    const maxWidthViewport = window.innerWidth * 0.5; // 50% of viewport
+    const maxWidth = Math.min(maxWidthRem, maxWidthViewport); // Use whichever is smaller
     const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
     
     previewPane.style.width = `${constrainedWidth}px`;
@@ -1519,6 +1608,16 @@ function updateHardwareAuthUI() {
     const removeBtn = document.getElementById('removeHardwareAuth');
     
     if (checkbox) {
+        // Check if FIDO feature is available with license
+        const fidoAvailable = hasFeature('fido');
+        checkbox.disabled = !fidoAvailable;
+        
+        if (!fidoAvailable) {
+            checkbox.checked = false;
+            statusDiv.classList.add('hidden');
+            return;
+        }
+        
         checkbox.checked = hardwareAuthConfig.isEnabled;
         
         if (hardwareAuthConfig.isEnabled && hardwareAuthConfig.hasCredentials) {
@@ -1546,6 +1645,13 @@ function setupHardwareAuthListeners() {
     
     if (checkbox) {
         checkbox.addEventListener('change', async (e) => {
+            // Check if FIDO feature is available
+            if (!hasFeature('fido')) {
+                e.target.checked = false;
+                showNotification('License Required', 'FIDO2 Hardware Authentication requires a valid license with FIDO features.', 'error');
+                return;
+            }
+            
             if (e.target.checked) {
                 // Enable hardware auth
                 if (!hardwareAuthConfig.hasCredentials) {
@@ -1850,4 +1956,392 @@ async function getAuthenticationMethod() {
         
         showPasswordModal('encrypt');
     });
+}
+
+// Sidebar toggle functionality
+function setupSidebarToggle() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const appContainer = document.querySelector('.app-container');
+    
+    if (sidebarToggle && sidebar && appContainer) {
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            appContainer.classList.toggle('sidebar-collapsed');
+            
+            // Save the state to localStorage
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+        });
+    }
+    
+    // Restore sidebar state from localStorage
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    if (savedState === 'true') {
+        sidebar.classList.add('collapsed');
+        appContainer.classList.add('sidebar-collapsed');
+    }
+}
+
+// License Management
+let currentLicense = null;
+const LICENSE_SERVER_URL = 'http://localhost:3001';
+
+// Copy test key to license input
+function copyToLicense(element) {
+    const licenseKey = element.textContent;
+    const licenseInput = document.getElementById('licenseKeyInput');
+    if (licenseInput) {
+        licenseInput.value = licenseKey;
+        // Show a brief visual feedback
+        element.style.backgroundColor = '#10b981';
+        setTimeout(() => {
+            element.style.backgroundColor = '';
+        }, 200);
+    }
+}
+
+// Validate license key
+async function validateLicenseKey() {
+    const licenseInput = document.getElementById('licenseKeyInput');
+    const validateBtn = document.getElementById('validateLicenseBtn');
+    const statusIndicator = document.getElementById('licenseStatusIndicator');
+    const statusText = document.getElementById('licenseStatusText');
+    
+    if (!licenseInput || !validateBtn) return;
+    
+    const licenseKey = licenseInput.value.trim();
+    
+    if (!licenseKey) {
+        updateLicenseStatus(false, 'Please enter a license key');
+        return;
+    }
+    
+    // Show loading state
+    validateBtn.disabled = true;
+    validateBtn.textContent = 'Validating...';
+    updateLicenseStatus(false, 'Validating license...');
+    
+    try {
+        const response = await fetch(`${LICENSE_SERVER_URL}/api/validate-license`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ licenseKey })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            currentLicense = result.license;
+            updateLicenseStatus(true, `Valid ${result.license.type} license`);
+            updateFeatureStatus(result.license.features);
+            saveLicenseToStorage(result.license);
+            showNotification('License Validated', 'License key is valid and features have been unlocked!', 'success');
+        } else {
+            updateLicenseStatus(false, result.error || 'Invalid license key');
+            updateFeatureStatus([]);
+            currentLicense = null;
+            clearLicenseFromStorage();
+        }
+        
+    } catch (error) {
+        console.error('License validation error:', error);
+        updateLicenseStatus(false, 'Unable to validate license. Please check your connection.');
+        updateFeatureStatus([]);
+        currentLicense = null;
+    } finally {
+        validateBtn.disabled = false;
+        validateBtn.textContent = 'Validate';
+    }
+}
+
+// Update license status display
+function updateLicenseStatus(isValid, message) {
+    const statusIndicator = document.getElementById('licenseStatusIndicator');
+    const statusText = document.getElementById('licenseStatusText');
+    
+    if (!statusIndicator || !statusText) return;
+    
+    const icon = statusIndicator.querySelector('i');
+    
+    if (isValid) {
+        icon.className = 'fas fa-check-circle';
+        icon.style.color = '#10b981';
+        statusText.textContent = message;
+    } else {
+        icon.className = 'fas fa-times-circle';
+        icon.style.color = '#ef4444';
+        statusText.textContent = message;
+    }
+}
+
+// Update feature status display
+function updateFeatureStatus(features = []) {
+    const featureElements = [
+        { id: 'fidoFeature', feature: 'fido', status: 'fidoStatus' },
+        { id: 'bulkFeature', feature: 'bulk', status: 'bulkStatus' },
+        { id: 'cloudFeature', feature: 'cloud', status: 'cloudStatus' }
+    ];
+    
+    featureElements.forEach(({ id, feature, status }) => {
+        const statusElement = document.getElementById(status);
+        if (!statusElement) return;
+        
+        const hasFeature = features.includes(feature);
+        const icon = statusElement.querySelector('i');
+        const span = statusElement.querySelector('span');
+        
+        if (hasFeature) {
+            statusElement.classList.add('unlocked');
+            icon.className = 'fas fa-unlock';
+            span.textContent = 'Unlocked';
+        } else {
+            statusElement.classList.remove('unlocked');
+            icon.className = 'fas fa-lock';
+            icon.style.color = '#ef4444';
+            span.textContent = 'Locked';
+        }
+    });
+    
+    // Update hardware authentication availability
+    updateHardwareAuthAvailability(features.includes('fido'));
+}
+
+// Update hardware authentication availability
+function updateHardwareAuthAvailability(isAvailable) {
+    const hardwareAuthCheckbox = document.getElementById('hardwareAuthEnabled');
+    const hardwareAuthStatus = document.getElementById('hardwareAuthStatus');
+    
+    if (hardwareAuthCheckbox) {
+        hardwareAuthCheckbox.disabled = !isAvailable;
+        
+        if (!isAvailable) {
+            hardwareAuthCheckbox.checked = false;
+            if (hardwareAuthStatus) {
+                hardwareAuthStatus.classList.add('hidden');
+            }
+        }
+    }
+}
+
+// Save license to localStorage
+function saveLicenseToStorage(license) {
+    try {
+        localStorage.setItem('maraikka_license', JSON.stringify(license));
+    } catch (error) {
+        console.error('Error saving license to storage:', error);
+    }
+}
+
+// Clear license from localStorage
+function clearLicenseFromStorage() {
+    try {
+        localStorage.removeItem('maraikka_license');
+    } catch (error) {
+        console.error('Error clearing license from storage:', error);
+    }
+}
+
+// Load license from localStorage
+function loadLicenseFromStorage() {
+    try {
+        const licenseData = localStorage.getItem('maraikka_license');
+        if (licenseData) {
+            const license = JSON.parse(licenseData);
+            // Check if license is still valid (not expired)
+            if (new Date(license.expiresAt) > new Date()) {
+                currentLicense = license;
+                
+                // Update UI
+                const licenseInput = document.getElementById('licenseKeyInput');
+                if (licenseInput) {
+                    licenseInput.value = license.key;
+                }
+                
+                updateLicenseStatus(true, `Valid ${license.type} license`);
+                updateFeatureStatus(license.features);
+                return true;
+            } else {
+                // License expired, clear it
+                clearLicenseFromStorage();
+            }
+        }
+    } catch (error) {
+        console.error('Error loading license from storage:', error);
+        clearLicenseFromStorage();
+    }
+    return false;
+}
+
+// Check if feature is available
+function hasFeature(feature) {
+    return currentLicense && currentLicense.features && currentLicense.features.includes(feature);
+}
+
+// Setup license event listeners
+function setupLicenseListeners() {
+    const validateBtn = document.getElementById('validateLicenseBtn');
+    const licenseInput = document.getElementById('licenseKeyInput');
+    
+    if (validateBtn) {
+        validateBtn.addEventListener('click', validateLicenseKey);
+    }
+    
+    if (licenseInput) {
+        licenseInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                validateLicenseKey();
+            }
+        });
+    }
+    
+    // Load saved license on startup
+    loadLicenseFromStorage();
+}
+
+// Tooltip functionality for collapsed sidebar
+function setupTooltips() {
+    let currentTooltip = null;
+    
+    function createTooltip(text, isDisabled = false) {
+        const tooltip = document.createElement('div');
+        tooltip.className = `tooltip ${isDisabled ? 'disabled' : ''}`;
+        tooltip.textContent = isDisabled ? `${text} (Disabled)` : text;
+        document.body.appendChild(tooltip);
+        return tooltip;
+    }
+    
+    function showTooltip(element, text, isDisabled = false) {
+        // Remove any existing tooltip
+        hideTooltip();
+        
+        // Only show tooltips when sidebar is collapsed
+        const sidebar = document.querySelector('.sidebar');
+        if (!sidebar || !sidebar.classList.contains('collapsed')) {
+            return;
+        }
+        
+        currentTooltip = createTooltip(text, isDisabled);
+        
+        // Position tooltip
+        const rect = element.getBoundingClientRect();
+        currentTooltip.style.left = `${rect.right + 12}px`;
+        currentTooltip.style.top = `${rect.top + rect.height / 2}px`;
+        
+        // Show tooltip with animation
+        requestAnimationFrame(() => {
+            currentTooltip.classList.add('show');
+        });
+    }
+    
+    function hideTooltip() {
+        if (currentTooltip) {
+            currentTooltip.remove();
+            currentTooltip = null;
+        }
+    }
+    
+    // Setup event listeners for all nav menu items
+    function attachTooltipListeners() {
+        const menuItems = document.querySelectorAll('.nav-menu-item[data-tooltip]');
+        
+        menuItems.forEach(item => {
+            const tooltipText = item.getAttribute('data-tooltip');
+            const isDisabled = item.disabled;
+            
+            item.addEventListener('mouseenter', () => {
+                showTooltip(item, tooltipText, isDisabled);
+            });
+            
+            item.addEventListener('mouseleave', () => {
+                hideTooltip();
+            });
+        });
+    }
+    
+    // Initial setup
+    attachTooltipListeners();
+    
+    // Re-attach listeners when sidebar state changes
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+            setTimeout(attachTooltipListeners, 100); // Small delay for transition
+        });
+    }
+    
+    // Hide tooltip when scrolling or clicking elsewhere
+    document.addEventListener('scroll', hideTooltip);
+    document.addEventListener('click', hideTooltip);
+}
+
+// Setup density slider functionality
+function setupDensitySlider() {
+    const densitySlider = document.getElementById('densitySlider');
+    const densityLabel = document.getElementById('densityLabel');
+    const densityDescription = document.getElementById('densityDescription');
+    const densitySteps = document.querySelectorAll('.density-step');
+    
+    if (!densitySlider) return;
+    
+    // Load saved density preference
+    const savedDensity = localStorage.getItem('fileDensity') || '3';
+    densitySlider.value = savedDensity;
+    updateDensityDisplay(parseInt(savedDensity));
+    applyDensity(parseInt(savedDensity));
+    
+    // Handle slider changes
+    densitySlider.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value);
+        updateDensityDisplay(value);
+        applyDensity(value);
+        
+        // Save preference
+        localStorage.setItem('fileDensity', value.toString());
+    });
+    
+    function updateDensityDisplay(value) {
+        const labels = {
+            1: { name: 'Very Spacious', description: 'Maximum spacing with large file cards' },
+            2: { name: 'Spacious', description: 'Generous spacing for comfortable viewing' },
+            3: { name: 'Balanced', description: 'Comfortable spacing for most users' },
+            4: { name: 'Compact', description: 'Efficient use of space with smaller gaps' },
+            5: { name: 'Dense', description: 'Maximum files visible with minimal spacing' }
+        };
+        
+        const current = labels[value];
+        densityLabel.textContent = current.name;
+        densityDescription.textContent = current.description;
+        
+        // Update step indicators
+        densitySteps.forEach((step, index) => {
+            if (index + 1 <= value) {
+                step.classList.add('active');
+            } else {
+                step.classList.remove('active');
+            }
+        });
+        
+        // Update range background
+        const percentage = ((value - 1) / 4) * 100;
+        const gradient = `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${percentage}%, ${
+            document.body.classList.contains('dark') ? '#4b5563' : '#e5e7eb'
+        } ${percentage}%, ${
+            document.body.classList.contains('dark') ? '#4b5563' : '#e5e7eb'
+        } 100%)`;
+        densitySlider.style.background = gradient;
+    }
+    
+    function applyDensity(value) {
+        const fileGrid = document.querySelector('.file-grid');
+        if (!fileGrid) return;
+        
+        // Remove existing density classes
+        fileGrid.classList.remove('density-1', 'density-2', 'density-3', 'density-4', 'density-5');
+        
+        // Add new density class
+        fileGrid.classList.add(`density-${value}`);
+    }
 }

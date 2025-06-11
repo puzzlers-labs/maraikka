@@ -27,7 +27,9 @@ function createWindow() {
     backgroundColor: '#1a1a1a'
   });
 
-  mainWindow.loadFile('src/renderer/index.html');
+  // Load the correct HTML file for both development and production
+  const htmlPath = path.join(__dirname, 'renderer', 'index.html');
+  mainWindow.loadFile(htmlPath);
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
@@ -263,9 +265,70 @@ function createMenu() {
   }
 }
 
+// Handle command line arguments for context menu integration
+function handleCommandLineArgs() {
+  const args = process.argv.slice(2);
+  console.log('Command line args:', args);
+  
+  // Look for our custom arguments
+  const encryptIndex = args.indexOf('--encrypt');
+  const decryptIndex = args.indexOf('--decrypt');
+  
+  if (encryptIndex !== -1 && args[encryptIndex + 1]) {
+    const filePath = args[encryptIndex + 1];
+    console.log('Context menu encrypt request for:', filePath);
+    handleContextMenuAction('encrypt', filePath);
+    return true;
+  }
+  
+  if (decryptIndex !== -1 && args[decryptIndex + 1]) {
+    const filePath = args[decryptIndex + 1];
+    console.log('Context menu decrypt request for:', filePath);
+    handleContextMenuAction('decrypt', filePath);
+    return true;
+  }
+  
+  return false;
+}
+
+// Handle context menu actions
+async function handleContextMenuAction(action, filePath) {
+  // Create a minimal window for password input
+  const contextWindow = new BrowserWindow({
+    width: 400,
+    height: 300,
+    resizable: false,
+    alwaysOnTop: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
+    },
+    titleBarStyle: 'hiddenInset',
+    frame: process.platform === 'darwin' ? false : true,
+    show: false
+  });
+  
+  // Load a simple password dialog
+  const contextDialogPath = path.join(__dirname, 'renderer', 'context-dialog.html');
+  contextWindow.loadFile(contextDialogPath);
+  
+  contextWindow.once('ready-to-show', () => {
+    contextWindow.show();
+    // Send the action and file path to the renderer
+    contextWindow.webContents.send('context-action', { action, filePath });
+  });
+}
+
 app.whenReady().then(() => {
-  createWindow();
-  createMenu();
+  // Check if this is a context menu invocation
+  const isContextMenuAction = handleCommandLineArgs();
+  
+  if (!isContextMenuAction) {
+    // Normal app startup
+    createWindow();
+    createMenu();
+  }
 });
 
 app.on('window-all-closed', () => {

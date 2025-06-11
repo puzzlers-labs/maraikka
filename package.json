@@ -30,23 +30,40 @@
     "fs-extra": "^11.2.0"
   },
   "build": {
-    "appId": "com.maraikka.encryptor",
+    "appId": "com.maraikka.app",
     "productName": "Maraikka",
     "directories": {
       "output": "dist"
     },
     "files": [
       "src/**/*",
+      "macos-services/**/*",
       "node_modules/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "macos-services",
+        "to": "macos-services"
+      }
+    ],
     "mac": {
-      "category": "public.app-category.utilities"
+      "category": "public.app-category.utilities",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["universal"]
+        }
+      ],
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
     },
     "win": {
       "target": "nsis"
     },
     "linux": {
       "target": "AppImage"
-    }
+    },
+    "afterSign": "scripts/notarize.js",
+    "afterPack": "scripts/after-pack.js"
   }
 } 

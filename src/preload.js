@@ -23,6 +23,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onSelectDirectoryMenu: (callback) => ipcRenderer.on('select-directory-menu', callback),
   onShowAbout: (callback) => ipcRenderer.on('show-about', callback),
   
+  // Context menu event listeners
+  onContextAction: (callback) => ipcRenderer.on('context-action', callback),
+  
   // Remove listeners
   removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)
 }); 
