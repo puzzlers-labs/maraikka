@@ -405,7 +405,132 @@ ipcMain.handle('decrypt-file', async (event, filePath, password) => {
   }
 });
 
+ipcMain.handle('read-text-file', async (event, filePath) => {
+  try {
+    if (!filePath) {
+      throw new Error('File path is required');
+    }
+    
+    // Check if file exists
+    if (!await fs.pathExists(filePath)) {
+      throw new Error(`File does not exist: ${filePath}`);
+    }
+    
+    // Read file content as text with size limit for safety
+    const stats = await fs.stat(filePath);
+    const maxSize = 10 * 1024 * 1024; // 10MB limit
+    
+    if (stats.size > maxSize) {
+      throw new Error('File is too large to preview (max 10MB)');
+    }
+    
+    const content = await fs.readFile(filePath, 'utf8');
+    return content;
+  } catch (error) {
+    console.error('IPC: Read text file error:', error);
+    throw new Error(`Failed to read file: ${error.message}`);
+  }
+});
 
+ipcMain.handle('decrypt-file-for-preview', async (event, filePath, password) => {
+  try {
+    if (!filePath) {
+      throw new Error('File path is required');
+    }
+    
+    if (!password) {
+      throw new Error('Password is required');
+    }
+    
+    // Check if file exists
+    if (!await fs.pathExists(filePath)) {
+      throw new Error(`File does not exist: ${filePath}`);
+    }
+    
+    const stats = await fs.stat(filePath);
+    const maxSize = 10 * 1024 * 1024; // 10MB limit for in-memory decryption
+    
+    if (stats.size > maxSize) {
+      throw new Error('File too large for preview (max 10MB). Please decrypt the file on disk first.');
+    }
+    
+    // Read the encrypted file
+    const encryptedContent = await fs.readFile(filePath, 'utf8');
+    
+    // Check if it's a Maraikka encrypted file
+    if (!encryptedContent.startsWith('MARAIKKA_ENCRYPTED:')) {
+      throw new Error('This is not a valid Maraikka encrypted file');
+    }
+    
+    // Extract the encrypted data (remove the prefix)
+    const encryptedData = encryptedContent.substring('MARAIKKA_ENCRYPTED:'.length);
+    
+    try {
+      // Decrypt the data
+      const decrypted = CryptoJS.AES.decrypt(encryptedData, password);
+      const decryptedString = decrypted.toString(CryptoJS.enc.Utf8);
+      
+      if (!decryptedString) {
+        throw new Error('Invalid password or corrupted file');
+      }
+      
+      // Convert from base64 back to binary
+      const binaryData = Buffer.from(decryptedString, 'base64');
+      
+      // Get the original filename (remove .enc extension if present)
+      const originalName = path.basename(filePath).replace(/\.enc$/, '');
+      const ext = path.extname(originalName).toLowerCase().substring(1); // Remove the dot
+      
+      return {
+        success: true,
+        data: binaryData,
+        originalName,
+        extension: ext,
+        mimeType: getMimeType(ext)
+      };
+    } catch (decryptError) {
+      throw new Error('Failed to decrypt file. Please check your password.');
+    }
+  } catch (error) {
+    console.error('IPC: Decrypt file for preview error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+function getMimeType(ext) {
+  const mimeTypes = {
+    // Images
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'gif': 'image/gif',
+    'bmp': 'image/bmp',
+    'webp': 'image/webp',
+    'svg': 'image/svg+xml',
+    // Videos
+    'mp4': 'video/mp4',
+    'avi': 'video/x-msvideo',
+    'mov': 'video/quicktime',
+    'wmv': 'video/x-ms-wmv',
+    'flv': 'video/x-flv',
+    'webm': 'video/webm',
+    'mkv': 'video/x-matroska',
+    // Text
+    'txt': 'text/plain',
+    'md': 'text/markdown',
+    'js': 'text/javascript',
+    'html': 'text/html',
+    'css': 'text/css',
+    'json': 'application/json',
+    'xml': 'text/xml',
+    'csv': 'text/csv',
+    'log': 'text/plain',
+    // PDF
+    'pdf': 'application/pdf'
+  };
+  
+  return mimeTypes[ext] || 'application/octet-stream';
+}
 
 // Encryption functions
 async function encryptFile(filePath, password) {

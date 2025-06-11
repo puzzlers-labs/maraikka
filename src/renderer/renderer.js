@@ -11,26 +11,18 @@ const selectDirectoryBtn = document.getElementById('selectDirectoryBtn');
 const encryptBtn = document.getElementById('encryptBtn');
 const decryptBtn = document.getElementById('decryptBtn');
 const refreshBtn = document.getElementById('refreshBtn');
-const currentPathElement = document.getElementById('currentPath');
-const breadcrumbPath = document.getElementById('breadcrumbPath');
+const currentPathElement = document.getElementById('currentPathText');
 const fileList = document.getElementById('fileList');
+const fileGrid = document.getElementById('fileGrid');
+const emptyState = document.getElementById('emptyState');
 const passwordModal = document.getElementById('passwordModal');
 const passwordInput = document.getElementById('passwordInput');
-const confirmPasswordBtn = document.getElementById('confirmPasswordBtn');
 const progressContainer = document.getElementById('progressContainer');
 const progressFill = document.getElementById('progressFill');
 const progressText = document.getElementById('progressText');
-const statusMessage = document.getElementById('statusMessage');
-const statusTime = document.getElementById('statusTime');
-const totalFiles = document.getElementById('totalFiles');
-const encryptedFiles = document.getElementById('encryptedFiles');
-const totalDirs = document.getElementById('totalDirs');
-const modalTitle = document.getElementById('modalTitle');
-const strengthIndicator = document.getElementById('strengthIndicator');
-const strengthText = document.getElementById('strengthText');
+const modalTitle = document.getElementById('passwordModalTitle');
 const listViewBtn = document.getElementById('listViewBtn');
 const gridViewBtn = document.getElementById('gridViewBtn');
-const notificationContainer = document.getElementById('notificationContainer');
 const preferencesBtn = document.getElementById('preferencesBtn');
 const preferencesModal = document.getElementById('preferencesModal');
 
@@ -45,8 +37,6 @@ decryptBtn.addEventListener('click', () => {
     showPasswordModal('decrypt');
 });
 refreshBtn.addEventListener('click', refreshDirectory);
-confirmPasswordBtn.addEventListener('click', handlePasswordConfirm);
-passwordInput.addEventListener('input', checkPasswordStrength);
 passwordInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         handlePasswordConfirm();
@@ -57,14 +47,42 @@ listViewBtn.addEventListener('click', () => switchView('list'));
 gridViewBtn.addEventListener('click', () => switchView('grid'));
 preferencesBtn.addEventListener('click', showPreferences);
 
+// Setup preview event listeners (moved here to ensure elements are defined)
+document.addEventListener('DOMContentLoaded', () => {
+    const previewCloseBtn = document.getElementById('closePreviewBtn');
+    const previewResizeHandle = document.querySelector('.resize-handle');
+    
+    if (previewCloseBtn) {
+        previewCloseBtn.addEventListener('click', closePreviewPane);
+    }
+    
+    if (previewResizeHandle) {
+        previewResizeHandle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.addEventListener('mousemove', handleResize);
+            document.addEventListener('mouseup', stopResize);
+            e.preventDefault();
+        });
+    }
+    
+    // Close preview with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && currentPreviewFile) {
+            closePreviewPane();
+        }
+    });
+});
+
 // Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
-    updateStatusTime();
-    setInterval(updateStatusTime, 1000);
-    updateStatus('Ready');
-    
     // Setup menu event listeners
     setupMenuListeners();
+    
+    // Setup preferences event listeners
+    setupPreferencesListeners();
+    
+    // Load saved preferences
+    loadPreferences();
 });
 
 // Setup menu event listeners
@@ -102,6 +120,29 @@ function setupMenuListeners() {
             showPreferences();
         }
     });
+    
+    // Setup new navigation menu items
+    setupNavigationMenuItems();
+}
+
+// Setup navigation menu items
+function setupNavigationMenuItems() {
+    // No additional navigation items needed for encryption app
+}
+
+// Set active menu item
+function setActiveMenuItem(activeId) {
+    // Remove active class from all menu items
+    const menuItems = document.querySelectorAll('.nav-menu-item');
+    menuItems.forEach(item => {
+        item.classList.remove('active'); 
+    });
+    
+    // Add active class to clicked item
+    const activeItem = document.getElementById(activeId);
+    if (activeItem) {
+        activeItem.classList.add('active');
+    }
 }
 
 // Directory selection
@@ -148,83 +189,185 @@ async function loadDirectoryContents() {
 
 // Render file list
 function renderFileList() {
-    if (currentDirectoryContents.length === 0) {
-        fileList.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-folder-open"></i>
-                <h3>Directory is Empty</h3>
-                <p>This directory contains no files or folders</p>
-            </div>
-        `;
+    // Clear existing content
+    fileList.innerHTML = '';
+    fileGrid.innerHTML = '';
+    
+    if (!currentDirectoryContents || currentDirectoryContents.length === 0) {
+        emptyState.classList.remove('hidden');
+        fileList.classList.add('hidden');
+        fileGrid.classList.add('hidden');
         return;
     }
 
-    const fileItems = currentDirectoryContents.map(item => {
+    emptyState.classList.add('hidden');
+    
+    const isGridView = gridViewBtn.classList.contains('active');
+    
+    if (isGridView) {
+        fileList.classList.add('hidden');
+        fileGrid.classList.remove('hidden');
+        renderGridView();
+    } else {
+        fileGrid.classList.add('hidden');
+        fileList.classList.remove('hidden');
+        renderListView();
+    }
+}
+
+function renderListView() {
+    currentDirectoryContents.forEach((item, index) => {
         const isEncrypted = item.encrypted;
         const isDirectory = item.isDirectory;
-        const icon = isDirectory ? 'fas fa-folder' : (isEncrypted ? 'fas fa-lock' : 'fas fa-file');
-        const itemClass = isDirectory ? 'directory' : (isEncrypted ? 'encrypted' : '');
+        const icon = getFileIcon(item.name, isDirectory, isEncrypted);
         const size = formatFileSize(item.size);
         const modified = formatDate(item.modified);
 
-        return `
-            <div class="file-item ${itemClass}" data-path="${item.path}">
-                <div class="file-icon ${isDirectory ? 'directory' : (isEncrypted ? 'encrypted' : 'file')}">
-                    <i class="${icon}"></i>
-                </div>
-                <div class="file-info">
-                    <div class="file-name">${item.name}</div>
-                    <div class="file-meta">
-                        <span>${size}</span>
-                        <span>${modified}</span>
-                        ${isEncrypted ? '<span class="encrypted-badge">Encrypted</span>' : ''}
-                    </div>
-                </div>
-                <div class="file-actions">
-                    ${!isDirectory && !isEncrypted ? `
-                        <button class="file-action-btn encrypt-file-btn" data-file-path="${item.path}">
-                            <i class="fas fa-lock"></i> Encrypt
-                        </button>
-                    ` : ''}
-                    ${!isDirectory && isEncrypted ? `
-                        <button class="file-action-btn decrypt-file-btn" data-file-path="${item.path}">
-                            <i class="fas fa-unlock"></i> Decrypt
-                        </button>
-                    ` : ''}
+        const listItem = document.createElement('li');
+        listItem.className = 'file-item';
+        listItem.style.animationDelay = `${index * 0.05}s`;
+        
+        listItem.innerHTML = `
+            <div class="file-icon">
+                <i class="${icon}"></i>
+            </div>
+            <div class="file-info">
+                <div class="file-name">${item.name}</div>
+                <div class="file-meta">
+                    <span>${isDirectory ? 'Directory' : size}</span>
+                    <span>${modified}</span>
+                    ${isEncrypted ? '<span style="color: #10b981;"><i class="fas fa-lock"></i> Encrypted</span>' : ''}
                 </div>
             </div>
+            <div class="file-actions">
+                ${!isDirectory ? `
+                    ${isPreviewableFile(item.name) || isPreviewableEncryptedFile(item.name, isEncrypted) ? `
+                        <button class="file-action-btn" data-action="preview" data-file-path="${item.path}" data-encrypted="${isEncrypted}" title="Preview">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                    ` : ''}
+                    <button class="file-action-btn" data-action="encrypt" data-file-path="${item.path}">
+                        <i class="fas fa-lock"></i> Encrypt
+                    </button>
+                    <button class="file-action-btn" data-action="decrypt" data-file-path="${item.path}">
+                        <i class="fas fa-unlock"></i> Decrypt
+                    </button>
+                ` : ''}
+            </div>
         `;
-    }).join('');
-
-    fileList.innerHTML = fileItems;
-    
-    // Add staggered animation to file items
-    const items = fileList.querySelectorAll('.file-item');
-    items.forEach((item, index) => {
-        item.style.animationDelay = `${index * 0.05}s`;
-        item.classList.add('file-item-animate');
+        
+        fileList.appendChild(listItem);
     });
     
-    // Add event listeners for single file encrypt/decrypt buttons
     setupFileActionListeners();
 }
 
-function setupFileActionListeners() {
-    // Add event listeners for encrypt buttons
-    document.querySelectorAll('.encrypt-file-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const filePath = btn.getAttribute('data-file-path');
-            showSingleFilePasswordModal('encrypt', filePath);
-        });
+function renderGridView() {
+    currentDirectoryContents.forEach((item, index) => {
+        const isEncrypted = item.encrypted;
+        const isDirectory = item.isDirectory;
+        const icon = getFileIcon(item.name, isDirectory, isEncrypted);
+        const size = formatFileSize(item.size);
+
+        const gridItem = document.createElement('div');
+        gridItem.className = 'file-card';
+        gridItem.style.animationDelay = `${index * 0.05}s`;
+        
+        gridItem.innerHTML = `
+            <div class="file-icon">
+                <i class="${icon}"></i>
+            </div>
+            <div class="file-name">${item.name}</div>
+            <div class="file-meta">
+                <span>${isDirectory ? 'Directory' : size}</span>
+                ${isEncrypted ? '<div style="color: #10b981; margin-top: 0.25rem;"><i class="fas fa-lock"></i> Encrypted</div>' : ''}
+            </div>
+            <div class="file-actions">
+                ${!isDirectory ? `
+                                    ${isPreviewableFile(item.name) || isPreviewableEncryptedFile(item.name, isEncrypted) ? `
+                    <button class="file-action-btn" data-action="preview" data-file-path="${item.path}" data-encrypted="${isEncrypted}" title="Preview">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                ` : ''}
+                    <button class="file-action-btn" data-action="encrypt" data-file-path="${item.path}">
+                        <i class="fas fa-lock"></i>
+                    </button>
+                    <button class="file-action-btn" data-action="decrypt" data-file-path="${item.path}">
+                        <i class="fas fa-unlock"></i>
+                    </button>
+                ` : ''}
+            </div>
+        `;
+        
+        fileGrid.appendChild(gridItem);
     });
     
-    // Add event listeners for decrypt buttons
-    document.querySelectorAll('.decrypt-file-btn').forEach(btn => {
+    setupFileActionListeners();
+}
+
+function getFileIcon(filename, isDirectory, isEncrypted) {
+    if (isDirectory) return 'fas fa-folder';
+    if (isEncrypted) return 'fas fa-lock';
+    
+    const ext = filename.split('.').pop().toLowerCase();
+    const iconMap = {
+        // Images
+        'jpg': 'fas fa-image', 'jpeg': 'fas fa-image', 'png': 'fas fa-image', 'gif': 'fas fa-image', 'svg': 'fas fa-image',
+        // Documents
+        'pdf': 'fas fa-file-pdf', 'doc': 'fas fa-file-word', 'docx': 'fas fa-file-word', 'txt': 'fas fa-file-text',
+        // Code
+        'js': 'fas fa-file-code', 'html': 'fas fa-file-code', 'css': 'fas fa-file-code', 'json': 'fas fa-file-code',
+        // Archives
+        'zip': 'fas fa-file-archive', 'rar': 'fas fa-file-archive', '7z': 'fas fa-file-archive',
+        // Audio/Video
+        'mp3': 'fas fa-file-audio', 'mp4': 'fas fa-file-video', 'avi': 'fas fa-file-video'
+    };
+    
+    return iconMap[ext] || 'fas fa-file';
+}
+
+function isPreviewableFile(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    const previewableExtensions = [
+        // Images
+        'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg',
+        // Videos
+        'mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv',
+        // Text files
+        'txt', 'md', 'js', 'html', 'css', 'json', 'xml', 'csv', 'log',
+        // PDFs
+        'pdf'
+    ];
+    
+    return previewableExtensions.includes(ext);
+}
+
+function isPreviewableEncryptedFile(filename, isEncrypted) {
+    if (!isEncrypted) return false;
+    
+    // For encrypted files, check the original extension (remove .enc if present)
+    let originalName = filename;
+    if (filename.toLowerCase().endsWith('.enc')) {
+        originalName = filename.slice(0, -4); // Remove '.enc'
+    }
+    
+    return isPreviewableFile(originalName);
+}
+
+function setupFileActionListeners() {
+    // Add event listeners for all file action buttons
+    document.querySelectorAll('.file-action-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
+            const action = btn.getAttribute('data-action');
             const filePath = btn.getAttribute('data-file-path');
-            showSingleFilePasswordModal('decrypt', filePath);
+            const isEncrypted = btn.getAttribute('data-encrypted') === 'true';
+            
+            if (action === 'preview') {
+                previewFile(filePath, isEncrypted);
+            } else {
+                showSingleFilePasswordModal(action, filePath);
+            }
         });
     });
 }
@@ -236,14 +379,13 @@ function showPasswordModal(action) {
     console.log(`Renderer: currentAction set to: ${currentAction}`);
     modalTitle.textContent = action === 'encrypt' ? 'Encrypt Directory' : 'Decrypt Directory';
     passwordInput.value = '';
-    passwordModal.classList.add('show');
+    passwordModal.classList.remove('hidden');
     passwordInput.focus();
-    checkPasswordStrength();
 }
 
 function closePasswordModal() {
     console.log(`Renderer: closePasswordModal called, currentAction was: ${currentAction}`);
-    passwordModal.classList.remove('show');
+    passwordModal.classList.add('hidden');
     currentAction = null;
     currentFilePath = null;
     passwordInput.value = '';
@@ -256,14 +398,14 @@ function showSingleFilePasswordModal(action, filePath) {
     const fileName = filePath.split('/').pop();
     modalTitle.textContent = action === 'encrypt' ? `Encrypt File: ${fileName}` : `Decrypt File: ${fileName}`;
     passwordInput.value = '';
-    passwordModal.classList.add('show');
+    passwordModal.classList.remove('hidden');
     passwordInput.focus();
-    checkPasswordStrength();
 }
 
 function togglePasswordVisibility() {
     const input = passwordInput;
-    const icon = document.querySelector('.password-toggle i');
+    const toggle = input.nextElementSibling;
+    const icon = toggle.querySelector('i');
     
     if (input.type === 'password') {
         input.type = 'text';
@@ -271,43 +413,6 @@ function togglePasswordVisibility() {
     } else {
         input.type = 'password';
         icon.className = 'fas fa-eye';
-    }
-}
-
-// Password strength checker
-function checkPasswordStrength() {
-    const password = passwordInput.value;
-    const strength = calculatePasswordStrength(password);
-    
-    strengthIndicator.style.width = `${strength.score}%`;
-    strengthIndicator.style.background = strength.color;
-    strengthText.textContent = strength.text;
-}
-
-function calculatePasswordStrength(password) {
-    if (!password) {
-        return { score: 0, color: '#333333', text: 'Enter a password' };
-    }
-
-    let score = 0;
-    const checks = [
-        password.length >= 8,
-        /[a-z]/.test(password),
-        /[A-Z]/.test(password),
-        /[0-9]/.test(password),
-        /[^a-zA-Z0-9]/.test(password)
-    ];
-
-    score = (checks.filter(Boolean).length / checks.length) * 100;
-
-    if (score < 40) {
-        return { score, color: '#ef4444', text: 'Weak' };
-    } else if (score < 70) {
-        return { score, color: '#f59e0b', text: 'Fair' };
-    } else if (score < 90) {
-        return { score, color: '#10b981', text: 'Good' };
-    } else {
-        return { score, color: '#059669', text: 'Strong' };
     }
 }
 
@@ -539,41 +644,55 @@ function updateStats() {
 }
 
 function showProgress(message) {
-    progressText.textContent = message;
-    progressContainer.classList.remove('hidden');
-    progressFill.style.width = '100%';
+    if (progressContainer && progressText) {
+        progressText.textContent = message;
+        progressContainer.classList.remove('hidden');
+        if (progressFill) progressFill.style.width = '100%';
+    }
 }
 
 function hideProgress() {
-    progressContainer.classList.add('hidden');
-    progressFill.style.width = '0%';
+    if (progressContainer) {
+        progressContainer.classList.add('hidden');
+        if (progressFill) progressFill.style.width = '0%';
+    }
 }
 
 function updateStatus(message) {
-    statusMessage.textContent = message;
+    // Status message is now handled through notifications
+    console.log('Status:', message);
 }
 
 function updateStatusTime() {
-    const now = new Date();
-    statusTime.textContent = now.toLocaleTimeString();
+    // Status time is no longer needed in the new template
 }
 
 function switchView(viewType) {
     if (viewType === 'list') {
         listViewBtn.classList.add('active');
         gridViewBtn.classList.remove('active');
-        fileList.className = 'file-list';
     } else {
         gridViewBtn.classList.add('active');
         listViewBtn.classList.remove('active');
-        fileList.className = 'file-list grid-view';
     }
+    
+    // Re-render the file list with the new view
+    renderFileList();
 }
 
 // Notification system
 function showNotification(title, message, type = 'info') {
+    // Create notification container if it doesn't exist
+    let notificationContainer = document.getElementById('notification-container');
+    if (!notificationContainer) {
+        notificationContainer = document.createElement('div');
+        notificationContainer.id = 'notification-container';
+        notificationContainer.className = 'notification-container';
+        document.body.appendChild(notificationContainer);
+    }
+    
     const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
+    notification.className = `notification notification-${type}`;
     
     const iconMap = {
         success: 'fas fa-check-circle',
@@ -583,24 +702,27 @@ function showNotification(title, message, type = 'info') {
     };
 
     notification.innerHTML = `
-        <div class="notification-header">
+        <div class="notification-content">
             <i class="notification-icon ${iconMap[type]}"></i>
-            <span class="notification-title">${title}</span>
+            <div class="notification-text">
+                <div class="notification-title">${title}</div>
+                <div class="notification-message">${message}</div>
+            </div>
         </div>
-        <div class="notification-message">${message}</div>
     `;
 
     notificationContainer.appendChild(notification);
 
-    // Auto remove after 5 seconds
+    // Auto remove after 4 seconds
     setTimeout(() => {
-        notification.style.animation = 'notificationSlideOut 0.3s ease forwards';
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
             }
         }, 300);
-    }, 5000);
+    }, 4000);
 }
 
 // Utility functions
@@ -618,32 +740,18 @@ function formatDate(date) {
     return new Date(date).toLocaleDateString() + ' ' + new Date(date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 }
 
-// Add CSS for notification slide out animation
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes notificationSlideOut {
-        from {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        to {
-            opacity: 0;
-            transform: translateX(100%);
-        }
-    }
-`;
-document.head.appendChild(style);
+// Notification styles are now handled in CSS
 
 // Preferences functionality
 function showPreferences() {
     console.log('Renderer: Opening preferences modal');
-    preferencesModal.classList.add('show');
+    preferencesModal.classList.remove('hidden');
     loadPreferences();
 }
 
 function closePreferences() {
     console.log('Renderer: Closing preferences modal');
-    preferencesModal.classList.remove('show');
+    preferencesModal.classList.add('hidden');
 }
 
 function loadPreferences() {
@@ -659,49 +767,46 @@ function loadPreferences() {
         }
     });
     
-    // Load other preferences
-    const autoLock = localStorage.getItem('maraikka-autolock') === 'true';
-    const clearClipboard = localStorage.getItem('maraikka-clearclipboard') !== 'false';
-    
-    document.getElementById('autoLockEnabled').checked = autoLock;
-    document.getElementById('clearClipboardEnabled').checked = clearClipboard;
+    // Additional preferences can be loaded here as needed
 }
 
 function applyTheme(theme) {
     console.log(`Renderer: Applying theme: ${theme}`);
     
     // Remove all theme classes
-    document.body.classList.remove('light-theme', 'glass-dark-theme', 'glass-light-theme');
+    document.body.classList.remove('light-theme', 'dark');
     
     // Apply the selected theme
     if (theme === 'light') {
         document.body.classList.add('light-theme');
-    } else if (theme === 'glass-dark') {
-        document.body.classList.add('glass-dark-theme');
-    } else if (theme === 'glass-light') {
-        document.body.classList.add('glass-light-theme');
+    } else {
+        document.body.classList.add('dark');
     }
-    // Dark theme is the default (no class needed)
     
     localStorage.setItem('maraikka-theme', theme);
 }
 
-// Tab switching functionality
-document.addEventListener('DOMContentLoaded', () => {
+// Setup preferences event listeners (called after DOM is loaded)
+function setupPreferencesListeners() {
     // Preferences tab switching
-    document.querySelectorAll('.preferences-tab').forEach(tab => {
+    document.querySelectorAll('.tab-btn').forEach(tab => {
         tab.addEventListener('click', () => {
             const targetTab = tab.dataset.tab;
             
             // Update active tab
-            document.querySelectorAll('.preferences-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             
             // Update active content
-            document.querySelectorAll('.preferences-tab-content').forEach(content => {
+            document.querySelectorAll('.tab-panel').forEach(content => {
                 content.classList.remove('active');
+                content.classList.add('hidden');
             });
-            document.getElementById(`${targetTab}-tab`).classList.add('active');
+            const targetPanel = document.getElementById(`${targetTab}Tab`);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+                targetPanel.classList.remove('hidden');
+            }
         });
     });
     
@@ -720,20 +825,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Preference checkboxes
-    document.getElementById('autoLockEnabled').addEventListener('change', (e) => {
-        localStorage.setItem('maraikka-autolock', e.target.checked);
-        showNotification('Settings Updated', `Auto-lock ${e.target.checked ? 'enabled' : 'disabled'}`, 'info');
-    });
-    
-    document.getElementById('clearClipboardEnabled').addEventListener('change', (e) => {
-        localStorage.setItem('maraikka-clearclipboard', e.target.checked);
-        showNotification('Settings Updated', `Clear clipboard ${e.target.checked ? 'enabled' : 'disabled'}`, 'info');
-    });
-    
-    // Load preferences on startup
-    loadPreferences();
-});
+    // Additional preference controls can be added here as needed
+}
 
 // External link handler
 function openExternal(url) {
@@ -754,5 +847,613 @@ document.addEventListener('keydown', (e) => {
 preferencesModal.addEventListener('click', (e) => {
     if (e.target === preferencesModal) {
         closePreferences();
+    }
+});
+
+// File Preview Functionality
+let isResizing = false;
+let currentPreviewFile = null;
+
+// Preview pane elements
+const previewPane = document.getElementById('previewPane');
+const previewFileName = document.getElementById('previewFileName');
+const previewContent = document.querySelector('.preview-content');
+const previewLoader = document.getElementById('previewLoader');
+const previewError = document.getElementById('previewError');
+const closePreviewBtn = document.getElementById('closePreviewBtn');
+const resizeHandle = document.querySelector('.resize-handle');
+const appContainer = document.querySelector('.app-container');
+
+// Preview file function
+async function previewFile(filePath, isEncrypted = false) {
+    try {
+        currentPreviewFile = filePath;
+        const fileName = filePath.split('/').pop();
+        previewFileName.textContent = fileName;
+        
+        // Open preview pane
+        openPreviewPane();
+        
+        if (isEncrypted) {
+            showPasswordPrompt(filePath);
+        } else {
+            // Show loading state
+            showPreviewLoader();
+            
+            // Get file content based on type
+            const ext = fileName.split('.').pop().toLowerCase();
+            await renderPreviewContent(filePath, ext);
+        }
+        
+    } catch (error) {
+        console.error('Error previewing file:', error);
+        showPreviewError();
+    }
+}
+
+function openPreviewPane() {
+    previewPane.classList.remove('hidden');
+    appContainer.classList.add('preview-open');
+    
+    // Set initial margin based on preview pane width
+    const mainContent = document.querySelector('.main-content');
+    const previewWidth = previewPane.offsetWidth || 480; // Default 30rem = 480px
+    mainContent.style.marginRight = `${previewWidth}px`;
+}
+
+function closePreviewPane() {
+    previewPane.classList.add('hidden');
+    appContainer.classList.remove('preview-open');
+    
+    // Reset main content margin to 0
+    const mainContent = document.querySelector('.main-content');
+    mainContent.style.marginRight = '0';
+    
+    clearPreviewContent();
+    currentPreviewFile = null;
+}
+
+function showPreviewLoader() {
+    previewLoader.classList.remove('hidden');
+    previewError.classList.add('hidden');
+    clearPreviewContent();
+}
+
+function showPreviewError() {
+    previewLoader.classList.add('hidden');
+    previewError.classList.remove('hidden');
+    clearPreviewContent();
+}
+
+function clearPreviewContent() {
+    // Remove any existing content except loader and error
+    const existingContent = previewContent.querySelector('.preview-image-container, .preview-video, .preview-text, .preview-pdf, .preview-unsupported, .preview-password-prompt');
+    if (existingContent) {
+        existingContent.remove();
+    }
+}
+
+function showPasswordPrompt(filePath) {
+    previewLoader.classList.add('hidden');
+    previewError.classList.add('hidden');
+    clearPreviewContent();
+    
+    const fileName = filePath.split('/').pop();
+    const promptDiv = document.createElement('div');
+    promptDiv.className = 'preview-password-prompt';
+    
+    promptDiv.innerHTML = `
+        <i class="fas fa-lock"></i>
+        <h3>Encrypted File</h3>
+        <p>Enter password to preview "${fileName}"</p>
+        <div class="preview-password-form">
+            <input type="password" class="preview-password-input" placeholder="Enter password" />
+            <div class="preview-password-buttons">
+                <button class="preview-password-btn secondary cancel-btn">Cancel</button>
+                <button class="preview-password-btn primary unlock-btn">Unlock & Preview</button>
+            </div>
+            <div class="preview-error-message hidden"></div>
+        </div>
+    `;
+    
+    previewContent.appendChild(promptDiv);
+    
+    const passwordInput = promptDiv.querySelector('.preview-password-input');
+    const unlockBtn = promptDiv.querySelector('.unlock-btn');
+    const cancelBtn = promptDiv.querySelector('.cancel-btn');
+    const errorDiv = promptDiv.querySelector('.preview-error-message');
+    
+    // Focus password input
+    passwordInput.focus();
+    
+    // Handle unlock button
+    const handleUnlock = async () => {
+        const password = passwordInput.value.trim();
+        if (!password) {
+            showPasswordError(errorDiv, 'Please enter a password');
+            return;
+        }
+        
+        if (password.length < 6) {
+            showPasswordError(errorDiv, 'Password must be at least 6 characters');
+            return;
+        }
+        
+        try {
+            unlockBtn.disabled = true;
+            unlockBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Decrypting...';
+            hidePasswordError(errorDiv);
+            
+            await previewEncryptedFile(filePath, password);
+        } catch (error) {
+            console.error('Error decrypting file for preview:', error);
+            showPasswordError(errorDiv, error.message || 'Failed to decrypt file');
+        } finally {
+            unlockBtn.disabled = false;
+            unlockBtn.innerHTML = 'Unlock & Preview';
+        }
+    };
+    
+    // Handle cancel button
+    const handleCancel = () => {
+        closePreviewPane();
+    };
+    
+    // Event listeners
+    unlockBtn.addEventListener('click', handleUnlock);
+    cancelBtn.addEventListener('click', handleCancel);
+    
+    // Enter key to unlock
+    passwordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !unlockBtn.disabled) {
+            handleUnlock();
+        }
+    });
+}
+
+function showPasswordError(errorDiv, message) {
+    errorDiv.textContent = message;
+    errorDiv.classList.remove('hidden');
+}
+
+function hidePasswordError(errorDiv) {
+    errorDiv.classList.add('hidden');
+}
+
+async function previewEncryptedFile(filePath, password) {
+    try {
+        const result = await window.electronAPI.decryptFileForPreview(filePath, password);
+        
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+        
+        // Clear password prompt
+        clearPreviewContent();
+        showPreviewLoader();
+        
+        // Render the decrypted content
+        await renderDecryptedPreviewContent(result);
+        
+    } catch (error) {
+        console.error('Error previewing encrypted file:', error);
+        throw error;
+    }
+}
+
+async function renderDecryptedPreviewContent(decryptedData) {
+    try {
+        previewLoader.classList.add('hidden');
+        previewError.classList.add('hidden');
+        
+        const { data, extension, mimeType } = decryptedData;
+        
+        if (isImageFile(extension)) {
+            await renderDecryptedImagePreview(data, mimeType);
+        } else if (isVideoFile(extension)) {
+            await renderDecryptedVideoPreview(data, mimeType);
+        } else if (isTextFile(extension)) {
+            await renderDecryptedTextPreview(data);
+        } else if (extension === 'pdf') {
+            await renderDecryptedPDFPreview(data);
+        } else {
+            renderUnsupportedPreview();
+        }
+    } catch (error) {
+        console.error('Error rendering decrypted preview:', error);
+        showPreviewError();
+    }
+}
+
+async function renderDecryptedImagePreview(data, mimeType) {
+    // Create container for image and controls
+    const container = document.createElement('div');
+    container.className = 'preview-image-container';
+    
+    // Create image element
+    const img = document.createElement('img');
+    img.className = 'preview-image';
+    img.alt = 'Preview';
+    
+    // Convert buffer to blob and create object URL
+    const blob = new Blob([data], { type: mimeType });
+    const imageUrl = URL.createObjectURL(blob);
+    img.src = imageUrl;
+    
+    // Create controls
+    const controls = document.createElement('div');
+    controls.className = 'preview-image-controls';
+    controls.innerHTML = `
+        <button class="zoom-out-btn" title="Zoom Out">
+            <i class="fas fa-minus"></i>
+        </button>
+        <button class="zoom-in-btn" title="Zoom In">
+            <i class="fas fa-plus"></i>
+        </button>
+        <button class="zoom-fit-btn" title="Fit to Window">
+            <i class="fas fa-expand-arrows-alt"></i>
+        </button>
+        <div class="zoom-level">100%</div>
+        <button class="zoom-reset-btn" title="Reset Zoom">
+            <i class="fas fa-undo"></i>
+        </button>
+    `;
+    
+    container.appendChild(img);
+    container.appendChild(controls);
+    
+    img.onload = () => {
+        previewContent.appendChild(container);
+        setupImageZoomPan(container, img, controls);
+    };
+    
+    img.onerror = () => {
+        URL.revokeObjectURL(imageUrl);
+        showPreviewError();
+    };
+    
+    // Clean up URL when preview closes
+    const originalClosePreview = closePreviewPane;
+    closePreviewPane = () => {
+        URL.revokeObjectURL(imageUrl);
+        closePreviewPane = originalClosePreview;
+        originalClosePreview();
+    };
+}
+
+async function renderDecryptedVideoPreview(data, mimeType) {
+    const video = document.createElement('video');
+    video.className = 'preview-video';
+    video.controls = true;
+    video.preload = 'metadata';
+    
+    // Convert buffer to blob and create object URL
+    const blob = new Blob([data], { type: mimeType });
+    const videoUrl = URL.createObjectURL(blob);
+    video.src = videoUrl;
+    
+    video.onloadedmetadata = () => {
+        previewContent.appendChild(video);
+    };
+    
+    video.onerror = () => {
+        URL.revokeObjectURL(videoUrl);
+        showPreviewError();
+    };
+    
+    // Clean up URL when preview closes
+    const originalClosePreview = closePreviewPane;
+    closePreviewPane = () => {
+        URL.revokeObjectURL(videoUrl);
+        closePreviewPane = originalClosePreview;
+        originalClosePreview();
+    };
+}
+
+async function renderDecryptedTextPreview(data) {
+    const textDiv = document.createElement('div');
+    textDiv.className = 'preview-text';
+    textDiv.textContent = data.toString('utf8');
+    
+    previewContent.appendChild(textDiv);
+}
+
+async function renderDecryptedPDFPreview(data) {
+    // Convert buffer to blob and create object URL
+    const blob = new Blob([data], { type: 'application/pdf' });
+    const pdfUrl = URL.createObjectURL(blob);
+    
+    const iframe = document.createElement('iframe');
+    iframe.className = 'preview-pdf';
+    iframe.src = pdfUrl;
+    
+    iframe.onload = () => {
+        previewContent.appendChild(iframe);
+    };
+    
+    iframe.onerror = () => {
+        URL.revokeObjectURL(pdfUrl);
+        showPreviewError();
+    };
+    
+    // Clean up URL when preview closes
+    const originalClosePreview = closePreviewPane;
+    closePreviewPane = () => {
+        URL.revokeObjectURL(pdfUrl);
+        closePreviewPane = originalClosePreview;
+        originalClosePreview();
+    };
+}
+
+async function renderPreviewContent(filePath, ext) {
+    try {
+        previewLoader.classList.add('hidden');
+        previewError.classList.add('hidden');
+        
+        if (isImageFile(ext)) {
+            await renderImagePreview(filePath);
+        } else if (isVideoFile(ext)) {
+            await renderVideoPreview(filePath);
+        } else if (isTextFile(ext)) {
+            await renderTextPreview(filePath);
+        } else if (ext === 'pdf') {
+            await renderPDFPreview(filePath);
+        } else {
+            renderUnsupportedPreview();
+        }
+    } catch (error) {
+        console.error('Error rendering preview:', error);
+        showPreviewError();
+    }
+}
+
+function isImageFile(ext) {
+    return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext);
+}
+
+function isVideoFile(ext) {
+    return ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'].includes(ext);
+}
+
+function isTextFile(ext) {
+    return ['txt', 'md', 'js', 'html', 'css', 'json', 'xml', 'csv', 'log'].includes(ext);
+}
+
+async function renderImagePreview(filePath) {
+    // Create container for image and controls
+    const container = document.createElement('div');
+    container.className = 'preview-image-container';
+    
+    // Create image element
+    const img = document.createElement('img');
+    img.className = 'preview-image';
+    img.src = `file://${filePath}`;
+    img.alt = 'Preview';
+    
+    // Create controls
+    const controls = document.createElement('div');
+    controls.className = 'preview-image-controls';
+    controls.innerHTML = `
+        <button class="zoom-out-btn" title="Zoom Out">
+            <i class="fas fa-minus"></i>
+        </button>
+        <button class="zoom-in-btn" title="Zoom In">
+            <i class="fas fa-plus"></i>
+        </button>
+        <button class="zoom-fit-btn" title="Fit to Window">
+            <i class="fas fa-expand-arrows-alt"></i>
+        </button>
+        <div class="zoom-level">100%</div>
+        <button class="zoom-reset-btn" title="Reset Zoom">
+            <i class="fas fa-undo"></i>
+        </button>
+    `;
+    
+    container.appendChild(img);
+    container.appendChild(controls);
+    
+    img.onload = () => {
+        previewContent.appendChild(container);
+        setupImageZoomPan(container, img, controls);
+    };
+    
+    img.onerror = () => {
+        showPreviewError();
+    };
+}
+
+function setupImageZoomPan(container, img, controls) {
+    let scale = 1;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let lastTranslateX = 0;
+    let lastTranslateY = 0;
+    
+    const minScale = 0.1;
+    const maxScale = 5;
+    const scaleStep = 0.2;
+    
+    // Update transform
+    function updateTransform() {
+        img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        controls.querySelector('.zoom-level').textContent = `${Math.round(scale * 100)}%`;
+    }
+    
+    // Zoom to fit
+    function zoomToFit() {
+        const containerRect = container.getBoundingClientRect();
+        const imgRect = img.getBoundingClientRect();
+        
+        const scaleX = containerRect.width / img.naturalWidth;
+        const scaleY = containerRect.height / img.naturalHeight;
+        scale = Math.min(scaleX, scaleY, 1);
+        
+        translateX = 0;
+        translateY = 0;
+        updateTransform();
+    }
+    
+    // Reset zoom
+    function resetZoom() {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        updateTransform();
+    }
+    
+    // Zoom in/out
+    function zoom(delta) {
+        const newScale = Math.max(minScale, Math.min(maxScale, scale + delta));
+        if (newScale !== scale) {
+            scale = newScale;
+            updateTransform();
+        }
+    }
+    
+    // Mouse wheel zoom
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -scaleStep : scaleStep;
+        zoom(delta);
+    });
+    
+    // Mouse drag to pan
+    container.addEventListener('mousedown', (e) => {
+        if (scale > 1) {
+            isDragging = true;
+            container.classList.add('dragging');
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            lastTranslateX = translateX;
+            lastTranslateY = translateY;
+        }
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            const deltaX = e.clientX - dragStartX;
+            const deltaY = e.clientY - dragStartY;
+            translateX = lastTranslateX + deltaX;
+            translateY = lastTranslateY + deltaY;
+            updateTransform();
+        }
+    });
+    
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        container.classList.remove('dragging');
+    });
+    
+    // Button controls
+    controls.querySelector('.zoom-in-btn').addEventListener('click', () => zoom(scaleStep));
+    controls.querySelector('.zoom-out-btn').addEventListener('click', () => zoom(-scaleStep));
+    controls.querySelector('.zoom-fit-btn').addEventListener('click', zoomToFit);
+    controls.querySelector('.zoom-reset-btn').addEventListener('click', resetZoom);
+    
+    // Initial zoom at 100%
+    updateTransform();
+}
+
+async function renderVideoPreview(filePath) {
+    const video = document.createElement('video');
+    video.className = 'preview-video';
+    video.src = `file://${filePath}`;
+    video.controls = true;
+    video.preload = 'metadata';
+    
+    video.onloadedmetadata = () => {
+        previewContent.appendChild(video);
+    };
+    
+    video.onerror = () => {
+        showPreviewError();
+    };
+}
+
+async function renderTextPreview(filePath) {
+    try {
+        // Use Electron's fs to read text files
+        const content = await window.electronAPI.readTextFile(filePath);
+        
+        const textDiv = document.createElement('div');
+        textDiv.className = 'preview-text';
+        textDiv.textContent = content;
+        
+        previewContent.appendChild(textDiv);
+    } catch (error) {
+        console.error('Error reading text file:', error);
+        showPreviewError();
+    }
+}
+
+async function renderPDFPreview(filePath) {
+    const iframe = document.createElement('iframe');
+    iframe.className = 'preview-pdf';
+    iframe.src = `file://${filePath}`;
+    
+    iframe.onload = () => {
+        previewContent.appendChild(iframe);
+    };
+    
+    iframe.onerror = () => {
+        showPreviewError();
+    };
+}
+
+function renderUnsupportedPreview() {
+    const unsupportedDiv = document.createElement('div');
+    unsupportedDiv.className = 'preview-unsupported';
+    unsupportedDiv.innerHTML = `
+        <i class="fas fa-file"></i>
+        <h3>Preview not available</h3>
+        <p>This file type is not supported for preview.</p>
+    `;
+    
+    previewContent.appendChild(unsupportedDiv);
+}
+
+// Event listeners for preview pane
+closePreviewBtn.addEventListener('click', closePreviewPane);
+
+// Resize functionality
+resizeHandle.addEventListener('mousedown', (e) => {
+    isResizing = true;
+    document.addEventListener('mousemove', handleResize);
+    document.addEventListener('mouseup', stopResize);
+    e.preventDefault();
+});
+
+function handleResize(e) {
+    if (!isResizing) return;
+    
+    const containerRect = appContainer.getBoundingClientRect();
+    const newWidth = containerRect.right - e.clientX;
+    
+    // Apply min/max constraints
+    const minWidth = 320; // 20rem
+    const maxWidth = 800; // 50rem
+    const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+    
+    previewPane.style.width = `${constrainedWidth}px`;
+    
+    // Update main content margin
+    if (appContainer.classList.contains('preview-open')) {
+        document.querySelector('.main-content').style.marginRight = `${constrainedWidth}px`;
+    }
+}
+
+function stopResize() {
+    isResizing = false;
+    document.removeEventListener('mousemove', handleResize);
+    document.removeEventListener('mouseup', stopResize);
+}
+
+// Close preview with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !previewPane.classList.contains('hidden')) {
+        closePreviewPane();
     }
 }); 

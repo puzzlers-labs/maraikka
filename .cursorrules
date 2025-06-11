@@ -1,0 +1,53 @@
+# Maraikka App Cursor Rules
+
+## UI Component Guidelines
+
+### **ALWAYS USE TEMPLATE COMPONENTS**
+- All UI components MUST be sourced from the `@/template` directory unless explicitly specified otherwise
+- Follow the template's design system, color palette, and component patterns
+- Maintain consistency with the template's Tailwind CSS v4 utility classes
+- Use the template's typography, spacing, and visual hierarchy
+
+### Template Component Structure
+- **Buttons**: Use template button variants (primary, secondary, danger, success)
+- **Forms**: Use template form inputs, labels, and validation patterns
+- **Cards**: Follow template card layouts and styling
+- **Modals**: Use template modal structure and animations
+- **Navigation**: Follow template navigation patterns
+- **Typography**: Use template font weights, sizes, and color schemes
+
+### Color Scheme
+- Primary: #8b5cf6 (violet-500)
+- Secondary: #6b7280 (gray-500) 
+- Success: #10b981 (emerald-500)
+- Danger: #ef4444 (red-500)
+- Dark theme: Use template's dark mode color variables
+- Light theme: Use template's light mode color variables
+
+### Layout Principles
+- Maintain the sidebar + main content layout structure
+- Use template's spacing system (rem units)
+- Follow template's border radius and shadow patterns
+- Preserve template's responsive design patterns
+
+### Component Styling
+- Button classes: `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-danger`, `.btn-success`
+- Form classes: `.form-group`, `.form-label`, `.form-input`
+- Card classes: `.card`, `.card-header`, `.card-body`, `.card-footer`
+- Modal classes: `.modal-overlay`, `.modal`, `.modal-header`, `.modal-body`, `.modal-footer`
+
+### Animation Guidelines
+- Keep existing slideInLeft and scaleIn animations for file list items
+- Use template's transition durations and easing functions
+- Maintain smooth hover and focus states from template
+
+### Custom Exceptions
+- File encryption/decryption functionality: Keep existing logic
+- Electron-specific integrations: Maintain current implementation
+- macOS menu integration: Preserve existing functionality
+
+### Remember
+- Template components take precedence over custom styling
+- Only create custom components when template lacks specific functionality
+- Always verify new components match template's design language
+- Test both light and dark themes when making changes 

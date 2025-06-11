@@ -5,310 +5,243 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maraikka</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="dark">
+    <!-- macOS Title Bar -->
+    <div class="title-bar">
+        <div class="title-bar-content">
+            <span class="title-bar-title">Maraikka</span>
+        </div>
+    </div>
+
+    <!-- App Container -->
     <div class="app-container">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-shield-alt"></i>
-                    <h1>Maraikka</h1>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Curved Header Section -->
+            <div class="sidebar-curved-header">
+                <div class="logo-container">
+                    <div class="logo-circle">
+                        <img class="logo-icon" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMNCA2VjExQzQgMTYuNSA3LjM2IDIxLjY2IDEyIDIzQzE2LjY0IDIxLjY2IDIwIDE2LjUgMjAgMTFWNkwxMiAyWiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+" alt="Shield" />
+                    </div>
                 </div>
-                <div class="header-actions">
-                    <button id="selectDirectoryBtn" class="btn btn-primary">
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="sidebar-nav">
+                <!-- Actions Section (for the encryption tools) -->
+                <div class="nav-section">
+                    <h3 class="nav-section-title">ACTIONS</h3>
+                    <div class="nav-items">
+                        <button id="selectDirectoryBtn" class="nav-menu-item">
+                            <i class="fas fa-folder-open nav-icon"></i>
+                            <span class="nav-text">Select Directory</span>
+                        </button>
+                        <button id="encryptBtn" class="nav-menu-item" disabled>
+                            <i class="fas fa-lock nav-icon"></i>
+                            <span class="nav-text">Encrypt Directory</span>
+                        </button>
+                        <button id="decryptBtn" class="nav-menu-item" disabled>
+                            <i class="fas fa-unlock nav-icon"></i>
+                            <span class="nav-text">Decrypt Directory</span>
+                        </button>
+                        <button id="refreshBtn" class="nav-menu-item" disabled>
+                            <i class="fas fa-refresh nav-icon"></i>
+                            <span class="nav-text">Refresh</span>
+                        </button>
+                        <button id="preferencesBtn" class="nav-menu-item">
+                            <i class="fas fa-cog nav-icon"></i>
+                            <span class="nav-text">Preferences</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Current Directory Info -->
+                <div class="nav-section">
+                    <h3 class="nav-section-title">CURRENT PATH</h3>
+                    <div class="current-directory">
+                        <div class="current-path">
+                            <i class="fas fa-folder"></i>
+                            <span id="currentPathText">No directory selected</span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Progress Container -->
+            <div id="progressContainer" class="progress-container hidden">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div id="progressText" class="progress-text">Processing files...</div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- File Browser Header -->
+            <div class="file-browser-header">
+                <div class="file-browser-title">
+                    <h2>File Browser</h2>
+                </div>
+                
+                <!-- View Toggle -->
+                <div class="view-toggle">
+                    <button id="listViewBtn" class="view-toggle-btn active" title="List View">
+                        <i class="fas fa-list"></i>
+                    </button>
+                    <button id="gridViewBtn" class="view-toggle-btn" title="Grid View">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- File Browser Content -->
+            <div class="file-browser-content">
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3 class="empty-title">No Directory Selected</h3>
+                    <p class="empty-description">Select a directory to view its contents and start encrypting or decrypting files.</p>
+                    <button class="btn btn-primary" onclick="selectDirectory()">
                         <i class="fas fa-folder-open"></i>
                         Select Directory
                     </button>
                 </div>
+
+                <!-- File List (List View) -->
+                <ul id="fileList" class="file-list hidden"></ul>
+
+                <!-- File Grid (Grid View) -->
+                <div id="fileGrid" class="file-grid hidden"></div>
             </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Sidebar -->
-            <aside class="sidebar">
-                <div class="sidebar-section">
-                    <h3>Current Directory</h3>
-                    <div id="currentPath" class="current-path">
-                        <i class="fas fa-folder"></i>
-                        <span>No directory selected</span>
-                    </div>
-                </div>
-
-                <div class="sidebar-section">
-                    <h3>Actions</h3>
-                    <div class="action-buttons">
-                        <button id="encryptBtn" class="btn btn-success" disabled>
-                            <i class="fas fa-lock"></i>
-                            Encrypt Directory
-                        </button>
-                        <button id="decryptBtn" class="btn btn-warning" disabled>
-                            <i class="fas fa-unlock"></i>
-                            Decrypt Directory
-                        </button>
-                                            <button id="refreshBtn" class="btn btn-secondary" disabled>
-                        <i class="fas fa-refresh"></i>
-                        Refresh
-                    </button>
-                    <button id="preferencesBtn" class="btn btn-secondary">
-                        <i class="fas fa-cog"></i>
-                        Preferences
-                    </button>
-                    </div>
-                </div>
-
-                <div class="sidebar-section">
-                    <h3>Statistics</h3>
-                    <div class="stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Total Files:</span>
-                            <span id="totalFiles" class="stat-value">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Encrypted:</span>
-                            <span id="encryptedFiles" class="stat-value">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Directories:</span>
-                            <span id="totalDirs" class="stat-value">0</span>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- File Explorer -->
-            <section class="file-explorer">
-                <div class="explorer-header">
-                    <div class="breadcrumb">
-                        <i class="fas fa-home"></i>
-                        <span id="breadcrumbPath">Select a directory to begin</span>
-                    </div>
-                    <div class="view-options">
-                        <button id="listViewBtn" class="view-btn active">
-                            <i class="fas fa-list"></i>
-                        </button>
-                        <button id="gridViewBtn" class="view-btn">
-                            <i class="fas fa-th"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="explorer-content">
-                    <div id="fileList" class="file-list">
-                        <div class="empty-state">
-                            <i class="fas fa-folder-open"></i>
-                            <h3>No Directory Selected</h3>
-                            <p>Choose a directory to view and manage your files</p>
-                            <button class="btn btn-primary" onclick="document.getElementById('selectDirectoryBtn').click()">
-                                <i class="fas fa-folder-open"></i>
-                                Select Directory
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- Progress Bar -->
-        <div id="progressContainer" class="progress-container hidden">
-            <div class="progress-bar">
-                <div id="progressFill" class="progress-fill"></div>
-            </div>
-            <div id="progressText" class="progress-text">Processing...</div>
         </div>
 
-        <!-- Status Bar -->
-        <footer class="status-bar">
-            <div class="status-left">
-                <span id="statusMessage">Ready</span>
-            </div>
-            <div class="status-right">
-                <span id="statusTime"></span>
-            </div>
-        </footer>
-    </div>
-
-    <!-- Password Modal -->
-    <div id="passwordModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle">Enter Password</h3>
-                <button class="modal-close" onclick="closePasswordModal()">
+        <!-- File Preview Pane -->
+        <div id="previewPane" class="preview-pane hidden">
+            <!-- Resize Handle -->
+            <div class="resize-handle"></div>
+            
+            <!-- Preview Header -->
+            <div class="preview-header">
+                <div class="preview-title">
+                    <i class="fas fa-file"></i>
+                    <span id="previewFileName">File Preview</span>
+                </div>
+                <button id="closePreviewBtn" class="preview-close-btn">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+
+            <!-- Preview Content -->
+            <div class="preview-content">
+                <div id="previewLoader" class="preview-loader hidden">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading...</span>
+                </div>
+                <div id="previewError" class="preview-error hidden">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Unable to preview this file</span>
+                </div>
+                <!-- Content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="passwordModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="passwordModalTitle">Enter Password</h3>
+            </div>
             <div class="modal-body">
-                <div class="input-group">
-                    <label for="passwordInput">Password:</label>
-                    <div class="password-input-container">
-                        <input type="password" id="passwordInput" placeholder="Enter your password">
-                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                <form id="passwordForm">
+                    <div class="form-group">
+                        <label for="passwordInput" class="form-label">Password</label>
+                        <input type="password" id="passwordInput" class="form-input" 
+                               placeholder="Enter your password" required>
                     </div>
-                </div>
-                <div class="password-strength">
-                    <div class="strength-bar">
-                        <div id="strengthIndicator" class="strength-indicator"></div>
-                    </div>
-                    <span id="strengthText" class="strength-text">Enter a password</span>
-                </div>
+                </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
-                <button id="confirmPasswordBtn" class="btn btn-primary">Confirm</button>
+                <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="handlePasswordConfirm()">Confirm</button>
             </div>
         </div>
     </div>
 
     <!-- Preferences Modal -->
-    <div id="preferencesModal" class="preferences-modal">
-        <div class="preferences-content">
-            <div class="preferences-header">
-                <div class="preferences-title">Preferences</div>
-                <button class="preferences-close" onclick="closePreferences()">
-                    <i class="fas fa-times"></i>
-                </button>
+    <div id="preferencesModal" class="modal-overlay hidden">
+        <div class="modal preferences-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Preferences</h3>
             </div>
             
+            <!-- Tabs -->
             <div class="preferences-tabs">
-                <button class="preferences-tab active" data-tab="general">
+                <button class="tab-btn active" data-tab="general">
                     <i class="fas fa-cog"></i>
-                    <span>General</span>
+                    General
                 </button>
-                <button class="preferences-tab" data-tab="license">
-                    <i class="fas fa-certificate"></i>
-                    <span>License</span>
-                </button>
-                <button class="preferences-tab" data-tab="about">
+                <button class="tab-btn" data-tab="about">
                     <i class="fas fa-info-circle"></i>
-                    <span>About</span>
+                    About
                 </button>
             </div>
-            
-            <div class="preferences-body">
+
+            <!-- Tab Content -->
+            <div class="tab-content">
                 <!-- General Tab -->
-                <div id="general-tab" class="preferences-tab-content active">
-                    <div class="preference-section">
-                        <h3>Appearance</h3>
-                        <div class="preference-item">
-                            <label>Theme:</label>
-                            <div class="theme-selector">
-                                <div class="theme-option active" data-theme="dark">
-                                    <div class="theme-preview dark-preview">
-                                        <div class="preview-header"></div>
-                                        <div class="preview-body"></div>
-                                    </div>
-                                    <span>Dark</span>
-                                </div>
-                                <div class="theme-option" data-theme="light">
-                                    <div class="theme-preview light-preview">
-                                        <div class="preview-header"></div>
-                                        <div class="preview-body"></div>
-                                    </div>
-                                    <span>Light</span>
-                                </div>
-                                <div class="theme-option" data-theme="glass-dark">
-                                    <div class="theme-preview glass-dark-preview">
-                                        <div class="preview-header"></div>
-                                        <div class="preview-body"></div>
-                                        <div class="preview-glass-layer"></div>
-                                    </div>
-                                    <span>Liquid Glass (Dark)</span>
-                                </div>
-                                <div class="theme-option" data-theme="glass-light">
-                                    <div class="theme-preview glass-light-preview">
-                                        <div class="preview-header"></div>
-                                        <div class="preview-body"></div>
-                                        <div class="preview-glass-layer"></div>
-                                    </div>
-                                    <span>Liquid Glass (Light)</span>
-                                </div>
+                <div id="generalTab" class="tab-panel active">
+                    <div class="form-group">
+                        <label class="form-label">Theme</label>
+                        <div class="theme-selector">
+                            <div class="theme-option active" data-theme="dark">
+                                <div class="theme-preview dark-preview"></div>
+                                <span>Dark</span>
+                            </div>
+                            <div class="theme-option" data-theme="light">
+                                <div class="theme-preview light-preview"></div>
+                                <span>Light</span>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="preference-section">
-                        <h3>Security</h3>
-                        <div class="preference-item">
-                            <label>
-                                <input type="checkbox" id="autoLockEnabled">
-                                Auto-lock after inactivity
-                            </label>
-                            <p class="preference-description">Automatically lock the application after 10 minutes of inactivity</p>
-                        </div>
-                        <div class="preference-item">
-                            <label>
-                                <input type="checkbox" id="clearClipboardEnabled" checked>
-                                Clear clipboard after copy
-                            </label>
-                            <p class="preference-description">Automatically clear clipboard contents after 30 seconds</p>
-                        </div>
-                    </div>
                 </div>
-                
-                <!-- License Tab -->
-                <div id="license-tab" class="preferences-tab-content">
-                    <div class="license-content">
-                        <h3>MIT License</h3>
-                        <div class="license-text">
-                            <p>Copyright (c) 2024 Maraikka Labs</p>
-                            
-                            <p>Permission is hereby granted, free of charge, to any person obtaining a copy
-                            of this software and associated documentation files (the "Software"), to deal
-                            in the Software without restriction, including without limitation the rights
-                            to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-                            copies of the Software, and to permit persons to whom the Software is
-                            furnished to do so, subject to the following conditions:</p>
-                            
-                            <p>The above copyright notice and this permission notice shall be included in all
-                            copies or substantial portions of the Software.</p>
-                            
-                            <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-                            IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-                            FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-                            AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-                            LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-                            OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-                            SOFTWARE.</p>
-                        </div>
-                    </div>
-                </div>
-                
+
                 <!-- About Tab -->
-                <div id="about-tab" class="preferences-tab-content">
-                    <div class="about-content">
-                        <div class="app-icon">
-                            <i class="fas fa-shield-alt"></i>
+                <div id="aboutTab" class="tab-panel hidden">
+                    <div style="text-align: center;">
+                        <div style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                            <i class="fas fa-shield-alt" style="font-size: 2rem; color: white;"></i>
                         </div>
-                        <h2>Maraikka</h2>
-                        <p class="version">Version 1.0.0</p>
-                        <p class="description">A beautiful, secure desktop application for encrypting and decrypting files and directories with military-grade AES encryption.</p>
+                        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">Maraikka</h2>
+                        <p style="color: #6b7280; margin-bottom: 1.5rem;">Version 1.0.0</p>
+                        <p style="color: #6b7280; margin-bottom: 2rem;">A secure file encryption application for protecting your sensitive data.</p>
                         
-                        <div class="about-details">
-                            <div class="detail-item">
-                                <strong>Developer:</strong> Maraikka Labs
+                        <div style="text-align: left; max-width: 20rem; margin: 0 auto;">
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                <span style="font-weight: 500;">Developer</span>
+                                <span style="color: #6b7280;">Maraikka Labs</span>
                             </div>
-                            <div class="detail-item">
-                                <strong>Technology:</strong> Electron, Node.js, CryptoJS
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                <span style="font-weight: 500;">License</span>
+                                <span style="color: #6b7280;">Source Available</span>
                             </div>
-                            <div class="detail-item">
-                                <strong>Encryption:</strong> AES-256 with Base64 encoding
-                            </div>
-                            <div class="detail-item">
-                                <strong>Platform:</strong> Cross-platform (Windows, macOS, Linux)
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 0.875rem;">
+                                <span style="font-weight: 500;">Framework</span>
+                                <span style="color: #6b7280;">Electron</span>
                             </div>
                         </div>
-                        
-                        <div class="about-buttons">
-                            <button class="btn btn-primary" onclick="openExternal('https://github.com/maraikka-labs')">
+
+                        <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 2rem;">
+                            <button class="btn btn-secondary" onclick="openExternal('https://github.com/maraikka-labs')">
                                 <i class="fab fa-github"></i>
                                 GitHub
                             </button>
-                            <button class="btn btn-secondary" onclick="openExternal('https://maraikka.com')">
+                            <button class="btn btn-secondary" onclick="openExternal('https://maraikka-labs.com')">
                                 <i class="fas fa-globe"></i>
                                 Website
                             </button>
@@ -316,12 +249,13 @@
                     </div>
                 </div>
             </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="closePreferences()">Close</button>
+            </div>
         </div>
     </div>
 
-    <!-- Notification Container -->
-    <div id="notificationContainer" class="notification-container"></div>
-
-    <script src="renderer.js?v=7"></script>
+    <script src="renderer.js?v=3"></script>
 </body>
 </html> 
