@@ -192,6 +192,7 @@
     "externalLink": "外部リンク",
     "externalLinkDescription": "リンク機能は本番ビルドで実装されます"
   },
+
   "fileTypes": {
     "image": "画像",
     "video": "動画", 

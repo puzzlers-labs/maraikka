@@ -165,6 +165,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Setup density slider
     setupDensitySlider();
+    
+    // Initialize banner system
+    loadDismissedBanners();
+    await fetchBanners();
+    
+    // Refresh banners periodically (every 5 minutes)
+    setInterval(fetchBanners, 5 * 60 * 1000);
 });
 
 // Setup menu event listeners
@@ -2403,6 +2410,10 @@ function setupSidebarToggle() {
 let currentLicense = null;
 const LICENSE_SERVER_URL = 'http://localhost:3001';
 
+// Banner Management
+let activeBanners = [];
+let dismissedBanners = new Set();
+
 // Copy test key to license input
 function copyToLicense(element) {
     const licenseKey = element.textContent;
@@ -2455,11 +2466,15 @@ async function validateLicenseKey() {
             updateFeatureStatus(result.license.features);
             saveLicenseToStorage(result.license);
             showNotification('License Validated', 'License key is valid and features have been unlocked!', 'success');
+            // Refresh banners since user type changed
+            await fetchBanners();
         } else {
             updateLicenseStatus(false, result.error || 'Invalid license key');
             updateFeatureStatus([]);
             currentLicense = null;
             clearLicenseFromStorage();
+            // Refresh banners since user type changed
+            await fetchBanners();
         }
         
     } catch (error) {
@@ -2615,6 +2630,128 @@ function setupLicenseListeners() {
     
     // Load saved license on startup
     loadLicenseFromStorage();
+}
+
+// Banner Management Functions
+
+// Fetch banners from server
+async function fetchBanners() {
+    try {
+        const userType = currentLicense ? 'premium' : 'free';
+        const language = getCurrentLanguage();
+        
+        const response = await fetch(`${LICENSE_SERVER_URL}/api/banners?userType=${userType}&language=${language}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            activeBanners = result.banners;
+            displayBanners();
+        } else {
+            console.error('Failed to fetch banners:', result.error);
+        }
+    } catch (error) {
+        console.error('Error fetching banners:', error);
+    }
+}
+
+// Display banners in the UI
+function displayBanners() {
+    const bannerContainer = document.getElementById('bannerContainer');
+    const appContainer = document.querySelector('.app-container');
+    
+    if (!bannerContainer || !appContainer) return;
+    
+    // Filter out dismissed banners
+    const visibleBanners = activeBanners.filter(banner => !dismissedBanners.has(banner.id));
+    
+    if (visibleBanners.length === 0) {
+        bannerContainer.classList.add('hidden');
+        appContainer.classList.remove('has-banners');
+        appContainer.style.setProperty('--banner-height', '0px');
+        return;
+    }
+    
+    // Clear existing banners
+    bannerContainer.innerHTML = '';
+    
+    // Create banner elements
+    visibleBanners.forEach(banner => {
+        const bannerElement = createBannerElement(banner);
+        bannerContainer.appendChild(bannerElement);
+    });
+    
+    // Show banner container and adjust app layout
+    bannerContainer.classList.remove('hidden');
+    appContainer.classList.add('has-banners');
+    
+    // Calculate total banner height
+    setTimeout(() => {
+        const totalHeight = bannerContainer.offsetHeight;
+        appContainer.style.setProperty('--banner-height', `${totalHeight}px`);
+    }, 100);
+}
+
+// Create a banner element
+function createBannerElement(banner) {
+    const bannerDiv = document.createElement('div');
+    bannerDiv.className = `banner ${banner.type}`;
+    bannerDiv.setAttribute('data-banner-id', banner.id);
+    
+    // Get icon based on banner type
+    const iconMap = {
+        info: 'fas fa-info-circle',
+        warning: 'fas fa-exclamation-triangle',
+        success: 'fas fa-check-circle',
+        error: 'fas fa-times-circle'
+    };
+    
+    bannerDiv.innerHTML = `
+        <div class="banner-content">
+            <i class="banner-icon ${iconMap[banner.type] || 'fas fa-info-circle'}"></i>
+            <div class="banner-message">${banner.message}</div>
+        </div>
+        ${banner.dismissible ? `
+            <button class="banner-close" onclick="dismissBanner('${banner.id}')">
+                <i class="fas fa-times"></i>
+            </button>
+        ` : ''}
+    `;
+    
+    return bannerDiv;
+}
+
+// Dismiss a banner
+function dismissBanner(bannerId) {
+    dismissedBanners.add(bannerId);
+    saveDismissedBanners();
+    displayBanners();
+}
+
+// Save dismissed banners to localStorage
+function saveDismissedBanners() {
+    try {
+        localStorage.setItem('maraikka_dismissed_banners', JSON.stringify([...dismissedBanners]));
+    } catch (error) {
+        console.error('Error saving dismissed banners:', error);
+    }
+}
+
+// Load dismissed banners from localStorage
+function loadDismissedBanners() {
+    try {
+        const dismissed = localStorage.getItem('maraikka_dismissed_banners');
+        if (dismissed) {
+            dismissedBanners = new Set(JSON.parse(dismissed));
+        }
+    } catch (error) {
+        console.error('Error loading dismissed banners:', error);
+        dismissedBanners = new Set();
+    }
+}
+
+// Get current language
+function getCurrentLanguage() {
+    return localStorage.getItem('maraikka_language') || 'en';
 }
 
 // Tooltip functionality for collapsed sidebar

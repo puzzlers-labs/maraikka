@@ -47,6 +47,74 @@ const LICENSE_KEYS = [
     }
 ];
 
+// Banner Configuration Database
+const BANNERS = [
+    {
+        id: 'welcome-2024',
+        type: 'info',
+        messages: {
+            en: 'Welcome to Maraikka 2024! Experience enhanced security with our latest encryption features.',
+            es: '¡Bienvenido a Maraikka 2024! Experimenta seguridad mejorada con nuestras últimas características de cifrado.',
+            hi: 'Maraikka 2024 में आपका स्वागत है! हमारी नवीनतम एन्क्रिप्शन सुविधाओं के साथ बेहतर सुरक्षा का अनुभव करें।',
+            ja: 'Maraikka 2024へようこそ！最新の暗号化機能で強化されたセキュリティをご体験ください。'
+        },
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-12-31'),
+        isActive: true,
+        priority: 1,
+        dismissible: true,
+        targetAudience: 'all' // 'all', 'free', 'premium'
+    },
+    {
+        id: 'security-update',
+        type: 'warning',
+        messages: {
+            en: 'Important: Please update to the latest version for critical security improvements.',
+            es: 'Importante: Por favor actualiza a la última versión para mejoras críticas de seguridad.',
+            hi: 'महत्वपूर्ण: महत्वपूर्ण सुरक्षा सुधारों के लिए कृपया नवीनतम संस्करण में अपडेट करें।',
+            ja: '重要：重要なセキュリティ改善のため、最新バージョンにアップデートしてください。'
+        },
+        startDate: new Date('2024-01-15'),
+        endDate: new Date('2024-02-15'),
+        isActive: true,
+        priority: 2,
+        dismissible: false,
+        targetAudience: 'all'
+    },
+    {
+        id: 'premium-features',
+        type: 'success',
+        messages: {
+            en: 'Unlock premium features like hardware authentication and bulk operations with a license key!',
+            es: '¡Desbloquea características premium como autenticación de hardware y operaciones en lote con una clave de licencia!',
+            hi: 'लाइसेंस कुंजी के साथ हार्डवेयर प्रमाणीकरण और बल्क ऑपरेशन जैसी प्रीमियम सुविधाओं को अनलॉक करें!',
+            ja: 'ライセンスキーでハードウェア認証やバルク操作などのプレミアム機能をアンロックしましょう！'
+        },
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-06-30'),
+        isActive: true,
+        priority: 3,
+        dismissible: true,
+        targetAudience: 'free'
+    },
+    {
+        id: 'maintenance-notice',
+        type: 'error',
+        messages: {
+            en: 'Scheduled maintenance on Feb 1-2. Some features may be temporarily unavailable.',
+            es: 'Mantenimiento programado del 1-2 de febrero. Algunas características pueden estar temporalmente no disponibles.',
+            hi: '1-2 फरवरी को निर्धारित रखरखाव। कुछ सुविधाएं अस्थायी रूप से अनुपलब्ध हो सकती हैं।',
+            ja: '2月1-2日にメンテナンスを予定しています。一部機能が一時的に利用できない場合があります。'
+        },
+        startDate: new Date('2024-02-01'),
+        endDate: new Date('2024-02-02'),
+        isActive: false,
+        priority: 1,
+        dismissible: false,
+        targetAudience: 'all'
+    }
+];
+
 // Helper function to validate license key format
 function isValidKeyFormat(key) {
     // Expected format: MRKK-XXXX-XXXX-XXXX
@@ -236,6 +304,50 @@ app.post('/api/license-info', (req, res) => {
 
     } catch (error) {
         console.error('License info error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+});
+
+// Get active banners
+app.get('/api/banners', (req, res) => {
+    try {
+        const { userType = 'free', language = 'en' } = req.query; // 'free', 'premium', or 'all'
+        const now = new Date();
+        
+        // Filter banners based on criteria
+        const activeBanners = BANNERS.filter(banner => {
+            // Check if banner is active
+            if (!banner.isActive) return false;
+            
+            // Check date range
+            if (now < banner.startDate || now > banner.endDate) return false;
+            
+            // Check target audience
+            if (banner.targetAudience !== 'all' && banner.targetAudience !== userType) return false;
+            
+            return true;
+        });
+        
+        // Sort by priority (lower number = higher priority)
+        activeBanners.sort((a, b) => a.priority - b.priority);
+        
+        res.json({
+            success: true,
+            banners: activeBanners.map(banner => ({
+                id: banner.id,
+                type: banner.type,
+                message: banner.messages[language] || banner.messages['en'], // Fallback to English
+                priority: banner.priority,
+                dismissible: banner.dismissible,
+                targetAudience: banner.targetAudience
+            }))
+        });
+
+    } catch (error) {
+        console.error('Banner fetch error:', error);
         res.status(500).json({
             success: false,
             error: 'Internal server error'

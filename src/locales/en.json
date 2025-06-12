@@ -195,6 +195,7 @@
     "externalLink": "External Link",
     "externalLinkDescription": "Link functionality will be implemented in production build"
   },
+
   "fileTypes": {
     "image": "Image",
     "video": "Video", 

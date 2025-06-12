@@ -82,6 +82,120 @@ body.dark {
   color: rgba(255, 255, 255, 0.8);
 }
 
+/* Banner Container */
+.banner-container {
+  position: fixed;
+  top: 32px;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.banner {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  font-weight: 500;
+  animation: bannerSlideDown 0.3s ease-out;
+}
+
+.dark .banner {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.banner.info {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.dark .banner.info {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #93c5fd;
+}
+
+.banner.warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.dark .banner.warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
+
+.banner.success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.dark .banner.success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #6ee7b7;
+}
+
+.banner.error {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.dark .banner.error {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.banner-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.banner-message {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.banner-close {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.banner-close:hover {
+  opacity: 1;
+}
+
+.banner-close i {
+  font-size: 0.875rem;
+}
+
+@keyframes bannerSlideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* App Container */
 .app-container {
   display: flex;
@@ -89,6 +203,11 @@ body.dark {
   margin-top: 32px;
   background-color: #f9fafb;
   overflow: hidden;
+  transition: margin-top 0.3s ease;
+}
+
+.app-container.has-banners {
+  margin-top: calc(32px + var(--banner-height, 0px));
 }
 
 .dark .app-container {

@@ -192,6 +192,7 @@
     "externalLink": "बाहरी लिंक",
     "externalLinkDescription": "लिंक कार्यक्षमता प्रोडक्शन बिल्ड में लागू की जाएगी"
   },
+
   "fileTypes": {
     "image": "छवि",
     "video": "वीडियो", 

@@ -192,6 +192,7 @@
     "externalLink": "Enlace Externo",
     "externalLinkDescription": "La funcionalidad de enlaces se implementará en la versión de producción"
   },
+
   "fileTypes": {
     "image": "Imagen",
     "video": "Video", 
