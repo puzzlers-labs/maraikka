@@ -1,5 +1,67 @@
 // Application state
 console.log('🚀 Renderer.js loaded - Version 2.0 with fixed action handling');
+
+// i18n initialization
+async function initializeI18n() {
+    try {
+        // Wait for i18n to be ready
+        if (window.i18n) {
+            await window.i18n.initializeLanguage();
+            setupLanguageChangeListener();
+        }
+    } catch (error) {
+        console.error('Failed to initialize i18n:', error);
+    }
+}
+
+function setupLanguageChangeListener() {
+    // Listen for language changes
+    document.addEventListener('languageChanged', (event) => {
+        const newLanguage = event.detail.language;
+        console.log('Language changed to:', newLanguage);
+        
+        // Update language selector
+        const languageSelect = document.getElementById('languageSelect');
+        if (languageSelect) {
+            languageSelect.value = newLanguage;
+        }
+        
+        // Re-render file list to update dynamic content
+        if (currentDirectoryContents) {
+            renderFileList();
+        }
+        
+        // Update notifications and other dynamic content
+        updateDynamicTranslations();
+    });
+}
+
+function updateDynamicTranslations() {
+    // Update file type labels and any other dynamic content
+    const fileItems = document.querySelectorAll('.file-meta');
+    fileItems.forEach(item => {
+        const typeElement = item.querySelector('.file-type');
+        if (typeElement) {
+            const currentType = typeElement.textContent;
+            // Update type translations if needed
+            switch (currentType) {
+                case 'Encrypted':
+                case 'Cifrado':
+                case 'एन्क्रिप्टेड':
+                case '暗号化済み':
+                    typeElement.textContent = window.i18n.t('fileList.encrypted');
+                    break;
+                case 'Directory':
+                case 'Directorio':
+                case 'डायरेक्टरी':
+                case 'ディレクトリ':
+                    typeElement.textContent = window.i18n.t('fileList.directory');
+                    break;
+            }
+        }
+    });
+}
+
 let currentDirectory = null;
 let currentDirectoryContents = [];
 let currentAction = null;
@@ -74,7 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Initialize the app
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize i18n system first
+    await initializeI18n();
+    
     // Setup menu event listeners
     setupMenuListeners();
     
@@ -82,6 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setupPreferencesListeners();
     setupHardwareAuthListeners();
     setupLicenseListeners();
+    
+    // Setup text editor
+
     
     // Load saved preferences
     loadPreferences();
@@ -173,7 +241,11 @@ async function selectDirectory() {
             enableButtons();
             updateCurrentPath();
             updateStatus('Directory loaded successfully');
-            showNotification('Directory Selected', `Loaded: ${selectedPath}`, 'success');
+            showNotification(
+                window.i18n ? window.i18n.t('notifications.success') : 'Directory Selected', 
+                `Loaded: ${selectedPath}`, 
+                'success'
+            );
         } else {
             console.log('Renderer: No directory selected');
         }
@@ -236,6 +308,10 @@ function renderListView() {
         const icon = getFileIcon(item.name, isDirectory, isEncrypted);
         const size = formatFileSize(item.size);
         const modified = formatDate(item.modified);
+        
+        // Get translated labels
+        const encryptedLabel = window.i18n ? window.i18n.t('fileList.encrypted') : 'Encrypted';
+        const directoryLabel = window.i18n ? window.i18n.t('fileList.directory') : 'Directory';
 
         const listItem = document.createElement('li');
         listItem.className = 'file-item';
@@ -248,9 +324,9 @@ function renderListView() {
             <div class="file-info">
                 <div class="file-name">${item.name}</div>
                 <div class="file-meta">
-                    <span>${isDirectory ? 'Directory' : size}</span>
+                    <span class="file-type">${isDirectory ? directoryLabel : size}</span>
                     <span>${modified}</span>
-                    ${isEncrypted ? '<span style="color: #10b981;"><i class="fas fa-lock"></i> Encrypted</span>' : ''}
+                    ${isEncrypted ? `<span style="color: #10b981;"><i class="fas fa-lock"></i> ${encryptedLabel}</span>` : ''}
                 </div>
             </div>
             <div class="file-actions">
@@ -270,6 +346,11 @@ function renderListView() {
             </div>
         `;
         
+        // Add context menu event listener
+        listItem.addEventListener('contextmenu', (e) => {
+            showContextMenu(e, item.path, isEncrypted, isDirectory);
+        });
+        
         fileList.appendChild(listItem);
     });
     
@@ -282,6 +363,10 @@ function renderGridView() {
         const isDirectory = item.isDirectory;
         const icon = getFileIcon(item.name, isDirectory, isEncrypted);
         const size = formatFileSize(item.size);
+        
+        // Get translated labels
+        const encryptedLabel = window.i18n ? window.i18n.t('fileList.encrypted') : 'Encrypted';
+        const directoryLabel = window.i18n ? window.i18n.t('fileList.directory') : 'Directory';
 
         const gridItem = document.createElement('div');
         gridItem.className = 'file-card';
@@ -293,8 +378,8 @@ function renderGridView() {
             </div>
             <div class="file-name">${item.name}</div>
             <div class="file-meta">
-                <span>${isDirectory ? 'Directory' : size}</span>
-                ${isEncrypted ? '<div style="color: #10b981; margin-top: 0.25rem;"><i class="fas fa-lock"></i> Encrypted</div>' : ''}
+                <span class="file-type">${isDirectory ? directoryLabel : size}</span>
+                ${isEncrypted ? `<div style="color: #10b981; margin-top: 0.25rem;"><i class="fas fa-lock"></i> ${encryptedLabel}</div>` : ''}
             </div>
             <div class="file-actions">
                 ${!isDirectory ? `
@@ -312,6 +397,11 @@ function renderGridView() {
                 ` : ''}
             </div>
         `;
+        
+        // Add context menu event listener
+        gridItem.addEventListener('contextmenu', (e) => {
+            showContextMenu(e, item.path, isEncrypted, isDirectory);
+        });
         
         fileGrid.appendChild(gridItem);
     });
@@ -391,7 +481,8 @@ function showPasswordModal(action) {
     console.log(`Renderer: showPasswordModal called with action: ${action}`);
     currentAction = action;
     console.log(`Renderer: currentAction set to: ${currentAction}`);
-    modalTitle.textContent = action === 'encrypt' ? 'Encrypt Directory' : 'Decrypt Directory';
+    const titleKey = action === 'encrypt' ? 'modals.encryptDirectory' : 'modals.decryptDirectory';
+    modalTitle.textContent = window.i18n ? window.i18n.t(titleKey) : (action === 'encrypt' ? 'Encrypt Directory' : 'Decrypt Directory');
     passwordInput.value = '';
     passwordModal.classList.remove('hidden');
     passwordInput.focus();
@@ -410,7 +501,9 @@ function showSingleFilePasswordModal(action, filePath) {
     currentAction = action;
     currentFilePath = filePath;
     const fileName = filePath.split('/').pop();
-    modalTitle.textContent = action === 'encrypt' ? `Encrypt File: ${fileName}` : `Decrypt File: ${fileName}`;
+    const titleKey = action === 'encrypt' ? 'modals.encryptFile' : 'modals.decryptFile';
+    const titleText = window.i18n ? window.i18n.t(titleKey) : (action === 'encrypt' ? 'Encrypt File' : 'Decrypt File');
+    modalTitle.textContent = `${titleText}: ${fileName}`;
     passwordInput.value = '';
     passwordModal.classList.remove('hidden');
     passwordInput.focus();
@@ -828,6 +921,11 @@ function applyTheme(theme) {
     }
     
     localStorage.setItem('maraikka-theme', theme);
+    
+    // Broadcast theme change to all open editor windows
+    if (window.electronAPI && window.electronAPI.broadcastThemeChange) {
+        window.electronAPI.broadcastThemeChange(theme);
+    }
 }
 
 // Setup preferences event listeners (called after DOM is loaded)
@@ -854,6 +952,25 @@ function setupPreferencesListeners() {
         });
     });
     
+    // Language selector
+    const languageSelect = document.getElementById('languageSelect');
+    if (languageSelect) {
+        // Set current language
+        languageSelect.value = window.i18n ? window.i18n.getCurrentLanguage() : 'en';
+        
+        languageSelect.addEventListener('change', async (e) => {
+            const selectedLanguage = e.target.value;
+            if (window.i18n) {
+                await window.i18n.changeLanguage(selectedLanguage);
+                showNotification(
+                    window.i18n.t('notifications.success'), 
+                    `Language changed to ${selectedLanguage}`, 
+                    'success'
+                );
+            }
+        });
+    }
+
     // Theme selector
     document.querySelectorAll('.theme-option').forEach(option => {
         option.addEventListener('click', () => {
@@ -865,7 +982,11 @@ function setupPreferencesListeners() {
             
             // Apply theme
             applyTheme(theme);
-            showNotification('Theme Updated', `Switched to ${theme} theme`, 'success');
+            showNotification(
+                window.i18n ? window.i18n.t('notifications.success') : 'Theme Updated', 
+                window.i18n ? `Switched to ${window.i18n.t('preferences.theme' + (theme === 'dark' ? 'Dark' : 'Light'))} theme` : `Switched to ${theme} theme`, 
+                'success'
+            );
         });
     });
     
@@ -880,23 +1001,69 @@ function openExternal(url) {
     showNotification('External Link', 'Link functionality will be implemented in production build', 'info');
 }
 
-// Close preferences with Escape key
+// Close modals with Escape key
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && preferencesModal.classList.contains('show')) {
-        closePreferences();
+    if (e.key === 'Escape') {
+        // Handle escape key for all modals/panels in order of priority
+        // Check if context menu is open
+        if (contextMenu.classList.contains('show')) {
+            hideContextMenu();
+        }
+        // Check if preview pane is open with password prompt
+        else if (!previewPane.classList.contains('hidden') && 
+            document.querySelector('.preview-password-prompt')) {
+            // This is handled by the password prompt's own keydown listener
+            return;
+        }
+        // Check modals in order of priority
+        else if (!passwordModal.classList.contains('hidden')) {
+            closePasswordModal();
+        } else if (!preferencesModal.classList.contains('hidden')) {
+            closePreferences();
+        } else if (!document.getElementById('hardwareAuthModal').classList.contains('hidden')) {
+            closeHardwareAuthModal();
+        }
+        // Close preview pane if it's open (and no password prompt)
+        else if (!previewPane.classList.contains('hidden')) {
+            closePreviewPane();
+        }
     }
 });
 
-// Close preferences when clicking outside
-preferencesModal.addEventListener('click', (e) => {
-    if (e.target === preferencesModal) {
-        closePreferences();
+// Unified click-outside handling for all modals
+function setupModalClickOutsideHandlers() {
+    // Password modal click-outside handler
+    passwordModal.addEventListener('click', (e) => {
+        if (e.target === passwordModal) {
+            closePasswordModal();
+        }
+    });
+
+    // Preferences modal click-outside handler
+    preferencesModal.addEventListener('click', (e) => {
+        if (e.target === preferencesModal) {
+            closePreferences();
+        }
+    });
+
+    // Hardware auth modal click-outside handler
+    const hardwareAuthModal = document.getElementById('hardwareAuthModal');
+    if (hardwareAuthModal) {
+        hardwareAuthModal.addEventListener('click', (e) => {
+            if (e.target === hardwareAuthModal) {
+                closeHardwareAuthModal();
+            }
+        });
     }
-});
+}
+
+// Initialize modal handlers
+setupModalClickOutsideHandlers();
 
 // File Preview Functionality
 let isResizing = false;
 let currentPreviewFile = null;
+let sidebarAutoHidden = false; // Track if sidebar was automatically hidden due to preview
 
 // Preview pane elements
 const previewPane = document.getElementById('previewPane');
@@ -972,6 +1139,9 @@ function openPreviewPane() {
     const mainContent = document.querySelector('.main-content');
     const previewWidth = previewPane.offsetWidth || 480; // Default 30rem = 480px
     mainContent.style.marginRight = `${previewWidth}px`;
+    
+    // Auto-collapse sidebar if it's not already collapsed and preview would cause space issues
+    autoManageSidebarForPreview(true);
 }
 
 function closePreviewPane() {
@@ -984,6 +1154,9 @@ function closePreviewPane() {
     
     clearPreviewContent();
     currentPreviewFile = null;
+    
+    // Auto-expand sidebar if it was auto-collapsed
+    autoManageSidebarForPreview(false);
 }
 
 function showPreviewLoader() {
@@ -1076,10 +1249,12 @@ function showPasswordPrompt(filePath) {
     unlockBtn.addEventListener('click', handleUnlock);
     cancelBtn.addEventListener('click', handleCancel);
     
-    // Enter key to unlock
+    // Enter key to unlock, Escape key to cancel
     passwordInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !unlockBtn.disabled) {
             handleUnlock();
+        } else if (e.key === 'Escape') {
+            handleCancel();
         }
     });
 }
@@ -1523,13 +1698,18 @@ async function renderVideoPreview(filePath) {
 async function renderTextPreview(filePath) {
     try {
         // Use Electron's fs to read text files
-        const content = await window.electronAPI.readTextFile(filePath);
+        const result = await window.electronAPI.readTextFile(filePath);
         
-        const textDiv = document.createElement('div');
-        textDiv.className = 'preview-text';
-        textDiv.textContent = content;
-        
-        previewContent.appendChild(textDiv);
+        if (result.success) {
+            const textDiv = document.createElement('div');
+            textDiv.className = 'preview-text';
+            textDiv.textContent = result.content;
+            
+            previewContent.appendChild(textDiv);
+        } else {
+            console.error('Error reading text file:', result.error);
+            showPreviewError();
+        }
     } catch (error) {
         console.error('Error reading text file:', error);
         showPreviewError();
@@ -2200,9 +2380,14 @@ function setupSidebarToggle() {
             sidebar.classList.toggle('collapsed');
             appContainer.classList.toggle('sidebar-collapsed');
             
+            // Reset auto-hidden flag since user is manually controlling sidebar
+            sidebarAutoHidden = false;
+            
             // Save the state to localStorage
             const isCollapsed = sidebar.classList.contains('collapsed');
             localStorage.setItem('sidebarCollapsed', isCollapsed);
+            
+            console.log('Manual sidebar toggle - auto-hidden flag reset');
         });
     }
     
@@ -2576,3 +2761,299 @@ function setupDensitySlider() {
         fileGrid.classList.add(`density-${value}`);
     }
 }
+
+// Intelligent sidebar management for preview pane
+function autoManageSidebarForPreview(isPreviewOpening) {
+    const sidebar = document.querySelector('.sidebar');
+    const isSidebarCollapsed = sidebar && sidebar.classList.contains('collapsed');
+    
+    if (isPreviewOpening) {
+        // Preview is opening - collapse sidebar if it's not already collapsed
+        if (!isSidebarCollapsed) {
+            // Check if we should auto-collapse based on window width
+            if (shouldAutoCollapseSidebar()) {
+                sidebar.classList.add('collapsed');
+                appContainer.classList.add('sidebar-collapsed');
+                sidebarAutoHidden = true;
+                
+                console.log('Auto-collapsed sidebar for preview');
+                
+                // Don't save to localStorage - this is temporary auto-collapse
+                // The user's manual preference remains intact
+            }
+        }
+    } else {
+        // Preview is closing - expand sidebar if it was auto-collapsed
+        if (sidebarAutoHidden && isSidebarCollapsed) {
+            sidebar.classList.remove('collapsed');
+            appContainer.classList.remove('sidebar-collapsed');
+            sidebarAutoHidden = false;
+            
+            console.log('Auto-expanded sidebar after preview closed');
+            
+            // Don't save to localStorage - restore to original state
+        }
+    }
+}
+
+// Determine if sidebar should be auto-collapsed based on available space
+function shouldAutoCollapseSidebar() {
+    // Auto-collapse if window width is less than a threshold where sidebar + content + preview becomes cramped
+    const windowWidth = window.innerWidth;
+    const sidebarWidth = 280; // Approximate sidebar width
+    const previewWidth = 480; // Approximate preview width  
+    const minContentWidth = 400; // Minimum space needed for file content
+    
+    return windowWidth < (sidebarWidth + minContentWidth + previewWidth + 100); // 100px buffer
+}
+
+// Handle window resize for sidebar auto-management
+let resizeTimer;
+function handleWindowResize() {
+    // Debounce resize events to prevent excessive calls
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        // Only manage sidebar if preview is currently open
+        if (!previewPane.classList.contains('hidden')) {
+            const sidebar = document.querySelector('.sidebar');
+            const isSidebarCollapsed = sidebar && sidebar.classList.contains('collapsed');
+            
+            if (shouldAutoCollapseSidebar()) {
+                // Window is now small - collapse sidebar if not already collapsed and not manually set
+                if (!isSidebarCollapsed && !sidebarAutoHidden) {
+                    sidebar.classList.add('collapsed');
+                    appContainer.classList.add('sidebar-collapsed');
+                    sidebarAutoHidden = true;
+                    console.log('Auto-collapsed sidebar due to window resize');
+                }
+            } else {
+                // Window is now large enough - expand sidebar if it was auto-hidden
+                if (sidebarAutoHidden && isSidebarCollapsed) {
+                    sidebar.classList.remove('collapsed');
+                    appContainer.classList.remove('sidebar-collapsed');
+                    sidebarAutoHidden = false;  
+                    console.log('Auto-expanded sidebar due to window resize');
+                }
+            }
+        }
+    }, 150); // 150ms debounce
+}
+
+// Add window resize listener
+window.addEventListener('resize', handleWindowResize);
+
+// Context menu state
+let contextMenuTarget = null;
+let contextMenuAnimating = false;
+const contextMenu = document.getElementById('fileContextMenu');
+
+// Initialize context menu
+setupContextMenu();
+
+// Context Menu Functionality
+function setupContextMenu() {
+    // Hide context menu on click outside or scroll
+    document.addEventListener('click', hideContextMenu);
+    document.addEventListener('scroll', hideContextMenu, true);
+    
+    // Handle context menu item clicks
+    contextMenu.addEventListener('click', handleContextMenuClick);
+    
+    // Prevent context menu on context menu itself
+    contextMenu.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+    });
+}
+
+function showContextMenu(e, filePath, isEncrypted, isDirectory) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Prevent showing if already animating
+    if (contextMenuAnimating) return;
+    
+    // Store target information
+    contextMenuTarget = {
+        filePath,
+        isEncrypted,
+        isDirectory
+    };
+    
+    // Update menu items based on file type
+    updateContextMenuItems();
+    
+    // Position and show context menu with animation
+    positionContextMenu(e.clientX, e.clientY);
+    
+    // Remove hidden class and add show class for animation
+    contextMenu.classList.remove('hidden', 'hide');
+    
+    // Trigger animation on next frame
+    requestAnimationFrame(() => {
+        contextMenuAnimating = true;
+        contextMenu.classList.add('show');
+        
+        // Reset animation flag after animation completes
+        setTimeout(() => {
+            contextMenuAnimating = false;
+        }, 150);
+    });
+}
+
+function hideContextMenu() {
+    if (contextMenu.classList.contains('hidden') || contextMenuAnimating) {
+        return;
+    }
+    
+    contextMenuAnimating = true;
+    
+    // Add hide class for exit animation
+    contextMenu.classList.remove('show');
+    contextMenu.classList.add('hide');
+    
+    // After animation completes, fully hide the menu
+    setTimeout(() => {
+        contextMenu.classList.add('hidden');
+        contextMenu.classList.remove('hide');
+        contextMenuTarget = null;
+        contextMenuAnimating = false;
+    }, 150);
+}
+
+function positionContextMenu(x, y) {
+    const menuRect = contextMenu.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    // Adjust position if menu would go off screen
+    let left = x;
+    let top = y;
+    
+    if (x + menuRect.width > windowWidth) {
+        left = x - menuRect.width;
+    }
+    
+    if (y + menuRect.height > windowHeight) {
+        top = y - menuRect.height;
+    }
+    
+    contextMenu.style.left = `${left}px`;
+    contextMenu.style.top = `${top}px`;
+}
+
+function updateContextMenuItems() {
+    if (!contextMenuTarget) return;
+    
+    const { filePath, isEncrypted, isDirectory } = contextMenuTarget;
+    const previewItem = contextMenu.querySelector('[data-action="preview"]');
+    const editItem = contextMenu.querySelector('[data-action="edit"]');
+    const encryptItem = contextMenu.querySelector('[data-action="encrypt"]');
+    const decryptItem = contextMenu.querySelector('[data-action="decrypt"]');
+    
+    // Handle preview availability
+    if (isDirectory) {
+        previewItem.classList.add('disabled');
+    } else {
+        const canPreview = isPreviewableFile(filePath.split('/').pop()) || 
+                          isPreviewableEncryptedFile(filePath.split('/').pop(), isEncrypted);
+        
+        if (canPreview) {
+            previewItem.classList.remove('disabled');
+        } else {
+            previewItem.classList.add('disabled');
+        }
+    }
+    
+    // Handle edit availability for text files
+    if (isDirectory) {
+        editItem.classList.add('disabled');
+    } else {
+        const fileName = filePath.split('/').pop();
+        let canEdit = false;
+        
+        if (isEncrypted) {
+            // For encrypted files, check the original extension
+            const originalName = fileName.replace(/\.enc$/, '');
+            const ext = originalName.split('.').pop().toLowerCase();
+            canEdit = isTextFile(ext);
+        } else {
+            // For regular files, check extension directly
+            const ext = fileName.split('.').pop().toLowerCase();
+            canEdit = isTextFile(ext);
+        }
+        
+        if (canEdit) {
+            editItem.classList.remove('disabled');
+        } else {
+            editItem.classList.add('disabled');
+        }
+    }
+    
+    // Encrypt/Decrypt are always available for files
+    if (isDirectory) {
+        encryptItem.classList.add('disabled');
+        decryptItem.classList.add('disabled');
+    } else {
+        encryptItem.classList.remove('disabled');
+        decryptItem.classList.remove('disabled');
+    }
+}
+
+function handleContextMenuClick(e) {
+    e.stopPropagation();
+    
+    const item = e.target.closest('.context-menu-item');
+    if (!item || item.classList.contains('disabled') || !contextMenuTarget) {
+        return;
+    }
+    
+    const action = item.getAttribute('data-action');
+    const { filePath, isEncrypted } = contextMenuTarget;
+    
+    // Hide context menu first
+    hideContextMenu();
+    
+    // Execute the action
+    switch (action) {
+        case 'preview':
+            previewFile(filePath, isEncrypted);
+            break;
+        case 'edit':
+            openTextEditor(filePath, isEncrypted);
+            break;
+        case 'encrypt':
+        case 'decrypt':
+            showSingleFilePasswordModal(action, filePath);
+            break;
+        default:
+            console.warn('Unknown context menu action:', action);
+    }
+}
+
+// Text Editor Functionality - Window-based implementation
+
+// Open text editor for a file in a new window
+async function openTextEditor(filePath, isEncrypted) {
+    console.log('Opening text editor window for:', filePath, 'Encrypted:', isEncrypted);
+    
+    try {
+        const result = await window.electronAPI.openTextEditorWindow(filePath, isEncrypted);
+        
+        if (!result.success) {
+            console.error('Failed to open text editor window:', result.error);
+            showNotification('Error', 
+                window.i18n ? window.i18n.t('editor.failedToOpen') : 'Failed to open text editor', 
+                'error'
+            );
+        }
+    } catch (error) {
+        console.error('Error opening text editor window:', error);
+        showNotification('Error', 
+            window.i18n ? window.i18n.t('editor.failedToOpen') : 'Failed to open text editor', 
+            'error'
+        );
+    }
+}
+
+
+

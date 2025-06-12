@@ -11,6 +11,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readBinaryFile: (filePath) => ipcRenderer.invoke('read-binary-file', filePath),
   decryptFileForPreview: (filePath, password) => ipcRenderer.invoke('decrypt-file-for-preview', filePath, password),
   
+  // Text editor APIs
+  writeTextFile: (filePath, content) => ipcRenderer.invoke('write-text-file', filePath, content),
+  decryptFileForEdit: (filePath, password) => ipcRenderer.invoke('decrypt-file-for-edit', filePath, password),
+  encryptAndSaveTextFile: (filePath, content, password) => ipcRenderer.invoke('encrypt-and-save-text-file', filePath, content, password),
+  openTextEditorWindow: (filePath, isEncrypted) => ipcRenderer.invoke('open-text-editor-window', filePath, isEncrypted),
+  editorUnsavedChangesResponse: (action, filePath) => ipcRenderer.invoke('editor-unsaved-changes-response', action, filePath),
+  updateEditorUnsavedStatus: (filePath, hasUnsavedChanges) => ipcRenderer.invoke('update-editor-unsaved-status', filePath, hasUnsavedChanges),
+  broadcastThemeChange: (theme) => ipcRenderer.invoke('broadcast-theme-change', theme),
+  
   // Hardware Authentication APIs
   hardwareAuthAvailable: () => ipcRenderer.invoke('hardware-auth-available'),
   saveHardwareAuthCredential: (credentialId, challenge) => ipcRenderer.invoke('save-hardware-auth-credential', credentialId, challenge),
@@ -26,6 +35,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Context menu event listeners
   onContextAction: (callback) => ipcRenderer.on('context-action', callback),
+  
+  // Text editor window event listeners
+  onLoadFile: (callback) => ipcRenderer.on('load-file', callback),
+  onCheckUnsavedChanges: (callback) => ipcRenderer.on('check-unsaved-changes', callback),
+  onThemeChanged: (callback) => ipcRenderer.on('theme-changed', callback),
+  getCurrentTheme: () => ipcRenderer.invoke('get-current-theme'),
   
   // Remove listeners
   removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)

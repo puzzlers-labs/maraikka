@@ -1,0 +1,181 @@
+{
+  "app": {
+    "title": "Maraikka",
+    "version": "Versión 1.0.0",
+    "description": "Una aplicación de cifrado de archivos segura para proteger sus datos confidenciales."
+  },
+  "sidebar": {
+    "actions": "ACCIONES",
+    "selectDirectory": "Seleccionar Directorio",
+    "encryptDirectory": "Cifrar Directorio",
+    "decryptDirectory": "Descifrar Directorio",
+    "refresh": "Actualizar",
+    "preferences": "Preferencias",
+    "currentPath": "RUTA ACTUAL",
+    "noDirectorySelected": "Ningún directorio seleccionado"
+  },
+  "fileList": {
+    "encrypted": "Cifrado",
+    "directory": "Directorio",
+    "noFiles": "No hay archivos en este directorio",
+    "selectDirectoryFirst": "Por favor seleccione un directorio para ver archivos"
+  },
+  "fileActions": {
+    "preview": "Vista Previa",
+    "encrypt": "Cifrar",
+    "decrypt": "Descifrar"
+  },
+  "contextMenu": {
+    "preview": "Vista Previa",
+    "encrypt": "Cifrar", 
+    "decrypt": "Descifrar",
+    "edit": "Editar"
+  },
+  "modals": {
+    "enterPassword": "Introducir Contraseña",
+    "encryptDirectory": "Cifrar Directorio",
+    "decryptDirectory": "Descifrar Directorio",
+    "encryptFile": "Cifrar Archivo",
+    "decryptFile": "Descifrar Archivo",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Introduce tu contraseña",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "close": "Cerrar"
+  },
+      "editor": {
+        "title": "Editor de Texto",
+        "save": "Guardar",
+        "saveAs": "Guardar Como",
+        "unsavedChanges": "Cambios Sin Guardar",
+        "unsavedChangesMessage": "Tienes cambios sin guardar. ¿Qué te gustaría hacer?",
+        "saveAndClose": "Guardar y Cerrar",
+        "closeWithoutSaving": "Cerrar Sin Guardar",
+        "cancel": "Cancelar",
+        "enterPassword": "Introducir Contraseña",
+        "passwordRequired": "Este archivo está cifrado. Por favor introduce la contraseña para editarlo.",
+        "unlock": "Desbloquear",
+        "loading": "Cargando archivo...",
+        "ready": "Listo",
+        "saveChanges": "Guardar Cambios",
+        "discardChanges": "Descartar Cambios",
+        "fileSaved": "Archivo guardado exitosamente",
+        "enterPasswordToEdit": "Introduce la contraseña para editar el archivo cifrado",
+        "decryptingFile": "Descifrando archivo...",
+        "encryptingFile": "Cifrando archivo...",
+        "failedToSave": "Error al guardar el archivo",
+        "failedToDecrypt": "Error al descifrar el archivo",
+        "failedToOpen": "Error al abrir el editor de texto",
+        "invalidPassword": "Contraseña inválida o archivo corrupto"
+    },
+  "preferences": {
+    "title": "Preferencias",
+    "general": "General",
+    "license": "Licencia", 
+    "about": "Acerca de",
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "language": "Idioma",
+    "fileGridDensity": "Densidad de Grilla de Archivos",
+    "densitySpacious": "Vista espaciosa",
+    "densityDense": "Vista densa",
+    "densityBalanced": "Equilibrado",
+    "densityDescription": "Espaciado cómodo para la mayoría de usuarios",
+    "security": "Seguridad",
+    "hardwareAuth": "Autenticación de Hardware",
+    "hardwareAuthDescription": "Usar FIDO2/WebAuthn (YubiKey, Touch ID, Windows Hello) para cifrado en lugar de contraseñas",
+    "noAuthenticatorRegistered": "Ningún autenticador registrado",
+    "registerAuthenticator": "Registrar Autenticador",
+    "removeAuthenticator": "Eliminar Autenticador"
+  },
+  "license": {
+    "licenseKey": "Clave de Licencia",
+    "licenseKeyPlaceholder": "Introduce tu clave de licencia",
+    "validate": "Validar",
+    "validating": "Validando...",
+    "noValidLicense": "Sin licencia válida",
+    "premiumFeatures": "Características Premium",
+    "fidoAuth": "Autenticación de Hardware FIDO2",
+    "fidoAuthDescription": "Usar YubiKey, Touch ID y Windows Hello para cifrado seguro",
+    "bulkOperations": "Operaciones en Lote",
+    "bulkOperationsDescription": "Cifrar/descifrar múltiples archivos y carpetas simultáneamente",
+    "cloudIntegration": "Integración con la Nube", 
+    "cloudIntegrationDescription": "Cifrar archivos almacenados en servicios de nube sin problemas",
+    "locked": "Bloqueado",
+    "unlocked": "Desbloqueado",
+    "testLicenseKeys": "Claves de Licencia de Prueba",
+    "testKeysDescription": "Para propósitos de prueba, usa una de estas claves demo:"
+  },
+  "about": {
+    "developer": "Desarrollador",
+    "developerName": "Maraikka Labs",
+    "licenseType": "Licencia",
+    "licenseValue": "Código Disponible",
+    "framework": "Framework",
+    "frameworkValue": "Electron",
+    "github": "GitHub",
+    "website": "Sitio Web"
+  },
+  "hardwareAuth": {
+    "title": "Autenticación de Hardware",
+    "register": "Registra tu Autenticador",
+    "registerDescription": "Usa tu dispositivo FIDO2 (YubiKey, Touch ID, Windows Hello) para asegurar tus claves de cifrado.",
+    "waitingForAuthenticator": "Esperando autenticador...",
+    "registerButton": "Registrar"
+  },
+  "preview": {
+    "encryptedFile": "Archivo Cifrado",
+    "enterPasswordToPreview": "Introduce la contraseña para previsualizar \"{fileName}\"",
+    "enterPassword": "Introduce contraseña",
+    "unlockAndPreview": "Desbloquear y Previsualizar",
+    "decrypting": "Descifrando...",
+    "unableToPreview": "No se puede previsualizar este archivo",
+    "pages": "páginas"
+  },
+  "notifications": {
+    "success": "Éxito",
+    "error": "Error",
+    "directoryEncryptedSuccessfully": "Directorio cifrado exitosamente",
+    "directoryDecryptedSuccessfully": "Directorio descifrado exitosamente",
+    "fileEncryptedSuccessfully": "Archivo \"{fileName}\" cifrado exitosamente",
+    "fileDecryptedSuccessfully": "Archivo \"{fileName}\" descifrado exitosamente",
+    "encryptionFailed": "Falló el cifrado",
+    "decryptionFailed": "Falló el descifrado",
+    "pleaseEnterPassword": "Por favor introduce una contraseña",
+    "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+    "noDirectorySelected": "Ningún directorio seleccionado",
+    "failedToEncryptDirectory": "Falló al cifrar directorio",
+    "failedToDecryptDirectory": "Falló al descifrar directorio",
+    "failedToEncryptFile": "Falló al cifrar archivo",
+    "failedToDecryptFile": "Falló al descifrar archivo",
+    "licenseValidated": "Licencia Validada", 
+    "licenseValidatedDescription": "¡La clave de licencia es válida y las características han sido desbloqueadas!",
+    "pleaseEnterLicenseKey": "Por favor introduce una clave de licencia",
+    "invalidLicenseKey": "Clave de licencia inválida",
+    "unableToValidateLicense": "No se puede validar la licencia. Por favor verifica tu conexión.",
+    "externalLink": "Enlace Externo",
+    "externalLinkDescription": "La funcionalidad de enlaces se implementará en la versión de producción"
+  },
+  "fileTypes": {
+    "image": "Imagen",
+    "video": "Video", 
+    "document": "Documento",
+    "archive": "Archivo",
+    "audio": "Audio",
+    "code": "Código"
+  },
+  "viewModes": {
+    "list": "Vista de Lista",
+    "grid": "Vista de Grilla"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "hi": "हिन्दी",
+    "ja": "日本語", 
+    "fr": "Français",
+    "de": "Deutsch",
+    "zh": "中文"
+  }
+} 

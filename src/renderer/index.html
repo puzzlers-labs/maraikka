@@ -6,6 +6,7 @@
     <title>Maraikka</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="i18n.js"></script>
 </head>
 <body class="dark">
     <!-- macOS Title Bar -->
@@ -35,38 +36,38 @@
             <nav class="sidebar-nav">
                 <!-- Actions Section (for the encryption tools) -->
                 <div class="nav-section">
-                    <h3 class="nav-section-title">ACTIONS</h3>
+                    <h3 class="nav-section-title" data-i18n="sidebar.actions">ACTIONS</h3>
                     <div class="nav-items">
-                        <button id="selectDirectoryBtn" class="nav-menu-item" data-tooltip="Select Directory">
+                        <button id="selectDirectoryBtn" class="nav-menu-item" data-i18n-title="sidebar.selectDirectory">
                             <i class="fas fa-folder-open nav-icon"></i>
-                            <span class="nav-text">Select Directory</span>
+                            <span class="nav-text" data-i18n="sidebar.selectDirectory">Select Directory</span>
                         </button>
-                        <button id="encryptBtn" class="nav-menu-item" disabled data-tooltip="Encrypt Directory">
+                        <button id="encryptBtn" class="nav-menu-item" disabled data-i18n-title="sidebar.encryptDirectory">
                             <i class="fas fa-lock nav-icon"></i>
-                            <span class="nav-text">Encrypt Directory</span>
+                            <span class="nav-text" data-i18n="sidebar.encryptDirectory">Encrypt Directory</span>
                         </button>
-                        <button id="decryptBtn" class="nav-menu-item" disabled data-tooltip="Decrypt Directory">
+                        <button id="decryptBtn" class="nav-menu-item" disabled data-i18n-title="sidebar.decryptDirectory">
                             <i class="fas fa-unlock nav-icon"></i>
-                            <span class="nav-text">Decrypt Directory</span>
+                            <span class="nav-text" data-i18n="sidebar.decryptDirectory">Decrypt Directory</span>
                         </button>
-                        <button id="refreshBtn" class="nav-menu-item" disabled data-tooltip="Refresh">
+                        <button id="refreshBtn" class="nav-menu-item" disabled data-i18n-title="sidebar.refresh">
                             <i class="fas fa-refresh nav-icon"></i>
-                            <span class="nav-text">Refresh</span>
+                            <span class="nav-text" data-i18n="sidebar.refresh">Refresh</span>
                         </button>
-                        <button id="preferencesBtn" class="nav-menu-item" data-tooltip="Preferences">
+                        <button id="preferencesBtn" class="nav-menu-item" data-i18n-title="sidebar.preferences">
                             <i class="fas fa-cog nav-icon"></i>
-                            <span class="nav-text">Preferences</span>
+                            <span class="nav-text" data-i18n="sidebar.preferences">Preferences</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Current Directory Info -->
                 <div class="nav-section">
-                    <h3 class="nav-section-title">CURRENT PATH</h3>
+                    <h3 class="nav-section-title" data-i18n="sidebar.currentPath">CURRENT PATH</h3>
                     <div class="current-directory">
                         <div class="current-path">
                             <i class="fas fa-folder"></i>
-                            <span id="currentPathText">No directory selected</span>
+                            <span id="currentPathText" data-i18n="sidebar.noDirectorySelected">No directory selected</span>
                         </div>
                     </div>
                 </div>
@@ -107,11 +108,11 @@
                     <div class="empty-icon">
                         <i class="fas fa-folder-open"></i>
                     </div>
-                    <h3 class="empty-title">No Directory Selected</h3>
-                    <p class="empty-description">Select a directory to view its contents and start encrypting or decrypting files.</p>
+                    <h3 class="empty-title" data-i18n="sidebar.noDirectorySelected">No Directory Selected</h3>
+                    <p class="empty-description" data-i18n="fileList.selectDirectoryFirst">Select a directory to view its contents and start encrypting or decrypting files.</p>
                     <button class="btn btn-primary" onclick="selectDirectory()">
                         <i class="fas fa-folder-open"></i>
-                        Select Directory
+                        <span data-i18n="sidebar.selectDirectory">Select Directory</span>
                     </button>
                 </div>
 
@@ -158,20 +159,20 @@
     <div id="passwordModal" class="modal-overlay hidden">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title" id="passwordModalTitle">Enter Password</h3>
+                <h3 class="modal-title" id="passwordModalTitle" data-i18n="modals.enterPassword">Enter Password</h3>
             </div>
             <div class="modal-body">
                 <form id="passwordForm">
                     <div class="form-group">
-                        <label for="passwordInput" class="form-label">Password</label>
+                        <label for="passwordInput" class="form-label" data-i18n="modals.password">Password</label>
                         <input type="password" id="passwordInput" class="form-input" 
-                               placeholder="Enter your password" required>
+                               data-i18n-placeholder="modals.passwordPlaceholder" placeholder="Enter your password" required>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="handlePasswordConfirm()">Confirm</button>
+                <button type="button" class="btn btn-secondary" onclick="closePasswordModal()" data-i18n="modals.cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="handlePasswordConfirm()" data-i18n="modals.confirm">Confirm</button>
             </div>
         </div>
     </div>
@@ -180,22 +181,22 @@
     <div id="preferencesModal" class="modal-overlay hidden">
         <div class="modal preferences-modal">
             <div class="modal-header">
-                <h3 class="modal-title">Preferences</h3>
+                <h3 class="modal-title" data-i18n="preferences.title">Preferences</h3>
             </div>
             
             <!-- Tabs -->
             <div class="preferences-tabs">
                 <button class="tab-btn active" data-tab="general">
                     <i class="fas fa-cog"></i>
-                    General
+                    <span data-i18n="preferences.general">General</span>
                 </button>
                 <button class="tab-btn" data-tab="license">
                     <i class="fas fa-key"></i>
-                    License
+                    <span data-i18n="preferences.license">License</span>
                 </button>
                 <button class="tab-btn" data-tab="about">
                     <i class="fas fa-info-circle"></i>
-                    About
+                    <span data-i18n="preferences.about">About</span>
                 </button>
             </div>
 
@@ -204,31 +205,43 @@
                 <!-- General Tab -->
                 <div id="generalTab" class="tab-panel active">
                     <div class="form-group">
-                        <label class="form-label">Theme</label>
+                        <label class="form-label" data-i18n="preferences.language">Language</label>
+                        <div class="language-selector">
+                            <select id="languageSelect" class="form-select">
+                                <option value="en" data-i18n="languages.en">English</option>
+                                <option value="es" data-i18n="languages.es">Español</option>
+                                <option value="hi" data-i18n="languages.hi">हिन्दी</option>
+                                <option value="ja" data-i18n="languages.ja">日本語</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="preferences.theme">Theme</label>
                         <div class="theme-selector">
                             <div class="theme-option active" data-theme="dark">
                                 <div class="theme-preview dark-preview"></div>
-                                <span>Dark</span>
+                                <span data-i18n="preferences.themeDark">Dark</span>
                             </div>
                             <div class="theme-option" data-theme="light">
                                 <div class="theme-preview light-preview"></div>
-                                <span>Light</span>
+                                <span data-i18n="preferences.themeLight">Light</span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">File Grid Density</label>
+                        <label class="form-label" data-i18n="preferences.fileGridDensity">File Grid Density</label>
                         <div class="density-slider-container">
                             <div class="density-slider-header">
                                 <div class="density-icon-container">
-                                    <i class="fas fa-expand-arrows-alt density-icon" title="Spacious view"></i>
+                                    <i class="fas fa-expand-arrows-alt density-icon" data-i18n-title="preferences.densitySpacious" title="Spacious view"></i>
                                 </div>
                                 <div class="density-label">
-                                    <span id="densityLabel">Balanced</span>
+                                    <span id="densityLabel" data-i18n="preferences.densityBalanced">Balanced</span>
                                 </div>
                                 <div class="density-icon-container">
-                                    <i class="fas fa-compress-arrows-alt density-icon" title="Dense view"></i>
+                                    <i class="fas fa-compress-arrows-alt density-icon" data-i18n-title="preferences.densityDense" title="Dense view"></i>
                                 </div>
                             </div>
                             <div class="density-slider-track">
@@ -242,30 +255,30 @@
                                 </div>
                             </div>
                             <div class="density-description">
-                                <span id="densityDescription">Comfortable spacing for most users</span>
+                                <span id="densityDescription" data-i18n="preferences.densityDescription">Comfortable spacing for most users</span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Security</label>
+                        <label class="form-label" data-i18n="preferences.security">Security</label>
                         <div class="checkbox-group">
                             <label class="checkbox-label">
                                 <input type="checkbox" id="hardwareAuthEnabled" class="checkbox-input">
                                 <span class="checkbox-custom"></span>
                                 <div class="checkbox-text">
-                                    <span class="checkbox-title">Hardware Authentication</span>
-                                    <span class="checkbox-description">Use FIDO2/WebAuthn (YubiKey, Touch ID, Windows Hello) for encryption instead of passwords</span>
+                                    <span class="checkbox-title" data-i18n="preferences.hardwareAuth">Hardware Authentication</span>
+                                    <span class="checkbox-description" data-i18n="preferences.hardwareAuthDescription">Use FIDO2/WebAuthn (YubiKey, Touch ID, Windows Hello) for encryption instead of passwords</span>
                                 </div>
                             </label>
                         </div>
                         <div id="hardwareAuthStatus" class="hardware-auth-status hidden">
                             <div class="status-indicator">
                                 <i class="fas fa-key"></i>
-                                <span id="hardwareAuthStatusText">No authenticator registered</span>
+                                <span id="hardwareAuthStatusText" data-i18n="preferences.noAuthenticatorRegistered">No authenticator registered</span>
                             </div>
-                            <button id="registerHardwareAuth" class="btn btn-secondary btn-sm">Register Authenticator</button>
-                            <button id="removeHardwareAuth" class="btn btn-danger btn-sm hidden">Remove Authenticator</button>
+                            <button id="registerHardwareAuth" class="btn btn-secondary btn-sm" data-i18n="preferences.registerAuthenticator">Register Authenticator</button>
+                            <button id="removeHardwareAuth" class="btn btn-danger btn-sm hidden" data-i18n="preferences.removeAuthenticator">Remove Authenticator</button>
                         </div>
                     </div>
                 </div>
@@ -415,6 +428,28 @@
             </div>
         </div>
     </div>
+
+    <!-- File Context Menu -->
+    <div id="fileContextMenu" class="context-menu hidden">
+        <div class="context-menu-item" data-action="preview">
+            <i class="fas fa-eye"></i>
+            <span data-i18n="contextMenu.preview">Preview</span>
+        </div>
+        <div class="context-menu-item" data-action="edit">
+            <i class="fas fa-edit"></i>
+            <span data-i18n="contextMenu.edit">Edit</span>
+        </div>
+        <div class="context-menu-item" data-action="encrypt">
+            <i class="fas fa-lock"></i>
+            <span data-i18n="contextMenu.encrypt">Encrypt</span>
+        </div>
+        <div class="context-menu-item" data-action="decrypt">
+            <i class="fas fa-unlock"></i>
+            <span data-i18n="contextMenu.decrypt">Decrypt</span>
+        </div>
+    </div>
+
+
 
     <!-- PDF.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
