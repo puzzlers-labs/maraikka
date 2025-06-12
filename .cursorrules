@@ -50,4 +50,38 @@
 - Template components take precedence over custom styling
 - Only create custom components when template lacks specific functionality
 - Always verify new components match template's design language
-- Test both light and dark themes when making changes 
+- Test both light and dark themes when making changes
+
+## Internationalization (i18n) Guidelines
+
+### **ALWAYS UPDATE ALL LANGUAGE FILES**
+- When adding new UI text, labels, or messages, MUST update ALL language files in `src/locales/`
+- Current supported languages: English (en.json), Spanish (es.json), Hindi (hi.json), Japanese (ja.json)
+- Never add hardcoded text strings in HTML or JavaScript - always use i18n keys
+
+### i18n File Structure
+- **Context Menu**: Add new actions to `contextMenu` section
+- **Editor Features**: Add text editor labels to `editor` section, image editor to `imageEditor` section
+- **Error Messages**: Add error messages to appropriate sections (editor, notifications, etc.)
+- **Tool Tips**: Add tool descriptions to relevant sections
+
+### Translation Requirements
+- **English (en.json)**: Primary language, must be accurate and clear
+- **Spanish (es.json)**: Professional Spanish translations
+- **Hindi (hi.json)**: Proper Hindi translations with Devanagari script
+- **Japanese (ja.json)**: Accurate Japanese translations with appropriate honorifics
+
+### Key Naming Convention
+- Use descriptive, hierarchical keys: `section.subsection.key`
+- Example: `imageEditor.tools.pen`, `contextMenu.annotate`, `editor.failedToOpenImage`
+
+### Mandatory Process
+1. Add English text first in en.json
+2. Add corresponding translations in es.json, hi.json, ja.json
+3. Test UI with different languages to ensure proper display
+4. Verify text fits in UI components across all languages
+
+### Never Forget
+- Every new feature with text MUST have complete i18n support
+- Check all language files before considering a feature complete
+- Use `data-i18n` attributes in HTML for dynamic text updates 

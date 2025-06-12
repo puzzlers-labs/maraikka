@@ -20,6 +20,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateEditorUnsavedStatus: (filePath, hasUnsavedChanges) => ipcRenderer.invoke('update-editor-unsaved-status', filePath, hasUnsavedChanges),
   broadcastThemeChange: (theme) => ipcRenderer.invoke('broadcast-theme-change', theme),
   
+  // Image editor APIs
+  openImageEditorWindow: (filePath) => ipcRenderer.invoke('open-image-editor-window', filePath),
+  saveAnnotatedImage: (data) => ipcRenderer.invoke('save-annotated-image', data),
+  exportAnnotatedImage: (data) => ipcRenderer.invoke('export-annotated-image', data),
+  
   // Hardware Authentication APIs
   hardwareAuthAvailable: () => ipcRenderer.invoke('hardware-auth-available'),
   saveHardwareAuthCredential: (credentialId, challenge) => ipcRenderer.invoke('save-hardware-auth-credential', credentialId, challenge),
@@ -41,6 +46,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onCheckUnsavedChanges: (callback) => ipcRenderer.on('check-unsaved-changes', callback),
   onThemeChanged: (callback) => ipcRenderer.on('theme-changed', callback),
   getCurrentTheme: () => ipcRenderer.invoke('get-current-theme'),
+  
+  // Image editor window event listeners
+  onOpenImageFile: (callback) => ipcRenderer.on('open-image-file', callback),
+  onSaveImage: (callback) => ipcRenderer.on('save-image', callback),
+  onExportImage: (callback) => ipcRenderer.on('export-image', callback),
   
   // Remove listeners
   removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)

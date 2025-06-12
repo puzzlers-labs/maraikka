@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Editor - Maraikka</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+            height: 48px;
+            box-sizing: border-box;
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+
+        .toolbar::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .toolbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .toolbar::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .toolbar::-webkit-scrollbar-thumb:hover {
+            background: var(--border-hover);
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 8px;
+            border-right: 1px solid var(--border-color);
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .tool-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 32px;
+            height: 32px;
+            justify-content: center;
+        }
+
+        .tool-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-hover);
+        }
+
+        .tool-btn.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .tool-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .color-picker {
+            width: 32px;
+            height: 32px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            background: #000;
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .slider {
+            width: 80px;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #canvas {
+            border: 1px solid var(--border-color);
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .loading-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 16px;
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Dark theme variables */
+        .dark {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3d3d3d;
+            --bg-hover: #4d4d4d;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border-color: #404040;
+            --border-hover: #606060;
+            --accent-color: #8b5cf6;
+        }
+
+        /* Light theme variables */
+        .light-theme {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #e9ecef;
+            --bg-hover: #dee2e6;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+            --border-hover: #adb5bd;
+            --accent-color: #8b5cf6;
+        }
+
+        .status-bar {
+            background-color: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 4px 16px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 24px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-section" id="loadingSection">
+        <div class="loading-spinner"></div>
+        <div>Loading image editor...</div>
+    </div>
+
+    <div class="hidden" id="editorSection">
+        <div class="toolbar">
+            <!-- Drawing Tools -->
+            <div class="toolbar-group">
+                <button class="tool-btn active" id="selectTool" title="Select (V)">
+                    <span>⚡</span>
+                </button>
+                <button class="tool-btn" id="penTool" title="Pen (P)">
+                    <span>✏️</span>
+                </button>
+                <button class="tool-btn" id="lineTool" title="Line (L)">
+                    <span>📏</span>
+                </button>
+                <button class="tool-btn" id="arrowTool" title="Arrow (A)">
+                    <span>➡️</span>
+                </button>
+                <button class="tool-btn" id="rectTool" title="Rectangle (R)">
+                    <span>⬜</span>
+                </button>
+                <button class="tool-btn" id="circleTool" title="Circle (C)">
+                    <span>⭕</span>
+                </button>
+                <button class="tool-btn" id="textTool" title="Text (T)">
+                    <span>📝</span>
+                </button>
+            </div>
+
+            <!-- Style Controls -->
+            <div class="toolbar-group">
+                <div class="color-picker" id="strokeColor" title="Stroke Color"></div>
+                <div class="color-picker" id="fillColor" title="Fill Color" style="background: transparent; border-style: dashed;"></div>
+                <div class="slider-group">
+                    <span style="font-size: 11px;">Width:</span>
+                    <input type="range" class="slider" id="strokeWidth" min="1" max="20" value="2">
+                    <span id="strokeWidthValue" style="font-size: 11px; min-width: 20px;">2</span>
+                </div>
+            </div>
+
+            <!-- Effects -->
+            <div class="toolbar-group">
+                <button class="tool-btn" id="blurTool" title="Blur Effect">
+                    <span>🌫️</span>
+                </button>
+                <button class="tool-btn" id="highlightTool" title="Highlight">
+                    <span>🖍️</span>
+                </button>
+                <div class="slider-group">
+                    <span style="font-size: 11px;">Blur:</span>
+                    <input type="range" class="slider" id="blurAmount" min="0" max="20" value="0">
+                    <span id="blurAmountValue" style="font-size: 11px; min-width: 20px;">0</span>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="toolbar-group">
+                <button class="tool-btn" id="undoBtn" title="Undo (Ctrl+Z)">
+                    <span>↶</span>
+                </button>
+                <button class="tool-btn" id="redoBtn" title="Redo (Ctrl+Y)">
+                    <span>↷</span>
+                </button>
+                <button class="tool-btn" id="deleteBtn" title="Delete Selected">
+                    <span>🗑️</span>
+                </button>
+            </div>
+
+            <!-- File Operations -->
+            <div class="toolbar-group">
+                <button class="tool-btn" id="saveBtn" title="Save (Ctrl+S)">
+                    <span>💾</span>
+                </button>
+                <button class="tool-btn" id="exportBtn" title="Export">
+                    <span>📤</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div class="status-bar">
+            <span id="statusText">Ready</span>
+            <span id="positionInfo"></span>
+        </div>
+    </div>
+
+    <script src="../../node_modules/fabric/dist/index.min.js"></script>
+    <script src="image-editor.js"></script>
+</body>
+</html> 

@@ -2545,6 +2545,14 @@ body.light-theme .main-content {
     transition-delay: 0.06s;
 }
 
+.context-menu.show .context-menu-item:nth-child(4) {
+    transition-delay: 0.08s;
+}
+
+.context-menu.show .context-menu-item:nth-child(5) {
+    transition-delay: 0.10s;
+}
+
 .context-menu-item:hover {
     background-color: #f9fafb;
     color: #1f2937;

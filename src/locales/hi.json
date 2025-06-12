@@ -29,7 +29,8 @@
     "preview": "पूर्वावलोकन",
     "encrypt": "एन्क्रिप्ट करें", 
     "decrypt": "डिक्रिप्ट करें",
-    "edit": "संपादित करें"
+    "edit": "संपादित करें",
+    "annotate": "एनोटेट करें"
   },
     "modals": {
     "enterPassword": "पासवर्ड दर्ज करें",
@@ -66,7 +67,41 @@
     "failedToSave": "फ़ाइल सेव करने में विफल",
     "failedToDecrypt": "फ़ाइल डिक्रिप्ट करने में विफल",
     "failedToOpen": "टेक्स्ट एडिटर खोलने में विफल",
+    "failedToOpenImage": "इमेज एडिटर खोलने में विफल",
     "invalidPassword": "गलत पासवर्ड या क्षतिग्रस्त फ़ाइल"
+  },
+  "imageEditor": {
+    "title": "इमेज एडिटर",
+    "tools": {
+      "select": "चुनें",
+      "pen": "पेन",
+      "line": "लाइन", 
+      "arrow": "तीर",
+      "rectangle": "आयत",
+      "circle": "वृत्त",
+      "text": "टेक्स्ट",
+      "blur": "ब्लर इफेक्ट",
+      "highlight": "हाइलाइट"
+    },
+    "actions": {
+      "undo": "पूर्ववत करें",
+      "redo": "फिर से करें",
+      "delete": "चयनित को हटाएं",
+      "save": "सेव करें",
+      "export": "एक्सपोर्ट करें"
+    },
+    "properties": {
+      "strokeColor": "स्ट्रोक रंग",
+      "fillColor": "भरने का रंग",
+      "strokeWidth": "चौड़ाई",
+      "blurAmount": "ब्लर"
+    },
+    "status": {
+      "ready": "तैयार",
+      "loading": "इमेज एडिटर लोड हो रहा है...",
+      "saved": "सेव हो गया",
+      "exported": "एक्सपोर्ट हो गया"
+    }
   },
   "preferences": {
     "title": "प्राथमिकताएं",

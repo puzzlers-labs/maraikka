@@ -29,7 +29,8 @@
     "preview": "Vista Previa",
     "encrypt": "Cifrar", 
     "decrypt": "Descifrar",
-    "edit": "Editar"
+    "edit": "Editar",
+    "annotate": "Anotar"
   },
   "modals": {
     "enterPassword": "Introducir Contraseña",
@@ -66,7 +67,41 @@
         "failedToSave": "Error al guardar el archivo",
         "failedToDecrypt": "Error al descifrar el archivo",
         "failedToOpen": "Error al abrir el editor de texto",
+        "failedToOpenImage": "Error al abrir el editor de imágenes",
         "invalidPassword": "Contraseña inválida o archivo corrupto"
+    },
+    "imageEditor": {
+        "title": "Editor de Imágenes",
+        "tools": {
+            "select": "Seleccionar",
+            "pen": "Pluma",
+            "line": "Línea", 
+            "arrow": "Flecha",
+            "rectangle": "Rectángulo",
+            "circle": "Círculo",
+            "text": "Texto",
+            "blur": "Efecto de Desenfoque",
+            "highlight": "Resaltar"
+        },
+        "actions": {
+            "undo": "Deshacer",
+            "redo": "Rehacer",
+            "delete": "Eliminar Seleccionado",
+            "save": "Guardar",
+            "export": "Exportar"
+        },
+        "properties": {
+            "strokeColor": "Color de Trazo",
+            "fillColor": "Color de Relleno",
+            "strokeWidth": "Ancho",
+            "blurAmount": "Desenfoque"
+        },
+        "status": {
+            "ready": "Listo",
+            "loading": "Cargando editor de imágenes...",
+            "saved": "Guardado",
+            "exported": "Exportado"
+        }
     },
   "preferences": {
     "title": "Preferencias",

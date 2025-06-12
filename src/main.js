@@ -9,6 +9,7 @@ app.setName('Maraikka');
 
 let mainWindow;
 let editorWindows = new Map(); // Store editor windows by filePath
+let imageEditorWindows = new Map(); // Store image editor windows by filePath
 
 // Helper function to get theme-appropriate colors based on app theme
 function getThemeColors(appTheme = 'dark') {
@@ -168,6 +169,122 @@ function createTextEditorWindow(filePath, isEncrypted) {
   }
 
   return editorWindow;
+}
+
+function createImageEditorWindow(filePath) {
+  console.log('createImageEditorWindow called with:', { filePath });
+  
+  // Add validation for undefined filePath
+  if (!filePath || filePath === undefined) {
+    console.error('createImageEditorWindow: filePath is undefined or empty!');
+    console.trace('Stack trace for undefined filePath');
+    return null;
+  }
+
+  // Check if image editor window for this file already exists
+  if (imageEditorWindows.has(filePath)) {
+    const existingWindow = imageEditorWindows.get(filePath);
+    if (!existingWindow.isDestroyed()) {
+      existingWindow.focus();
+      return existingWindow;
+    } else {
+      imageEditorWindows.delete(filePath);
+    }
+  }
+
+  const imageEditorWindow = new BrowserWindow({
+    width: 1000,
+    height: 800,
+    minWidth: 800,
+    minHeight: 600,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+      webSecurity: true
+    },
+    titleBarStyle: 'default', // Use default title bar for easy window dragging
+    frame: true,
+    show: false,
+    backgroundColor: getThemeColors('dark').backgroundColor, // Default to dark theme
+    title: `${path.basename(filePath)} - Image Editor`
+  });
+
+  // Load the image editor HTML file
+  const imageEditorHtmlPath = path.join(__dirname, 'renderer', 'image-editor.html');
+  imageEditorWindow.loadFile(imageEditorHtmlPath);
+
+  // Store file info for this window
+  imageEditorWindow.fileInfo = {
+    filePath: filePath,
+    hasUnsavedChanges: false
+  };
+
+  imageEditorWindow.once('ready-to-show', () => {
+    imageEditorWindow.show();
+    // Send file info to the renderer
+    console.log('Sending image file to image editor:', filePath);
+    imageEditorWindow.webContents.send('open-image-file', filePath);
+    
+    // Wait a moment for the renderer to be fully ready, then send theme
+    setTimeout(() => {
+      // Get and send current app theme to the image editor
+      const sendTheme = (theme) => {
+        console.log('Sending theme to image editor:', theme);
+        imageEditorWindow.webContents.send('theme-changed', theme);
+        // Also update the window background color
+        const colors = getThemeColors(theme);
+        imageEditorWindow.setBackgroundColor(colors.backgroundColor);
+      };
+      
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        // Try to get theme from main window
+        mainWindow.webContents.executeJavaScript(`
+          localStorage.getItem('maraikka-theme') || 'dark'
+        `).then(theme => {
+          console.log('Got theme from main window localStorage:', theme);
+          sendTheme(theme);
+        }).catch(error => {
+          console.log('Failed to get theme from main window, checking document classes');
+          // Fallback: check main window's document classes
+          mainWindow.webContents.executeJavaScript(`
+            document.body.classList.contains('light-theme') ? 'light' : 'dark'
+          `).then(theme => {
+            console.log('Got theme from main window body classes:', theme);
+            sendTheme(theme);
+          }).catch(error2 => {
+            console.log('All theme detection failed, using dark as default');
+            sendTheme('dark');
+          });
+        });
+      } else {
+        console.log('Main window not available, using dark theme');
+        sendTheme('dark');
+      }
+    }, 500); // Wait 500ms for renderer to be ready
+  });
+
+  // Handle window close - check for unsaved changes
+  imageEditorWindow.on('close', (event) => {
+    if (imageEditorWindow.fileInfo.hasUnsavedChanges) {
+      event.preventDefault();
+      imageEditorWindow.webContents.send('check-unsaved-changes');
+    }
+  });
+
+  // Clean up when window is closed
+  imageEditorWindow.on('closed', () => {
+    imageEditorWindows.delete(filePath);
+  });
+
+  // Store the window reference
+  imageEditorWindows.set(filePath, imageEditorWindow);
+
+  if (process.argv.includes('--dev')) {
+    imageEditorWindow.webContents.openDevTools();
+  }
+
+  return imageEditorWindow;
 }
 
 function createMenu() {
@@ -982,6 +1099,28 @@ ipcMain.handle('open-text-editor-window', async (event, filePath, isEncrypted) =
   }
 });
 
+// Open image editor in new window
+ipcMain.handle('open-image-editor-window', async (event, filePath) => {
+  console.log('IPC: Open image editor window request:', { filePath });
+  
+  // Add validation for undefined filePath
+  if (!filePath || filePath === undefined) {
+    console.error('IPC handler: filePath is undefined or empty!');
+    return { success: false, error: 'File path is required' };
+  }
+  
+  try {
+    const imageEditorWindow = createImageEditorWindow(filePath);
+    if (!imageEditorWindow) {
+      return { success: false, error: 'Failed to create image editor window' };
+    }
+    return { success: true };
+  } catch (error) {
+    console.error('IPC: Error opening image editor window:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 // Handle unsaved changes response from editor window
 ipcMain.handle('editor-unsaved-changes-response', async (event, action, filePath) => {
   console.log('IPC: Editor unsaved changes response:', action, filePath);
@@ -1017,12 +1156,21 @@ ipcMain.handle('broadcast-theme-change', async (event, theme) => {
     mainWindow.setBackgroundColor(colors.backgroundColor);
   }
   
-  // Update all editor windows
+  // Update all text editor windows
   editorWindows.forEach((editorWindow) => {
     if (!editorWindow.isDestroyed()) {
       const colors = getThemeColors(theme);
       editorWindow.setBackgroundColor(colors.backgroundColor);
       editorWindow.webContents.send('theme-changed', theme);
+    }
+  });
+  
+  // Update all image editor windows
+  imageEditorWindows.forEach((imageEditorWindow) => {
+    if (!imageEditorWindow.isDestroyed()) {
+      const colors = getThemeColors(theme);
+      imageEditorWindow.setBackgroundColor(colors.backgroundColor);
+      imageEditorWindow.webContents.send('theme-changed', theme);
     }
   });
 });
@@ -1215,6 +1363,75 @@ async function decryptDirectory(dirPath, password) {
     throw error;
   }
 }
+
+// Image Editor IPC Handlers
+ipcMain.handle('save-annotated-image', async (event, data) => {
+  try {
+    const { originalPath, imageData } = data;
+    
+    if (!originalPath || !imageData) {
+      throw new Error('Original path and image data are required');
+    }
+    
+    // Convert data URL to buffer
+    const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // Create annotated filename
+    const parsedPath = path.parse(originalPath);
+    const annotatedPath = path.join(
+      parsedPath.dir,
+      `${parsedPath.name}_annotated${parsedPath.ext}`
+    );
+    
+    // Save the annotated image
+    await fs.writeFile(annotatedPath, buffer);
+    
+    console.log(`Saved annotated image: ${annotatedPath}`);
+    return { success: true, savedPath: annotatedPath };
+  } catch (error) {
+    console.error('Error saving annotated image:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('export-annotated-image', async (event, data) => {
+  try {
+    const { imageData } = data;
+    
+    if (!imageData) {
+      throw new Error('Image data is required');
+    }
+    
+    // Show save dialog
+    const result = await dialog.showSaveDialog(null, {
+      title: 'Export Annotated Image',
+      defaultPath: 'annotated_image.png',
+      filters: [
+        { name: 'PNG Images', extensions: ['png'] },
+        { name: 'JPEG Images', extensions: ['jpg', 'jpeg'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    
+    if (result.canceled) {
+      return { success: false, error: 'Export canceled' };
+    }
+    
+    // Convert data URL to buffer
+    const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // Save the exported image
+    await fs.writeFile(result.filePath, buffer);
+    
+    console.log(`Exported annotated image: ${result.filePath}`);
+    return { success: true, exportPath: result.filePath };
+  } catch (error) {
+    console.error('Error exporting annotated image:', error);
+    return { success: false, error: error.message };
+  }
+});
 
 // Get current app theme from main window
 ipcMain.handle('get-current-theme', async () => {

@@ -29,7 +29,8 @@
     "preview": "Preview",
     "encrypt": "Encrypt", 
     "decrypt": "Decrypt",
-    "edit": "Edit"
+    "edit": "Edit",
+    "annotate": "Annotate"
   },
   "modals": {
     "enterPassword": "Enter Password",
@@ -66,7 +67,41 @@
         "failedToSave": "Failed to save file",
         "failedToDecrypt": "Failed to decrypt file",
         "failedToOpen": "Failed to open text editor",
+        "failedToOpenImage": "Failed to open image editor",
         "invalidPassword": "Invalid password or corrupted file"
+    },
+    "imageEditor": {
+        "title": "Image Editor",
+        "tools": {
+            "select": "Select",
+            "pen": "Pen",
+            "line": "Line", 
+            "arrow": "Arrow",
+            "rectangle": "Rectangle",
+            "circle": "Circle",
+            "text": "Text",
+            "blur": "Blur Effect",
+            "highlight": "Highlight"
+        },
+        "actions": {
+            "undo": "Undo",
+            "redo": "Redo",
+            "delete": "Delete Selected",
+            "save": "Save",
+            "export": "Export"
+        },
+        "properties": {
+            "strokeColor": "Stroke Color",
+            "fillColor": "Fill Color",
+            "strokeWidth": "Width",
+            "blurAmount": "Blur"
+        },
+        "status": {
+            "ready": "Ready",
+            "loading": "Loading image editor...",
+            "saved": "Saved",
+            "exported": "Exported"
+        }
     },
   "preferences": {
     "title": "Preferences",

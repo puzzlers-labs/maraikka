@@ -2947,6 +2947,7 @@ function updateContextMenuItems() {
     const { filePath, isEncrypted, isDirectory } = contextMenuTarget;
     const previewItem = contextMenu.querySelector('[data-action="preview"]');
     const editItem = contextMenu.querySelector('[data-action="edit"]');
+    const annotateItem = contextMenu.querySelector('[data-action="annotate"]');
     const encryptItem = contextMenu.querySelector('[data-action="encrypt"]');
     const decryptItem = contextMenu.querySelector('[data-action="decrypt"]');
     
@@ -2989,6 +2990,21 @@ function updateContextMenuItems() {
         }
     }
     
+    // Handle annotate availability for image files (only non-encrypted for now)
+    if (isDirectory || isEncrypted) {
+        annotateItem.classList.add('disabled');
+    } else {
+        const fileName = filePath.split('/').pop();
+        const ext = fileName.split('.').pop().toLowerCase();
+        const canAnnotate = isImageFile(ext);
+        
+        if (canAnnotate) {
+            annotateItem.classList.remove('disabled');
+        } else {
+            annotateItem.classList.add('disabled');
+        }
+    }
+    
     // Encrypt/Decrypt are always available for files
     if (isDirectory) {
         encryptItem.classList.add('disabled');
@@ -3021,6 +3037,9 @@ function handleContextMenuClick(e) {
         case 'edit':
             openTextEditor(filePath, isEncrypted);
             break;
+        case 'annotate':
+            openImageEditor(filePath);
+            break;
         case 'encrypt':
         case 'decrypt':
             showSingleFilePasswordModal(action, filePath);
@@ -3050,6 +3069,31 @@ async function openTextEditor(filePath, isEncrypted) {
         console.error('Error opening text editor window:', error);
         showNotification('Error', 
             window.i18n ? window.i18n.t('editor.failedToOpen') : 'Failed to open text editor', 
+            'error'
+        );
+    }
+}
+
+// Image Editor Functionality - Window-based implementation
+
+// Open image editor for a file in a new window
+async function openImageEditor(filePath) {
+    console.log('Opening image editor window for:', filePath);
+    
+    try {
+        const result = await window.electronAPI.openImageEditorWindow(filePath);
+        
+        if (!result.success) {
+            console.error('Failed to open image editor window:', result.error);
+            showNotification('Error', 
+                window.i18n ? window.i18n.t('editor.failedToOpenImage') : 'Failed to open image editor', 
+                'error'
+            );
+        }
+    } catch (error) {
+        console.error('Error opening image editor window:', error);
+        showNotification('Error', 
+            window.i18n ? window.i18n.t('editor.failedToOpenImage') : 'Failed to open image editor', 
             'error'
         );
     }
