@@ -3099,5 +3099,155 @@ async function openImageEditor(filePath) {
     }
 }
 
+// Update notification handling
+function initializeUpdateSystem() {
+    // Listen for update events
+    window.electronAPI.onUpdateAvailable((event, info) => {
+        showUpdateNotification('available', info);
+    });
+
+    window.electronAPI.onUpdateDownloadProgress((event, progress) => {
+        updateDownloadProgress(progress);
+    });
+
+    window.electronAPI.onUpdateDownloaded((event, info) => {
+        showUpdateNotification('downloaded', info);
+    });
+
+    window.electronAPI.onUpdateError((event, error) => {
+        showUpdateNotification('error', { error });
+    });
+}
+
+function showUpdateNotification(type, data) {
+    const existingNotification = document.querySelector('.update-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    const notification = document.createElement('div');
+    notification.className = 'update-notification';
+    
+    switch (type) {
+        case 'available':
+            notification.innerHTML = `
+                <div class="update-content">
+                    <div class="update-icon">🔄</div>
+                    <div class="update-text">
+                        <h4>Update Available</h4>
+                        <p>Maraikka ${data.version} is ready to download</p>
+                    </div>
+                    <div class="update-actions">
+                        <button class="btn btn-primary" onclick="downloadUpdate()">Download</button>
+                        <button class="btn btn-secondary" onclick="dismissUpdate()">Later</button>
+                    </div>
+                </div>
+            `;
+            break;
+            
+        case 'downloaded':
+            notification.innerHTML = `
+                <div class="update-content">
+                    <div class="update-icon">✅</div>
+                    <div class="update-text">
+                        <h4>Update Ready</h4>
+                        <p>Maraikka ${data.version} has been downloaded</p>
+                    </div>
+                    <div class="update-actions">
+                        <button class="btn btn-primary" onclick="installUpdate()">Restart & Install</button>
+                        <button class="btn btn-secondary" onclick="dismissUpdate()">Later</button>
+                    </div>
+                </div>
+            `;
+            break;
+            
+        case 'error':
+            notification.innerHTML = `
+                <div class="update-content">
+                    <div class="update-icon">❌</div>
+                    <div class="update-text">
+                        <h4>Update Error</h4>
+                        <p>Failed to check for updates: ${data.error}</p>
+                    </div>
+                    <div class="update-actions">
+                        <button class="btn btn-secondary" onclick="dismissUpdate()">Dismiss</button>
+                    </div>
+                </div>
+            `;
+            break;
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Auto-dismiss after 10 seconds for error notifications
+    if (type === 'error') {
+        setTimeout(() => {
+            dismissUpdate();
+        }, 10000);
+    }
+}
+
+function updateDownloadProgress(progress) {
+    const notification = document.querySelector('.update-notification');
+    if (notification) {
+        const progressBar = notification.querySelector('.progress-bar');
+        if (!progressBar) {
+            const progressContainer = document.createElement('div');
+            progressContainer.className = 'progress-container';
+            progressContainer.innerHTML = `
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${progress.percent}%"></div>
+                </div>
+                <div class="progress-text">${progress.percent}% downloaded</div>
+            `;
+            notification.querySelector('.update-text').appendChild(progressContainer);
+        } else {
+            const fill = progressBar.querySelector('.progress-fill');
+            const text = notification.querySelector('.progress-text');
+            fill.style.width = `${progress.percent}%`;
+            text.textContent = `${progress.percent}% downloaded`;
+        }
+    }
+}
+
+async function downloadUpdate() {
+    try {
+        await window.electronAPI.downloadUpdate();
+        // Update UI will be handled by the download progress events
+    } catch (error) {
+        showUpdateNotification('error', { error: error.message });
+    }
+}
+
+async function installUpdate() {
+    try {
+        await window.electronAPI.installUpdate();
+        // App will restart automatically
+    } catch (error) {
+        showUpdateNotification('error', { error: error.message });
+    }
+}
+
+function dismissUpdate() {
+    const notification = document.querySelector('.update-notification');
+    if (notification) {
+        notification.remove();
+    }
+}
+
+// Manual update check function
+async function checkForUpdates() {
+    try {
+        await window.electronAPI.checkForUpdates();
+    } catch (error) {
+        showUpdateNotification('error', { error: error.message });
+    }
+}
+
+// Initialize update system when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    initializeUpdateSystem();
+});
+
 
 

@@ -1,0 +1,184 @@
+# Installation
+
+Get Maraikka up and running on your system in just a few minutes.
+
+## System Requirements
+
+### Minimum Requirements
+- **RAM**: 4 GB
+- **Storage**: 500 MB free space
+- **OS**: Windows 10+, macOS 10.14+, or Linux (Ubuntu 18.04+)
+
+### Recommended Requirements
+- **RAM**: 8 GB or more
+- **Storage**: 1 GB free space
+- **OS**: Latest version of your operating system
+
+## Download Options
+
+### Pre-built Releases (Recommended)
+
+Download the latest version from our [GitHub Releases](https://github.com/maraikka-labs/maraikka-app/releases) page.
+
+| Platform | Download | File Type |
+|----------|----------|-----------|
+| **Windows** | `Maraikka-Setup-1.0.0.exe` | NSIS Installer |
+| **Windows (Portable)** | `Maraikka-1.0.0-portable.exe` | Portable App |
+| **Windows (Store)** | `Maraikka-1.0.0.appx` | Microsoft Store |
+| **macOS** | `Maraikka-1.0.0.dmg` | DMG Installer |
+| **macOS (App Store)** | Available on Mac App Store | MAS Package |
+| **Linux** | `Maraikka-1.0.0.AppImage` | AppImage |
+| **Linux (Debian/Ubuntu)** | `Maraikka-1.0.0.deb` | DEB Package |
+| **Linux (Red Hat/Fedora)** | `Maraikka-1.0.0.rpm` | RPM Package |
+
+## Platform-Specific Installation
+
+### Windows Installation
+
+#### Option 1: NSIS Installer (Recommended)
+1. Download `Maraikka-Setup-1.0.0.exe`
+2. Run the installer as Administrator
+3. Follow the installation wizard
+4. Launch Maraikka from Start Menu or Desktop
+
+> [!NOTE]
+> The installer automatically adds Maraikka to your context menu for easy file encryption.
+
+#### Option 2: Portable Version
+1. Download `Maraikka-1.0.0-portable.exe`
+2. Run directly - no installation required
+3. Create a desktop shortcut if desired
+
+#### Option 3: Microsoft Store
+1. Search for "Maraikka" in Microsoft Store
+2. Click "Install"
+3. Launch from Start Menu
+
+### macOS Installation
+
+#### Option 1: DMG Installer (Recommended)
+1. Download `Maraikka-1.0.0.dmg`
+2. Open the DMG file
+3. Drag Maraikka to Applications folder
+4. Launch from Applications or Launchpad
+
+> [!TIP]
+> **First Launch**: You may need to right-click and select "Open" the first time due to Gatekeeper.
+
+#### Option 2: Mac App Store
+1. Search for "Maraikka" in Mac App Store
+2. Click "Get" or "Install"
+3. Launch from Applications
+
+#### macOS Services Integration
+After installation, Maraikka automatically integrates with macOS Services:
+- Right-click any file → Services → "Encrypt with Maraikka"
+- Right-click any `.enc` file → Services → "Decrypt with Maraikka"
+
+### Linux Installation
+
+#### Option 1: AppImage (Universal)
+1. Download `Maraikka-1.0.0.AppImage`
+2. Make it executable: `chmod +x Maraikka-1.0.0.AppImage`
+3. Run: `./Maraikka-1.0.0.AppImage`
+
+#### Option 2: DEB Package (Debian/Ubuntu)
+```bash
+# Download and install
+wget https://github.com/maraikka-labs/maraikka-app/releases/download/v1.0.0/Maraikka-1.0.0.deb
+sudo dpkg -i Maraikka-1.0.0.deb
+
+# Fix dependencies if needed
+sudo apt-get install -f
+```
+
+#### Option 3: RPM Package (Red Hat/Fedora)
+```bash
+# Download and install
+wget https://github.com/maraikka-labs/maraikka-app/releases/download/v1.0.0/Maraikka-1.0.0.rpm
+sudo rpm -i Maraikka-1.0.0.rpm
+
+# Or using dnf
+sudo dnf install Maraikka-1.0.0.rpm
+```
+
+## Building from Source
+
+If you prefer to build Maraikka yourself or want to contribute to development:
+
+### Prerequisites
+- **Node.js** 16 or higher
+- **npm** or **yarn**
+- **Git**
+
+### Build Steps
+```bash
+# Clone the repository
+git clone https://github.com/maraikka-labs/maraikka-app.git
+cd maraikka-app
+
+# Install dependencies
+npm install
+
+# Run in development mode
+npm run dev
+
+# Build for production
+npm run build
+
+# Build for specific platform
+npm run build:win    # Windows
+npm run build:mac    # macOS  
+npm run build:linux  # Linux
+```
+
+Built applications will be available in the `dist` directory.
+
+## Verification
+
+### Verify Installation
+After installation, verify Maraikka is working correctly:
+
+1. **Launch the application**
+2. **Check version**: Help → About Maraikka
+3. **Test basic functionality**: 
+   - Select a test directory
+   - Try encrypting a sample file
+   - Decrypt the file to verify it works
+
+### Digital Signatures
+
+All official releases are digitally signed:
+
+- **Windows**: Code signed with Maraikka Labs certificate
+- **macOS**: Notarized by Apple and signed with Developer ID
+- **Linux**: GPG signed packages available
+
+## Troubleshooting Installation
+
+### Common Issues
+
+#### Windows: "Windows protected your PC"
+This is normal for new applications. Click "More info" → "Run anyway"
+
+#### macOS: "Cannot be opened because it is from an unidentified developer"
+Right-click the app → "Open" → "Open" in the dialog
+
+#### Linux: Permission denied
+Make sure the AppImage is executable: `chmod +x Maraikka-*.AppImage`
+
+### Getting Help
+
+If you encounter installation issues:
+
+1. Check our [Troubleshooting Guide](/troubleshooting)
+2. Search [GitHub Issues](https://github.com/maraikka-labs/maraikka-app/issues)
+3. Create a new issue with your system details
+
+## Next Steps
+
+Once installed, head to our [Getting Started Guide](/getting-started) to learn how to use Maraikka effectively.
+
+---
+
+**Need help?** Check out our [Troubleshooting](/troubleshooting) section or [open an issue](https://github.com/maraikka-labs/maraikka-app/issues) on GitHub. 

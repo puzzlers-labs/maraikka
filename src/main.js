@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const crypto = require('crypto');
 const CryptoJS = require('crypto-js');
+const UpdateManager = require('./updater');
 
 // Set the app name immediately for menu bar
 app.setName('Maraikka');
@@ -10,6 +11,7 @@ app.setName('Maraikka');
 let mainWindow;
 let editorWindows = new Map(); // Store editor windows by filePath
 let imageEditorWindows = new Map(); // Store image editor windows by filePath
+let updateManager;
 
 // Helper function to get theme-appropriate colors based on app theme
 function getThemeColors(appTheme = 'dark') {
@@ -20,7 +22,7 @@ function getThemeColors(appTheme = 'dark') {
 }
 
 function createWindow() {
-  mainWindow = new BrowserWindow({
+  const windowOptions = {
     width: 1200,
     height: 800,
     minWidth: 800,
@@ -31,11 +33,25 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       webSecurity: true
     },
-    titleBarStyle: 'hiddenInset',
-    frame: process.platform === 'darwin' ? false : true,
     show: false,
     backgroundColor: getThemeColors('dark').backgroundColor // Default to dark theme
-  });
+  };
+
+  // Platform-specific window configuration
+  if (process.platform === 'darwin') {
+    windowOptions.titleBarStyle = 'hiddenInset';
+    windowOptions.frame = false;
+  } else if (process.platform === 'win32') {
+    windowOptions.frame = true;
+    windowOptions.autoHideMenuBar = true;
+    windowOptions.titleBarStyle = 'default';
+  } else {
+    // Linux and other platforms
+    windowOptions.frame = true;
+    windowOptions.autoHideMenuBar = true;
+  }
+
+  mainWindow = new BrowserWindow(windowOptions);
 
   // Load the correct HTML file for both development and production
   const htmlPath = path.join(__dirname, 'renderer', 'index.html');
@@ -574,6 +590,10 @@ app.whenReady().then(() => {
     // Normal app startup
     createWindow();
     createMenu();
+    
+    // Initialize update manager
+    updateManager = new UpdateManager();
+    updateManager.startPeriodicCheck();
   }
 });
 
@@ -586,6 +606,12 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
+  }
+});
+
+app.on('before-quit', () => {
+  if (updateManager) {
+    updateManager.stopPeriodicCheck();
   }
 });
 
@@ -1448,4 +1474,48 @@ ipcMain.handle('get-current-theme', async () => {
     }
   }
   return 'dark'; // Default fallback
+});
+
+// Update-related IPC handlers
+ipcMain.handle('check-for-updates', async () => {
+  if (!updateManager) {
+    return { error: 'Update manager not initialized' };
+  }
+  
+  try {
+    await updateManager.checkForUpdates(false);
+    return { success: true };
+  } catch (error) {
+    return { error: error.message };
+  }
+});
+
+ipcMain.handle('download-update', async () => {
+  if (!updateManager) {
+    return { error: 'Update manager not initialized' };
+  }
+  
+  try {
+    await updateManager.downloadUpdate();
+    return { success: true };
+  } catch (error) {
+    return { error: error.message };
+  }
+});
+
+ipcMain.handle('install-update', async () => {
+  if (!updateManager) {
+    return { error: 'Update manager not initialized' };
+  }
+  
+  updateManager.installUpdate();
+  return { success: true };
+});
+
+ipcMain.handle('get-update-info', async () => {
+  if (!updateManager) {
+    return { error: 'Update manager not initialized' };
+  }
+  
+  return updateManager.getUpdateInfo();
 }); 

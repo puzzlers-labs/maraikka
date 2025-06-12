@@ -1,0 +1,256 @@
+# Getting Started
+
+Welcome to Maraikka! This guide will help you get up and running with secure file encryption in just a few minutes.
+
+## First Launch
+
+When you first open Maraikka, you'll see the main interface with:
+
+- **Sidebar**: Contains actions, current path, and file statistics
+- **Main Area**: File explorer showing your selected directory contents
+- **Empty State**: Prompts you to select a directory to get started
+
+## Basic Workflow
+
+### 1. Select a Directory
+
+Start by selecting a directory containing files you want to work with:
+
+1. Click **"Select Directory"** in the sidebar
+2. Choose a folder from your file system
+3. Maraikka will display all files and subdirectories
+
+> [!TIP]
+> **Pro Tip**: You can also use the keyboard shortcut `Cmd+O` (macOS) or `Ctrl+O` (Windows/Linux) to quickly select a directory.
+
+### 2. Understanding the Interface
+
+Once you've selected a directory, you'll see:
+
+#### File List
+- **Files**: Regular files with their icons and sizes
+- **Directories**: Folders you can navigate into
+- **Encrypted Files**: Files with `.enc` extension and lock icons
+
+#### File Statistics (Sidebar)
+- Total files count
+- Number of directories
+- Number of encrypted files
+- Current directory path
+
+#### View Options
+- **List View**: Detailed file information with sizes and dates
+- **Grid View**: Visual thumbnails for images and file icons
+
+### 3. Your First Encryption
+
+Let's encrypt your first file:
+
+#### Encrypt a Single File
+1. **Hover over any file** in the list
+2. **Click the "Encrypt" button** that appears
+3. **Enter a strong password** in the modal
+4. **Click "Confirm"**
+
+The file will be encrypted and renamed with a `.enc` extension.
+
+#### Encrypt an Entire Directory
+1. **Click "Encrypt Directory"** in the sidebar
+2. **Enter a password** for all files in the directory
+3. **Click "Confirm"**
+
+All files in the directory will be encrypted with the same password.
+
+> [!WARNING]
+> **Remember Your Password**: Lost passwords cannot be recovered. Consider using a password manager.
+
+### 4. Decrypting Files
+
+To decrypt files:
+
+#### Decrypt a Single File
+1. **Hover over an encrypted file** (has lock icon)
+2. **Click the "Decrypt" button**
+3. **Enter the password** used for encryption
+4. **Click "Confirm"**
+
+#### Decrypt an Entire Directory
+1. **Click "Decrypt Directory"** in the sidebar
+2. **Enter the password** used for directory encryption
+3. **Click "Confirm"**
+
+## Password Best Practices
+
+Maraikka includes a built-in password strength meter to help you create secure passwords:
+
+### Strong Password Guidelines
+- **Minimum 12 characters** (6 minimum required)
+- **Mix of uppercase and lowercase** letters
+- **Include numbers and symbols**
+- **Avoid common words** or personal information
+
+### Password Strength Levels
+- 🔴 **Weak**: Too short or common
+- 🟡 **Fair**: Meets basic requirements
+- 🟢 **Good**: Strong and secure
+- 🟢 **Excellent**: Very strong password
+
+## File Preview
+
+Maraikka includes a powerful preview system:
+
+### Supported File Types
+- **Images**: JPG, PNG, GIF, WebP, SVG
+- **Videos**: MP4, WebM, MOV
+- **Documents**: PDF files
+- **Text**: TXT, MD, JSON, and more
+
+### Using Preview
+1. **Click any supported file** in the list
+2. **Preview opens** in the right panel
+3. **Use controls** to zoom, navigate, or close
+
+### Encrypted File Preview
+1. **Click an encrypted file**
+2. **Enter the password** when prompted
+3. **File decrypts temporarily** for preview only
+
+> [!NOTE]
+> Preview decryption is temporary - the original file remains encrypted.
+
+## Built-in Editors
+
+### Text Editor
+
+Edit text files directly within Maraikka:
+
+1. **Right-click a text file** → "Edit"
+2. **Text editor opens** in a new window
+3. **Make your changes**
+4. **Save with Ctrl+S** (Cmd+S on macOS)
+
+**Features:**
+- Syntax highlighting
+- Auto-save indicators
+- Character and line count
+- Dark/light theme support
+
+### Image Editor
+
+Annotate and edit images:
+
+1. **Right-click an image** → "Annotate"
+2. **Image editor opens** with drawing tools
+3. **Use tools** to draw, add text, blur, highlight
+4. **Save or export** your changes
+
+**Tools Available:**
+- Pen, Line, Arrow tools
+- Rectangle and Circle shapes
+- Text annotations
+- Blur and highlight effects
+- Undo/Redo support
+
+## Context Menu Integration
+
+### Windows
+Right-click any file or folder in Windows Explorer:
+- **"Encrypt with Maraikka"** - Opens Maraikka and encrypts
+- **"Decrypt with Maraikka"** - Opens Maraikka and decrypts
+
+### macOS
+Right-click any file in Finder → Services:
+- **"Encrypt with Maraikka"**
+- **"Decrypt with Maraikka"**
+
+### Linux
+Context menu integration varies by desktop environment.
+
+## Keyboard Shortcuts
+
+| Action | Windows/Linux | macOS |
+|--------|---------------|-------|
+| Select Directory | `Ctrl+O` | `Cmd+O` |
+| Refresh | `F5` | `Cmd+R` |
+| Encrypt Directory | `Ctrl+E` | `Cmd+E` |
+| Decrypt Directory | `Ctrl+D` | `Cmd+D` |
+| Preferences | `Ctrl+,` | `Cmd+,` |
+| Toggle Sidebar | `Ctrl+B` | `Cmd+B` |
+
+## Settings & Preferences
+
+Access preferences via the sidebar or `Ctrl+,` (Cmd+, on macOS):
+
+### General Settings
+- **Theme**: Switch between light and dark modes
+- **Language**: Choose from English, Spanish, Hindi, Japanese
+- **File Grid Density**: Adjust spacing in grid view
+
+### Security Settings
+- **Hardware Authentication**: Enable FIDO2/WebAuthn (Premium)
+- **Password Requirements**: Set minimum password strength
+
+### License
+- **Enter License Key**: Unlock premium features
+- **View Feature Status**: See what's available
+
+## Premium Features
+
+> [!NOTE]
+> **Premium License Required**: Some features require a valid license key.
+
+### Hardware Authentication
+- Use **YubiKey, Touch ID, Windows Hello** instead of passwords
+- More secure than traditional passwords
+- Faster authentication workflow
+
+### Bulk Operations
+- Encrypt/decrypt multiple files simultaneously
+- Batch processing for large file sets
+- Progress tracking for bulk operations
+
+### Cloud Integration
+- Seamlessly encrypt files in cloud storage
+- Automatic sync with encrypted versions
+- Support for major cloud providers
+
+## Tips for Success
+
+### 🔐 Security Tips
+1. **Use unique passwords** for different file sets
+2. **Store passwords securely** in a password manager
+3. **Test decryption** before deleting originals
+4. **Keep backups** of important encrypted files
+
+### ⚡ Performance Tips
+1. **Close preview panel** when working with large directories
+2. **Use list view** for better performance with many files
+3. **Encrypt in smaller batches** for very large directories
+
+### 🎯 Workflow Tips
+1. **Organize files** before encryption for easier management
+2. **Use descriptive passwords** you can remember
+3. **Preview files** before encryption to ensure they're correct
+
+## Getting Help
+
+### Documentation
+- **User Guide**: Detailed feature explanations
+- **Troubleshooting**: Common issues and solutions
+- **Security Guide**: Best practices and recommendations
+
+### Community Support
+- **GitHub Issues**: Report bugs or request features
+- **Discussions**: Ask questions and share tips
+
+## Next Steps
+
+Now that you know the basics:
+
+1. **Explore the [User Guide](/user-guide)** for detailed feature explanations
+2. **Check out [Security Best Practices](/security)** to protect your data
+3. **Learn about [Advanced Features](/features)** to get the most out of Maraikka
+
+---
+
+**Ready to secure your files?** Start by selecting a directory and encrypting your first file! 🚀 
