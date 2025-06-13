@@ -1,0 +1,389 @@
+# Security Guide
+
+Maraikka is designed with security as the top priority. This guide covers security best practices, technical details, and recommendations for protecting your sensitive data.
+
+## Security Architecture
+
+### Core Security Principles
+
+#### 1. **Local Processing Only**
+- All encryption and decryption happens on your device
+- No data is ever transmitted to external servers
+- Your files never leave your computer during processing
+- Complete offline functionality
+
+#### 2. **Zero Password Storage**
+- Passwords are never saved to disk or memory permanently
+- Passwords are cleared from memory immediately after use
+- No password recovery mechanism (by design)
+- No password hints or storage
+
+#### 3. **Military-Grade Encryption**
+- AES-256 encryption in CBC mode
+- PBKDF2 key derivation with SHA-256
+- Cryptographically secure random number generation
+- Industry-standard security practices
+
+#### 4. **Secure Memory Management**
+- Sensitive data is cleared from memory after use
+- No swap file exposure of encryption keys
+- Protected memory allocation where possible
+- Secure deletion of temporary files
+
+## Encryption Technical Details
+
+### AES Encryption Specifications
+
+#### Algorithm Details
+- **Cipher**: AES (Advanced Encryption Standard)
+- **Key Size**: 256 bits
+- **Mode**: CBC (Cipher Block Chaining)
+- **Padding**: PKCS#7 padding
+- **IV**: Random 16-byte initialization vector per file
+
+#### Key Derivation
+```
+Key = PBKDF2(password, salt, iterations, keyLength)
+- Hash Function: SHA-256
+- Salt: 32 random bytes per file
+- Iterations: 100,000 (configurable)
+- Key Length: 256 bits (32 bytes)
+```
+
+#### File Format Structure
+```
+Encrypted File (.enc):
+[Salt: 32 bytes] + [IV: 16 bytes] + [Encrypted Data: Variable]
+```
+
+### Security Guarantees
+
+#### What Maraikka Protects Against
+✅ **Unauthorized file access**
+✅ **Data theft from storage**
+✅ **Accidental data exposure**
+✅ **Brute force attacks** (with strong passwords)
+✅ **Dictionary attacks**
+✅ **Rainbow table attacks**
+✅ **File system forensics**
+
+#### What Maraikka Cannot Protect Against
+❌ **Weak passwords** chosen by users
+❌ **Keyloggers** capturing passwords during entry
+❌ **Screen recording** of password entry
+❌ **Physical access** to unlocked devices
+❌ **Malware** with system-level access
+❌ **Social engineering** attacks
+
+## Password Security
+
+### Strong Password Guidelines
+
+#### Minimum Requirements
+- **Length**: At least 12 characters (6 minimum enforced)
+- **Complexity**: Mix of character types
+- **Uniqueness**: Different passwords for different file sets
+- **Unpredictability**: Avoid patterns and personal information
+
+#### Password Strength Levels
+
+| Level | Requirements | Security |
+|-------|-------------|----------|
+| 🔴 **Weak** | < 8 chars, common patterns | Vulnerable to attacks |
+| 🟡 **Fair** | 8-11 chars, basic variety | Basic protection |
+| 🟢 **Good** | 12+ chars, good variety | Strong protection |
+| 🟢 **Excellent** | 16+ chars, high entropy | Maximum security |
+
+#### Password Examples
+```bash
+# Weak passwords (avoid these)
+❌ password123
+❌ myname1990
+❌ qwerty
+❌ 123456789
+
+# Strong passwords (recommended)
+✅ Tr0ub4dor&3
+✅ M@raikka2024!Secure
+✅ K7#mN9$pQ2@vX8&wZ5
+✅ correct-horse-battery-staple-2024!
+```
+
+### Password Management Best Practices
+
+#### Use a Password Manager
+**Recommended password managers:**
+- **1Password**: Cross-platform, secure sharing
+- **Bitwarden**: Open source, affordable
+- **LastPass**: Popular, feature-rich
+- **KeePass**: Local storage, highly secure
+
+#### Password Generation
+```bash
+# Generate strong passwords using tools:
+openssl rand -base64 32
+pwgen -s 20 1
+# Or use your password manager's generator
+```
+
+#### Password Storage
+- **DO**: Store in a reputable password manager
+- **DO**: Write down and store in a physical safe
+- **DON'T**: Store in plain text files
+- **DON'T**: Use browser password storage for critical passwords
+- **DON'T**: Share passwords via email or messaging
+
+## Hardware Authentication (Premium)
+
+> [!NOTE]
+> **Premium Feature**: Requires a valid license key.
+
+### FIDO2/WebAuthn Security
+
+#### Supported Authenticators
+- **YubiKey Series**: YubiKey 5, YubiKey Bio
+- **Touch ID**: macOS biometric authentication
+- **Windows Hello**: Windows biometric authentication
+- **Platform Authenticators**: Built-in device security
+
+#### Security Benefits
+- **Phishing Resistant**: Cannot be replicated or stolen
+- **No Shared Secrets**: Private keys never leave the device
+- **Cryptographic Proof**: Mathematical verification
+- **User Presence**: Requires physical interaction
+
+#### Setup Best Practices
+1. **Register multiple authenticators** for backup
+2. **Test authentication** before encrypting important files
+3. **Keep backup authenticator** in secure location
+4. **Document recovery process** for your organization
+
+## File Security Best Practices
+
+### Before Encryption
+
+#### File Preparation
+1. **Organize files** into logical groups
+2. **Remove unnecessary files** to reduce attack surface
+3. **Verify file integrity** before encryption
+4. **Create backups** of critical files
+
+#### Environment Security
+- **Close unnecessary applications** during encryption
+- **Ensure stable power supply** for large operations
+- **Use secure, private networks** when possible
+- **Disable cloud sync** temporarily during encryption
+
+### During Encryption
+
+#### Process Security
+- **Don't interrupt encryption** once started
+- **Monitor system resources** for unusual activity
+- **Avoid using other applications** heavily
+- **Keep the system secure** from physical access
+
+#### Password Entry
+- **Check for shoulder surfing** before entering passwords
+- **Use secure input methods** when available
+- **Verify password strength** before confirming
+- **Clear clipboard** after password operations
+
+### After Encryption
+
+#### Verification
+1. **Test decryption** on a sample file
+2. **Verify file integrity** after decryption
+3. **Confirm original files** are securely deleted
+4. **Document encryption details** securely
+
+#### Storage Security
+- **Store encrypted files** in multiple locations
+- **Use secure cloud storage** for backups
+- **Implement access controls** on storage locations
+- **Monitor for unauthorized access** attempts
+
+## System Security Recommendations
+
+### Operating System Security
+
+#### Windows Security
+```powershell
+# Enable BitLocker for full disk encryption
+manage-bde -on C: -RecoveryPassword
+
+# Keep Windows updated
+Get-WindowsUpdate -Install -AcceptAll
+
+# Use Windows Defender or reputable antivirus
+Set-MpPreference -DisableRealtimeMonitoring $false
+```
+
+#### macOS Security
+```bash
+# Enable FileVault for full disk encryption
+sudo fdesetup enable
+
+# Keep macOS updated
+sudo softwareupdate -i -a
+
+# Enable Gatekeeper
+sudo spctl --master-enable
+```
+
+#### Linux Security
+```bash
+# Enable full disk encryption (LUKS)
+cryptsetup luksFormat /dev/sdX
+
+# Keep system updated
+sudo apt update && sudo apt upgrade  # Debian/Ubuntu
+sudo dnf update                      # Fedora
+
+# Configure firewall
+sudo ufw enable  # Ubuntu
+sudo firewall-cmd --set-default-zone=public  # Fedora
+```
+
+### Network Security
+
+#### Secure Networks
+- **Use trusted networks** for sensitive operations
+- **Avoid public Wi-Fi** for encryption activities
+- **Use VPN** when on untrusted networks
+- **Monitor network traffic** for anomalies
+
+#### Firewall Configuration
+- **Block unnecessary ports** and services
+- **Allow only required applications** through firewall
+- **Monitor outbound connections** from Maraikka
+- **Use application-level firewalls** when available
+
+## Threat Model Analysis
+
+### Threat Scenarios
+
+#### 1. **Device Theft/Loss**
+**Risk**: Physical access to encrypted files
+**Mitigation**: 
+- Strong device encryption (BitLocker, FileVault, LUKS)
+- Strong Maraikka passwords
+- Remote wipe capabilities
+
+#### 2. **Malware Infection**
+**Risk**: Keyloggers, screen capture, file access
+**Mitigation**:
+- Regular antivirus scans
+- Hardware authentication (Premium)
+- Isolated encryption environment
+
+#### 3. **Insider Threats**
+**Risk**: Authorized users accessing files
+**Mitigation**:
+- Individual file passwords
+- Access logging and monitoring
+- Principle of least privilege
+
+#### 4. **Cloud Storage Compromise**
+**Risk**: Encrypted files accessed by attackers
+**Mitigation**:
+- Strong encryption passwords
+- Additional cloud encryption layers
+- Access monitoring and alerts
+
+### Risk Assessment Matrix
+
+| Threat | Likelihood | Impact | Risk Level | Mitigation |
+|--------|------------|--------|------------|------------|
+| Weak Password | High | High | 🔴 Critical | Password policy, education |
+| Device Theft | Medium | High | 🟡 High | Full disk encryption |
+| Malware | Medium | Medium | 🟡 Medium | Antivirus, updates |
+| Cloud Breach | Low | Medium | 🟢 Low | Strong passwords |
+
+## Compliance and Standards
+
+### Industry Standards
+- **FIPS 140-2**: Cryptographic module standards
+- **Common Criteria**: Security evaluation criteria
+- **NIST Guidelines**: Cryptographic best practices
+- **ISO 27001**: Information security management
+
+### Regulatory Compliance
+- **GDPR**: Data protection regulation compliance
+- **HIPAA**: Healthcare data protection
+- **SOX**: Financial data security
+- **PCI DSS**: Payment card data security
+
+## Security Auditing
+
+### Self-Assessment Checklist
+
+#### Password Security
+- [ ] Using strong, unique passwords
+- [ ] Passwords stored in secure password manager
+- [ ] Regular password rotation for critical files
+- [ ] No password sharing or reuse
+
+#### System Security
+- [ ] Operating system fully updated
+- [ ] Antivirus software active and updated
+- [ ] Firewall properly configured
+- [ ] Full disk encryption enabled
+
+#### File Security
+- [ ] Regular backups of encrypted files
+- [ ] Secure deletion of original files verified
+- [ ] Access controls on encrypted file storage
+- [ ] Monitoring for unauthorized access
+
+#### Process Security
+- [ ] Documented encryption procedures
+- [ ] Regular security training
+- [ ] Incident response plan in place
+- [ ] Regular security reviews
+
+### Professional Security Audit
+
+For organizations requiring formal security assessment:
+
+1. **Engage security professionals** for penetration testing
+2. **Conduct code review** of custom implementations
+3. **Perform compliance assessment** against relevant standards
+4. **Document security posture** and recommendations
+
+## Incident Response
+
+### If You Suspect Compromise
+
+#### Immediate Actions
+1. **Disconnect from network** to prevent data exfiltration
+2. **Change all passwords** used for encryption
+3. **Scan for malware** using updated antivirus
+4. **Review system logs** for suspicious activity
+
+#### Investigation Steps
+1. **Document the incident** with timestamps and details
+2. **Preserve evidence** for forensic analysis
+3. **Assess scope** of potential compromise
+4. **Notify relevant parties** as required
+
+#### Recovery Process
+1. **Re-encrypt affected files** with new passwords
+2. **Restore from clean backups** if necessary
+3. **Implement additional security measures**
+4. **Monitor for ongoing threats**
+
+## Getting Help
+
+### Security Questions
+- **[GitHub Issues](https://github.com/maraikka-labs/maraikka-app/issues)**: Report security concerns
+- **[Security Email](mailto:security@maraikka.com)**: Private security reports
+- **[Documentation](/troubleshooting)**: Common security questions
+
+### Professional Support
+- **Security Consulting**: Available for enterprise users
+- **Compliance Assistance**: Help with regulatory requirements
+- **Custom Security Features**: Available through licensing
+
+---
+
+**Remember**: Security is a process, not a product. Regular review and updates of your security practices are essential for maintaining protection. 🔐 

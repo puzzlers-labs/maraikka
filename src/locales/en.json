@@ -1,0 +1,220 @@
+{
+  "app": {
+    "title": "Maraikka",
+    "version": "Version 1.0.0",
+    "description": "A secure file encryption application for protecting your sensitive data."
+  },
+  "sidebar": {
+    "actions": "ACTIONS",
+    "selectDirectory": "Select Directory",
+    "encryptDirectory": "Encrypt Directory",
+    "decryptDirectory": "Decrypt Directory",
+    "refresh": "Refresh",
+    "preferences": "Preferences",
+    "currentPath": "CURRENT PATH",
+    "noDirectorySelected": "No directory selected"
+  },
+  "fileList": {
+    "encrypted": "Encrypted",
+    "directory": "Directory",
+    "noFiles": "No files in this directory",
+    "selectDirectoryFirst": "Please select a directory to view files"
+  },
+  "fileActions": {
+    "preview": "Preview",
+    "encrypt": "Encrypt",
+    "decrypt": "Decrypt"
+  },
+  "contextMenu": {
+    "preview": "Preview",
+    "encrypt": "Encrypt", 
+    "decrypt": "Decrypt",
+    "edit": "Edit",
+    "annotate": "Annotate"
+  },
+  "modals": {
+    "enterPassword": "Enter Password",
+    "encryptDirectory": "Encrypt Directory",
+    "decryptDirectory": "Decrypt Directory",
+    "encryptFile": "Encrypt File",
+    "decryptFile": "Decrypt File",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close"
+  },
+      "editor": {
+        "title": "Text Editor",
+        "save": "Save",
+        "saveAs": "Save As",
+        "unsavedChanges": "Unsaved Changes", 
+        "unsavedChangesMessage": "You have unsaved changes. What would you like to do?",
+        "saveAndClose": "Save & Close",
+        "closeWithoutSaving": "Close Without Saving",
+        "cancel": "Cancel",
+        "enterPassword": "Enter Password",
+        "passwordRequired": "This file is encrypted. Please enter the password to edit it.",
+        "unlock": "Unlock",
+        "loading": "Loading file...",
+        "ready": "Ready",
+        "saveChanges": "Save Changes",
+        "discardChanges": "Discard Changes",
+        "fileSaved": "File saved successfully",
+        "enterPasswordToEdit": "Enter password to edit encrypted file",
+        "decryptingFile": "Decrypting file...",
+        "encryptingFile": "Encrypting file...",
+        "failedToSave": "Failed to save file",
+        "failedToDecrypt": "Failed to decrypt file",
+        "failedToOpen": "Failed to open text editor",
+        "failedToOpenImage": "Failed to open image editor",
+        "invalidPassword": "Invalid password or corrupted file"
+    },
+    "imageEditor": {
+        "title": "Image Editor",
+        "tools": {
+            "select": "Select",
+            "pen": "Pen",
+            "line": "Line", 
+            "arrow": "Arrow",
+            "rectangle": "Rectangle",
+            "circle": "Circle",
+            "text": "Text",
+            "blur": "Blur Effect",
+            "highlight": "Highlight"
+        },
+        "actions": {
+            "undo": "Undo",
+            "redo": "Redo",
+            "delete": "Delete Selected",
+            "save": "Save",
+            "export": "Export"
+        },
+        "properties": {
+            "strokeColor": "Stroke Color",
+            "fillColor": "Fill Color",
+            "strokeWidth": "Width",
+            "blurAmount": "Blur"
+        },
+        "status": {
+            "ready": "Ready",
+            "loading": "Loading image editor...",
+            "saved": "Saved",
+            "exported": "Exported"
+        }
+    },
+  "preferences": {
+    "title": "Preferences",
+    "general": "General",
+    "license": "License", 
+    "about": "About",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language",
+    "fileGridDensity": "File Grid Density",
+    "densitySpacious": "Spacious view",
+    "densityDense": "Dense view",
+    "densityBalanced": "Balanced",
+    "densityDescription": "Comfortable spacing for most users",
+    "security": "Security",
+    "hardwareAuth": "Hardware Authentication",
+    "hardwareAuthDescription": "Use FIDO2/WebAuthn (YubiKey, Touch ID, Windows Hello) for encryption instead of passwords",
+    "noAuthenticatorRegistered": "No authenticator registered",
+    "registerAuthenticator": "Register Authenticator",
+    "removeAuthenticator": "Remove Authenticator"
+  },
+  "license": {
+    "licenseKey": "License Key",
+    "licenseKeyPlaceholder": "Enter your license key",
+    "validate": "Validate",
+    "validating": "Validating...",
+    "noValidLicense": "No valid license",
+    "premiumFeatures": "Premium Features",
+    "fidoAuth": "FIDO2 Hardware Authentication",
+    "fidoAuthDescription": "Use YubiKey, Touch ID, and Windows Hello for secure encryption",
+    "bulkOperations": "Bulk Operations",
+    "bulkOperationsDescription": "Encrypt/decrypt multiple files and folders simultaneously",
+    "cloudIntegration": "Cloud Integration", 
+    "cloudIntegrationDescription": "Seamlessly encrypt files stored in cloud services",
+    "locked": "Locked",
+    "unlocked": "Unlocked",
+    "testLicenseKeys": "Test License Keys",
+    "testKeysDescription": "For testing purposes, use one of these demo keys:"
+  },
+  "about": {
+    "developer": "Developer",
+    "developerName": "Maraikka Labs",
+    "licenseType": "License",
+    "licenseValue": "Source Available",
+    "framework": "Framework",
+    "frameworkValue": "Electron",
+    "github": "GitHub",
+    "website": "Website"
+  },
+  "hardwareAuth": {
+    "title": "Hardware Authentication",
+    "register": "Register Your Authenticator",
+    "registerDescription": "Use your FIDO2 device (YubiKey, Touch ID, Windows Hello) to secure your encryption keys.",
+    "waitingForAuthenticator": "Waiting for authenticator...",
+    "registerButton": "Register"
+  },
+  "preview": {
+    "encryptedFile": "Encrypted File",
+    "enterPasswordToPreview": "Enter password to preview \"{fileName}\"",
+    "enterPassword": "Enter password",
+    "unlockAndPreview": "Unlock & Preview",
+    "decrypting": "Decrypting...",
+    "unableToPreview": "Unable to preview this file",
+    "pages": "pages"
+  },
+  "notifications": {
+    "success": "Success",
+    "error": "Error",
+    "directoryEncryptedSuccessfully": "Directory encrypted successfully",
+    "directoryDecryptedSuccessfully": "Directory decrypted successfully",
+    "fileEncryptedSuccessfully": "File \"{fileName}\" encrypted successfully",
+    "fileDecryptedSuccessfully": "File \"{fileName}\" decrypted successfully",
+    "encryptionFailed": "Encryption failed",
+    "decryptionFailed": "Decryption failed",
+    "pleaseEnterPassword": "Please enter a password",
+    "passwordMinLength": "Password must be at least 6 characters long",
+    "noDirectorySelected": "No directory selected",
+    "failedToEncryptDirectory": "Failed to encrypt directory",
+    "failedToDecryptDirectory": "Failed to decrypt directory",
+    "failedToEncryptFile": "Failed to encrypt file",
+    "failedToDecryptFile": "Failed to decrypt file",
+    "pleaseEnterPassword": "Please enter a password",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "failedToDecryptFile": "Failed to decrypt file",
+    "licenseValidated": "License Validated", 
+    "licenseValidatedDescription": "License key is valid and features have been unlocked!",
+    "pleaseEnterLicenseKey": "Please enter a license key",
+    "invalidLicenseKey": "Invalid license key",
+    "unableToValidateLicense": "Unable to validate license. Please check your connection.",
+    "externalLink": "External Link",
+    "externalLinkDescription": "Link functionality will be implemented in production build"
+  },
+
+  "fileTypes": {
+    "image": "Image",
+    "video": "Video", 
+    "document": "Document",
+    "archive": "Archive",
+    "audio": "Audio",
+    "code": "Code"
+  },
+  "viewModes": {
+    "list": "List View",
+    "grid": "Grid View"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español", 
+    "hi": "हिन्दी",
+    "ja": "日本語",
+    "fr": "Français",
+    "de": "Deutsch",
+    "zh": "中文"
+  }
+} 

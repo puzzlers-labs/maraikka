@@ -1,0 +1,361 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.2.3)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+      platform:
+        description: 'Platform to build for'
+        required: false
+        type: choice
+        options:
+          - 'all'
+          - 'mac'
+          - 'windows'
+          - 'linux'
+        default: 'all'
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  APPLE_ID: ${{ secrets.APPLE_ID }}
+  APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+  CSC_LINK: ${{ secrets.CSC_LINK }}
+  CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'mac' || github.event.inputs.platform == ''
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install electron-builder
+        run: npm install -g electron-builder
+        
+      - name: Prepare for App Store build
+        run: |
+          # Create necessary directories
+          mkdir -p assets
+          
+          # Create placeholder files if they don't exist
+          if [ ! -f "assets/icon.icns" ]; then
+            echo "Warning: assets/icon.icns not found, using placeholder"
+            touch assets/icon.icns
+          fi
+          
+          if [ ! -f "assets/entitlements.mac.plist" ]; then
+            cat > assets/entitlements.mac.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>com.apple.security.cs.allow-jit</key>
+            <true/>
+            <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+            <true/>
+            <key>com.apple.security.cs.debugger</key>
+            <true/>
+            <key>com.apple.security.cs.disable-library-validation</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+          fi
+          
+          if [ ! -f "assets/entitlements.mas.plist" ]; then
+            cat > assets/entitlements.mas.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>com.apple.security.app-sandbox</key>
+            <true/>
+            <key>com.apple.security.files.user-selected.read-write</key>
+            <true/>
+            <key>com.apple.security.files.downloads.read-write</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+          fi
+          
+          if [ ! -f "assets/entitlements.mas.inherit.plist" ]; then
+            cat > assets/entitlements.mas.inherit.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>com.apple.security.app-sandbox</key>
+            <true/>
+            <key>com.apple.security.inherit</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+          fi
+          
+      - name: Build for GitHub Release (Direct Distribution)
+        run: npm run build:github
+        env:
+          DISTRIBUTION: github
+          
+      - name: Build for Mac App Store
+        run: npm run build:mas
+        env:
+          DISTRIBUTION: appstore
+          
+      - name: Upload Mac artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-builds
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/latest-mac.yml
+            dist/mac/**/*
+
+  build-windows:
+    runs-on: windows-latest
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows' || github.event.inputs.platform == ''
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install electron-builder
+        run: npm install -g electron-builder
+        
+      - name: Prepare Windows assets
+        run: |
+          # Create necessary directories
+          New-Item -ItemType Directory -Force -Path "assets"
+          
+          # Create placeholder icon if it doesn't exist
+          if (-not (Test-Path "assets/icon.ico")) {
+            Write-Host "Warning: assets/icon.ico not found, using placeholder"
+            # Create a minimal ICO file (you should replace this with actual icon)
+            New-Item -ItemType File -Path "assets/icon.ico"
+          }
+          
+          if (-not (Test-Path "assets/installer.ico")) {
+            Write-Host "Creating installer icon placeholder"
+            New-Item -ItemType File -Path "assets/installer.ico"
+          }
+          
+          if (-not (Test-Path "assets/uninstaller.ico")) {
+            Write-Host "Creating uninstaller icon placeholder"
+            New-Item -ItemType File -Path "assets/uninstaller.ico"
+          }
+          
+          if (-not (Test-Path "assets/installer-header.ico")) {
+            Write-Host "Creating installer header icon placeholder"
+            New-Item -ItemType File -Path "assets/installer-header.ico"
+          }
+        shell: powershell
+        
+      - name: Build for Windows (NSIS)
+        run: npm run build:win
+        env:
+          DISTRIBUTION: github
+          
+      - name: Build for Windows Store (MSIX)
+        run: npm run build:win-store
+        env:
+          DISTRIBUTION: windowsstore
+          
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-builds
+          path: |
+            dist/*.exe
+            dist/*.zip
+            dist/*.appx
+            dist/latest.yml
+            dist/win-unpacked/**/*
+
+  build-linux:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'linux' || github.event.inputs.platform == ''
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install electron-builder
+        run: npm install -g electron-builder
+        
+      - name: Prepare Linux assets
+        run: |
+          # Create necessary directories
+          mkdir -p assets
+          
+          # Create placeholder icon if it doesn't exist
+          if [ ! -f "assets/icon.png" ]; then
+            echo "Warning: assets/icon.png not found, using placeholder"
+            # Create a minimal PNG file (you should replace this with actual icon)
+            touch assets/icon.png
+          fi
+          
+      - name: Build for Linux
+        run: npm run build:linux
+        env:
+          DISTRIBUTION: github
+          
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-builds
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.rpm
+            dist/latest-linux.yml
+            dist/linux-unpacked/**/*
+
+  create-release:
+    needs: [build-mac, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    if: always() && (needs.build-mac.result == 'success' || needs.build-windows.result == 'success' || needs.build-linux.result == 'success')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-all
+          
+      - name: Organize artifacts
+        run: |
+          mkdir -p release-files
+          
+          # Copy Mac builds if they exist
+          if [ -d "dist-all/mac-builds" ]; then
+            cp -r dist-all/mac-builds/* release-files/ 2>/dev/null || true
+          fi
+          
+          # Copy Windows builds if they exist
+          if [ -d "dist-all/windows-builds" ]; then
+            cp -r dist-all/windows-builds/* release-files/ 2>/dev/null || true
+          fi
+          
+          # Copy Linux builds if they exist
+          if [ -d "dist-all/linux-builds" ]; then
+            cp -r dist-all/linux-builds/* release-files/ 2>/dev/null || true
+          fi
+          
+          # List all files for debugging
+          echo "Release files:"
+          find release-files -type f -name "*" | sort
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ github.event.inputs.version || github.ref_name }}
+          name: Release ${{ github.event.inputs.version || github.ref_name }}
+          prerelease: ${{ github.event.inputs.prerelease || contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+          files: |
+            release-files/*.dmg
+            release-files/*.zip
+            release-files/*.exe
+            release-files/*.AppImage
+            release-files/*.deb
+            release-files/*.rpm
+            release-files/*.appx
+            release-files/latest*.yml
+          body: |
+            ## What's New
+            
+            ### Features
+            - Cross-platform support: macOS, Windows, and Linux
+            - Context menu integration for all platforms
+            - Auto-update system for direct downloads
+            - Store distribution support (Mac App Store, Microsoft Store)
+            
+            ### Installation Options
+            
+            **macOS:**
+            - 📦 **Direct Download**: `.dmg` file with auto-updates
+            - 🏪 **Mac App Store**: Sandboxed version (separate submission)
+            
+            **Windows:**
+            - 📦 **Installer**: `.exe` NSIS installer with context menu integration
+            - 📱 **Portable**: `.zip` portable version
+            - 🏪 **Microsoft Store**: `.appx` package (separate submission)
+            
+            **Linux:**
+            - 📦 **AppImage**: Universal Linux application
+            - 📦 **Debian**: `.deb` package for Ubuntu/Debian
+            - 📦 **RPM**: `.rpm` package for Fedora/RHEL/SUSE
+            
+            ### System Requirements
+            - **macOS**: 10.15 or later (Intel/Apple Silicon)
+            - **Windows**: Windows 10 (1903+) or Windows 11
+            - **Linux**: Most modern distributions (x64)
+            
+            ### Security Features
+            - Hardware authentication support (Touch ID, Windows Hello, FIDO2)
+            - Code signing and notarization (macOS)
+            - Digital signatures (Windows)
+            - Secure auto-update channels
+            
+          draft: false
+
+  notify-stores:
+    needs: create-release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') && !contains(github.ref_name, 'beta') && !contains(github.ref_name, 'alpha')
+    
+    steps:
+      - name: Notify about store submissions
+        run: |
+          echo "::notice::Multi-platform builds created successfully!"
+          echo "::notice::Store submission reminders:"
+          echo "::notice::📱 Mac App Store: Upload .pkg to App Store Connect"
+          echo "::notice::🪟 Microsoft Store: Upload .appx to Partner Center"
+          echo "::notice::🐧 Linux: Consider submitting to Snap Store, Flathub"
+          echo "::notice::Remember to update version numbers and release notes for each store" 

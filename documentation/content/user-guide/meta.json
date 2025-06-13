@@ -1,0 +1,11 @@
+{
+  "index": "Overview",
+  "interface": "Interface Guide",
+  "encryption": "File Encryption",
+  "decryption": "File Decryption", 
+  "preview": "File Preview",
+  "text-editor": "Text Editor",
+  "image-editor": "Image Editor",
+  "preferences": "Settings & Preferences",
+  "shortcuts": "Keyboard Shortcuts"
+} 

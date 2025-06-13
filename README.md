@@ -1,8 +1,8 @@
-# Maraikka Encryptor
+# Maraikka
 
 A beautiful, secure desktop application for encrypting and decrypting files and directories with an intuitive file explorer interface.
 
-![Maraikka Encryptor](https://img.shields.io/badge/Electron-App-blue)
+![Maraikka](https://img.shields.io/badge/Electron-App-blue)
 ![Security](https://img.shields.io/badge/AES-Encryption-green)
 ![Platform](https://img.shields.io/badge/Platform-Cross--Platform-lightgray)
 
@@ -75,7 +75,7 @@ Built applications will be available in the `dist` directory.
 ### Getting Started
 
 1. **Launch the Application**
-   - Double-click the Maraikka Encryptor icon
+   - Double-click the Maraikka icon
    - The application will open with an empty file explorer
 
 2. **Select a Directory**

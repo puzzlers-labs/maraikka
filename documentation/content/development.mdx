@@ -1,0 +1,509 @@
+# Development Guide
+
+This guide is for developers who want to contribute to Maraikka or build custom features. Learn how to set up the development environment, understand the codebase, and contribute effectively.
+
+## Getting Started
+
+### Prerequisites
+
+#### Required Software
+- **Node.js** 16 or higher
+- **npm** or **yarn** package manager
+- **Git** for version control
+- **Code editor** (VS Code recommended)
+
+#### Platform-Specific Requirements
+
+**Windows:**
+- **Visual Studio Build Tools** or **Visual Studio Community**
+- **Python 3.x** for native module compilation
+- **Windows SDK** (latest version)
+
+**macOS:**
+- **Xcode Command Line Tools**: `xcode-select --install`
+- **macOS SDK** (included with Xcode)
+
+**Linux:**
+- **Build essentials**: `sudo apt install build-essential` (Ubuntu/Debian)
+- **Development tools**: `sudo dnf groupinstall "Development Tools"` (Fedora)
+
+### Development Setup
+
+#### 1. Clone the Repository
+```bash
+git clone https://github.com/maraikka-labs/maraikka-app.git
+cd maraikka-app
+```
+
+#### 2. Install Dependencies
+```bash
+# Install all dependencies
+npm install
+
+# Or using yarn
+yarn install
+```
+
+#### 3. Start Development Mode
+```bash
+# Run in development mode with hot reload
+npm run dev
+
+# Or using yarn
+yarn dev
+```
+
+The application will start with:
+- **Hot reload** enabled
+- **Developer tools** automatically opened
+- **Debug logging** enabled
+- **Source maps** for easier debugging
+
+## Project Structure
+
+### Directory Overview
+```
+maraikka-app/
+├── src/                    # Main application source
+│   ├── main.js            # Electron main process
+│   ├── preload.js         # Secure IPC bridge
+│   ├── updater.js         # Auto-update system
+│   ├── renderer/          # UI and frontend code
+│   │   ├── index.html     # Main application UI
+│   │   ├── renderer.js    # Main UI logic
+│   │   ├── styles.css     # Application styles
+│   │   ├── text-editor.html    # Text editor UI
+│   │   ├── text-editor.js      # Text editor logic
+│   │   ├── image-editor.html   # Image editor UI
+│   │   ├── image-editor.js     # Image editor logic
+│   │   └── i18n.js        # Internationalization
+│   └── locales/           # Translation files
+│       ├── en.json        # English translations
+│       ├── es.json        # Spanish translations
+│       ├── hi.json        # Hindi translations
+│       └── ja.json        # Japanese translations
+├── assets/                # Application assets
+│   ├── icon.icns         # macOS app icon
+│   ├── icon.ico          # Windows app icon
+│   └── icon.png          # Linux app icon
+├── scripts/               # Build and deployment scripts
+├── windows-context/       # Windows context menu integration
+├── macos-services/        # macOS Services integration
+├── template/              # UI component templates
+├── docs/                  # Additional documentation
+├── package.json           # Dependencies and scripts
+└── README.md             # Project overview
+```
+
+### Key Files Explained
+
+#### `src/main.js`
+The Electron main process that:
+- Creates application windows
+- Handles file system operations
+- Manages encryption/decryption
+- Provides IPC communication
+- Handles auto-updates
+
+#### `src/renderer/renderer.js`
+The main UI logic that:
+- Manages file explorer interface
+- Handles user interactions
+- Communicates with main process
+- Manages application state
+
+#### `src/preload.js`
+Security bridge that:
+- Exposes safe APIs to renderer
+- Prevents direct Node.js access
+- Maintains security boundaries
+
+## Architecture Overview
+
+### Electron Architecture
+```
+┌─────────────────┐    ┌─────────────────┐
+│   Main Process  │    │ Renderer Process│
+│                 │    │                 │
+│ • File I/O      │◄──►│ • User Interface│
+│ • Encryption    │    │ • User Input    │
+│ • System APIs   │    │ • Display Logic │
+│ • Auto-updates  │    │ • Styling       │
+└─────────────────┘    └─────────────────┘
+         ▲                       ▲
+         │                       │
+         ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐
+│   Preload       │    │   Template      │
+│                 │    │                 │
+│ • Secure APIs   │    │ • UI Components │
+│ • IPC Bridge    │    │ • Styling       │
+│ • Context       │    │ • Themes        │
+│   Isolation     │    │ • Layouts       │
+└─────────────────┘    └─────────────────┘
+```
+
+### Security Model
+- **Context Isolation**: Renderer cannot access Node.js directly
+- **Preload Scripts**: Controlled API exposure
+- **No Node Integration**: Renderer runs in secure context
+- **IPC Communication**: Structured message passing
+
+## Development Workflow
+
+### Code Style and Standards
+
+#### JavaScript Style
+```javascript
+// Use modern ES6+ syntax
+const encryptFile = async (filePath, password) => {
+  try {
+    const data = await fs.readFile(filePath);
+    const encrypted = await encrypt(data, password);
+    return encrypted;
+  } catch (error) {
+    console.error('Encryption failed:', error);
+    throw error;
+  }
+};
+
+// Use descriptive variable names
+const encryptedFileExtension = '.enc';
+const passwordStrengthThreshold = 6;
+
+// Add JSDoc comments for functions
+/**
+ * Encrypts a file using AES encryption
+ * @param {string} filePath - Path to the file to encrypt
+ * @param {string} password - Encryption password
+ * @returns {Promise<Buffer>} Encrypted file data
+ */
+```
+
+#### CSS/Styling Guidelines
+```css
+/* Use CSS custom properties for theming */
+:root {
+  --primary-color: #8b5cf6;
+  --background-color: #1a1a1a;
+  --text-color: #ffffff;
+}
+
+/* Use BEM methodology for class names */
+.file-list__item {
+  display: flex;
+  align-items: center;
+}
+
+.file-list__item--encrypted {
+  background-color: var(--encrypted-bg);
+}
+
+/* Use Tailwind CSS classes when possible */
+.btn-primary {
+  @apply bg-violet-500 hover:bg-violet-600 text-white px-4 py-2 rounded;
+}
+```
+
+### Testing
+
+#### Manual Testing Checklist
+- [ ] **File encryption** works for various file types
+- [ ] **Directory encryption** handles nested structures
+- [ ] **File decryption** restores original files correctly
+- [ ] **Password validation** enforces security requirements
+- [ ] **UI responsiveness** works across different screen sizes
+- [ ] **Theme switching** updates all components
+- [ ] **Language switching** translates all text
+- [ ] **Error handling** shows appropriate messages
+
+#### Automated Testing (Future)
+```bash
+# Unit tests (planned)
+npm run test:unit
+
+# Integration tests (planned)
+npm run test:integration
+
+# End-to-end tests (planned)
+npm run test:e2e
+```
+
+### Building and Packaging
+
+#### Development Builds
+```bash
+# Build for current platform
+npm run build
+
+# Build with debug information
+npm run build:debug
+```
+
+#### Platform-Specific Builds
+```bash
+# Windows builds
+npm run build:win          # NSIS installer
+npm run build:win-store    # Microsoft Store package
+npm run build:win-portable # Portable executable
+
+# macOS builds
+npm run build:mac          # DMG installer
+npm run build:mas          # Mac App Store package
+
+# Linux builds
+npm run build:linux        # AppImage, DEB, RPM packages
+
+# Build for all platforms
+npm run build:all
+```
+
+#### Build Configuration
+The build process is configured in `package.json` under the `build` section:
+
+```json
+{
+  "build": {
+    "appId": "com.maraikka.app",
+    "productName": "Maraikka",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "template/**/*",
+      "node_modules/**/*"
+    ]
+  }
+}
+```
+
+## Contributing Guidelines
+
+### Before Contributing
+
+#### 1. Check Existing Issues
+- Search [GitHub Issues](https://github.com/maraikka-labs/maraikka-app/issues)
+- Look for similar feature requests or bug reports
+- Comment on existing issues if you plan to work on them
+
+#### 2. Fork and Branch
+```bash
+# Fork the repository on GitHub
+# Clone your fork
+git clone https://github.com/YOUR_USERNAME/maraikka-app.git
+
+# Create a feature branch
+git checkout -b feature/your-feature-name
+
+# Or a bugfix branch
+git checkout -b bugfix/issue-description
+```
+
+#### 3. Development Environment
+- Set up development environment as described above
+- Test your changes thoroughly
+- Ensure code follows project standards
+
+### Making Changes
+
+#### Code Changes
+1. **Follow existing patterns** in the codebase
+2. **Add comments** for complex logic
+3. **Update translations** if adding new UI text
+4. **Test on multiple platforms** if possible
+
+#### Documentation Changes
+1. **Update relevant documentation** for new features
+2. **Add examples** for new APIs or functionality
+3. **Update README** if necessary
+
+#### Translation Updates
+When adding new UI text, update all language files:
+```json
+// src/locales/en.json
+{
+  "newFeature": {
+    "title": "New Feature",
+    "description": "This is a new feature"
+  }
+}
+
+// src/locales/es.json
+{
+  "newFeature": {
+    "title": "Nueva Característica",
+    "description": "Esta es una nueva característica"
+  }
+}
+```
+
+### Submitting Changes
+
+#### Pull Request Process
+1. **Commit your changes** with descriptive messages:
+   ```bash
+   git commit -m "feat: add hardware authentication support"
+   git commit -m "fix: resolve encryption failure on large files"
+   git commit -m "docs: update installation guide for Linux"
+   ```
+
+2. **Push to your fork**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+3. **Create Pull Request** on GitHub with:
+   - Clear title and description
+   - Reference to related issues
+   - Screenshots for UI changes
+   - Testing instructions
+
+#### Commit Message Format
+```
+type(scope): description
+
+[optional body]
+
+[optional footer]
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes
+- `refactor`: Code refactoring
+- `test`: Adding tests
+- `chore`: Maintenance tasks
+
+## Advanced Development
+
+### Adding New Features
+
+#### 1. Planning
+- **Design the feature** thoroughly
+- **Consider security implications**
+- **Plan UI/UX changes**
+- **Identify required translations**
+
+#### 2. Implementation
+- **Start with main process** changes if needed
+- **Add renderer logic** for UI interactions
+- **Update preload script** for new APIs
+- **Add styling** and responsive design
+
+#### 3. Integration
+- **Test with existing features**
+- **Ensure accessibility**
+- **Verify cross-platform compatibility**
+- **Update documentation**
+
+### Security Considerations
+
+#### When Adding Features
+- **Validate all inputs** from renderer process
+- **Use secure IPC communication**
+- **Avoid exposing sensitive APIs**
+- **Follow principle of least privilege**
+
+#### Encryption Changes
+- **Never weaken existing security**
+- **Use established cryptographic libraries**
+- **Test thoroughly with various inputs**
+- **Document security implications**
+
+### Performance Optimization
+
+#### Profiling
+```bash
+# Run with performance profiling
+npm run dev -- --inspect
+
+# Use Chrome DevTools for profiling
+# Navigate to chrome://inspect
+```
+
+#### Common Optimizations
+- **Lazy load large components**
+- **Optimize file I/O operations**
+- **Use efficient data structures**
+- **Minimize memory allocations**
+
+## Debugging
+
+### Development Tools
+
+#### Electron DevTools
+```javascript
+// In main.js (development mode)
+if (process.argv.includes('--dev')) {
+  mainWindow.webContents.openDevTools();
+}
+```
+
+#### Logging
+```javascript
+// Use structured logging
+console.log('🚀 Development mode: DevTools opened');
+console.error('❌ Encryption failed:', error);
+console.warn('⚠️ Password strength below recommended');
+```
+
+#### Debugging Main Process
+```bash
+# Start with Node.js debugging
+npm run dev -- --inspect-brk=5858
+
+# Connect with Chrome DevTools
+# Navigate to chrome://inspect
+```
+
+### Common Issues
+
+#### Build Failures
+- **Check Node.js version** (16+ required)
+- **Clear node_modules** and reinstall
+- **Update dependencies** if needed
+- **Check platform-specific requirements**
+
+#### Runtime Errors
+- **Check console logs** in DevTools
+- **Verify file permissions**
+- **Test with different file types**
+- **Check system resources**
+
+## Release Process
+
+### Version Management
+```bash
+# Update version in package.json
+npm version patch   # 1.0.0 -> 1.0.1
+npm version minor   # 1.0.0 -> 1.1.0
+npm version major   # 1.0.0 -> 2.0.0
+```
+
+### Release Checklist
+- [ ] **Update version** in package.json
+- [ ] **Update CHANGELOG** with new features and fixes
+- [ ] **Test on all platforms**
+- [ ] **Build release packages**
+- [ ] **Test installation** on clean systems
+- [ ] **Create GitHub release** with release notes
+- [ ] **Update documentation** if needed
+
+## Getting Help
+
+### Development Support
+- **[GitHub Discussions](https://github.com/maraikka-labs/maraikka-app/discussions)**: Ask development questions
+- **[GitHub Issues](https://github.com/maraikka-labs/maraikka-app/issues)**: Report bugs or request features
+- **Code Review**: Submit PRs for feedback
+
+### Resources
+- **[Electron Documentation](https://www.electronjs.org/docs)**: Official Electron guides
+- **[Node.js Documentation](https://nodejs.org/docs)**: Node.js API reference
+- **[MDN Web Docs](https://developer.mozilla.org/)**: Web technologies reference
+
+---
+
+**Ready to contribute?** Start by exploring the codebase and picking up a [good first issue](https://github.com/maraikka-labs/maraikka-app/labels/good%20first%20issue)! 🚀 

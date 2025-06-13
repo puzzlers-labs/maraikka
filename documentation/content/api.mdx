@@ -1,0 +1,686 @@
+# API Reference
+
+This reference documents Maraikka's internal APIs for developers who want to understand the codebase or build extensions.
+
+> [!WARNING]
+> **Internal APIs**: These APIs are for internal use and may change between versions. They are documented here for developers contributing to Maraikka.
+
+## IPC (Inter-Process Communication) APIs
+
+### Main Process → Renderer
+
+#### File Operations
+
+##### `directory-selected`
+Sent when a directory is successfully selected.
+
+```javascript
+// Payload
+{
+  path: string,           // Directory path
+  contents: Array<{       // Directory contents
+    name: string,         // File/directory name
+    path: string,         // Full path
+    isDirectory: boolean, // Is directory flag
+    isEncrypted: boolean, // Is encrypted flag
+    size: number,         // File size in bytes
+    modified: Date        // Last modified date
+  }>
+}
+```
+
+##### `encryption-progress`
+Sent during file/directory encryption operations.
+
+```javascript
+// Payload
+{
+  current: number,        // Current file index
+  total: number,          // Total files to process
+  fileName: string,       // Current file being processed
+  percentage: number      // Progress percentage (0-100)
+}
+```
+
+##### `encryption-complete`
+Sent when encryption operation completes.
+
+```javascript
+// Payload
+{
+  success: boolean,       // Operation success status
+  filesProcessed: number, // Number of files processed
+  errors: Array<string>   // Any error messages
+}
+```
+
+#### Theme and Preferences
+
+##### `theme-changed`
+Sent when application theme changes.
+
+```javascript
+// Payload
+{
+  theme: 'light' | 'dark'  // New theme
+}
+```
+
+##### `language-changed`
+Sent when application language changes.
+
+```javascript
+// Payload
+{
+  language: string,        // New language code (en, es, hi, ja)
+  translations: Object     // Translation object
+}
+```
+
+### Renderer → Main Process
+
+#### File System Operations
+
+##### `select-directory`
+Request to open directory selection dialog.
+
+```javascript
+// No payload required
+window.electronAPI.selectDirectory()
+```
+
+##### `encrypt-file`
+Request to encrypt a single file.
+
+```javascript
+// Payload
+{
+  filePath: string,       // Path to file to encrypt
+  password: string        // Encryption password
+}
+```
+
+##### `decrypt-file`
+Request to decrypt a single file.
+
+```javascript
+// Payload
+{
+  filePath: string,       // Path to encrypted file
+  password: string        // Decryption password
+}
+```
+
+##### `encrypt-directory`
+Request to encrypt all files in a directory.
+
+```javascript
+// Payload
+{
+  directoryPath: string,  // Path to directory
+  password: string        // Encryption password
+}
+```
+
+##### `decrypt-directory`
+Request to decrypt all encrypted files in a directory.
+
+```javascript
+// Payload
+{
+  directoryPath: string,  // Path to directory
+  password: string        // Decryption password
+}
+```
+
+#### Editor Operations
+
+##### `open-text-editor`
+Request to open text editor for a file.
+
+```javascript
+// Payload
+{
+  filePath: string,       // Path to file
+  isEncrypted: boolean    // Whether file is encrypted
+}
+```
+
+##### `open-image-editor`
+Request to open image editor for a file.
+
+```javascript
+// Payload
+{
+  filePath: string        // Path to image file
+}
+```
+
+## Encryption API
+
+### Core Functions
+
+#### `encryptFile(filePath, password)`
+Encrypts a single file using AES encryption.
+
+**Parameters:**
+- `filePath` (string): Path to the file to encrypt
+- `password` (string): Encryption password
+
+**Returns:** `Promise<boolean>` - Success status
+
+**Implementation:**
+```javascript
+async function encryptFile(filePath, password) {
+  try {
+    // Read file content
+    const data = await fs.readFile(filePath);
+    
+    // Convert to Base64 for binary safety
+    const base64Data = data.toString('base64');
+    
+    // Generate salt and IV
+    const salt = crypto.randomBytes(32);
+    const iv = crypto.randomBytes(16);
+    
+    // Derive key using PBKDF2
+    const key = crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256');
+    
+    // Encrypt data
+    const cipher = crypto.createCipher('aes-256-cbc', key);
+    cipher.setAutoPadding(true);
+    
+    let encrypted = cipher.update(base64Data, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    
+    // Combine salt + IV + encrypted data
+    const result = Buffer.concat([salt, iv, Buffer.from(encrypted, 'hex')]);
+    
+    // Write encrypted file
+    await fs.writeFile(filePath + '.enc', result);
+    
+    // Securely delete original
+    await secureDelete(filePath);
+    
+    return true;
+  } catch (error) {
+    console.error('Encryption failed:', error);
+    return false;
+  }
+}
+```
+
+#### `decryptFile(filePath, password)`
+Decrypts an encrypted file.
+
+**Parameters:**
+- `filePath` (string): Path to the encrypted file (.enc)
+- `password` (string): Decryption password
+
+**Returns:** `Promise<boolean>` - Success status
+
+**Implementation:**
+```javascript
+async function decryptFile(filePath, password) {
+  try {
+    // Read encrypted file
+    const encryptedData = await fs.readFile(filePath);
+    
+    // Extract salt, IV, and encrypted content
+    const salt = encryptedData.slice(0, 32);
+    const iv = encryptedData.slice(32, 48);
+    const encrypted = encryptedData.slice(48);
+    
+    // Derive key using same parameters
+    const key = crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256');
+    
+    // Decrypt data
+    const decipher = crypto.createDecipher('aes-256-cbc', key);
+    decipher.setAutoPadding(true);
+    
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    // Convert from Base64 back to binary
+    const originalData = Buffer.from(decrypted, 'base64');
+    
+    // Write decrypted file (remove .enc extension)
+    const originalPath = filePath.replace(/\.enc$/, '');
+    await fs.writeFile(originalPath, originalData);
+    
+    // Delete encrypted file
+    await fs.unlink(filePath);
+    
+    return true;
+  } catch (error) {
+    console.error('Decryption failed:', error);
+    return false;
+  }
+}
+```
+
+### Utility Functions
+
+#### `generateSecurePassword(length)`
+Generates a cryptographically secure password.
+
+```javascript
+function generateSecurePassword(length = 16) {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  let password = '';
+  
+  for (let i = 0; i < length; i++) {
+    const randomIndex = crypto.randomInt(0, charset.length);
+    password += charset[randomIndex];
+  }
+  
+  return password;
+}
+```
+
+#### `validatePasswordStrength(password)`
+Validates password strength and returns score.
+
+```javascript
+function validatePasswordStrength(password) {
+  let score = 0;
+  let feedback = [];
+  
+  // Length check
+  if (password.length >= 12) score += 2;
+  else if (password.length >= 8) score += 1;
+  else feedback.push('Use at least 8 characters');
+  
+  // Character variety checks
+  if (/[a-z]/.test(password)) score += 1;
+  else feedback.push('Include lowercase letters');
+  
+  if (/[A-Z]/.test(password)) score += 1;
+  else feedback.push('Include uppercase letters');
+  
+  if (/[0-9]/.test(password)) score += 1;
+  else feedback.push('Include numbers');
+  
+  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+  else feedback.push('Include special characters');
+  
+  // Determine strength level
+  let strength;
+  if (score >= 6) strength = 'excellent';
+  else if (score >= 4) strength = 'good';
+  else if (score >= 2) strength = 'fair';
+  else strength = 'weak';
+  
+  return { score, strength, feedback };
+}
+```
+
+## File System API
+
+### Directory Operations
+
+#### `getDirectoryContents(dirPath)`
+Gets contents of a directory with file metadata.
+
+```javascript
+async function getDirectoryContents(dirPath) {
+  try {
+    const items = await fs.readdir(dirPath, { withFileTypes: true });
+    const contents = [];
+    
+    for (const item of items) {
+      const fullPath = path.join(dirPath, item.name);
+      const stats = await fs.stat(fullPath);
+      
+      contents.push({
+        name: item.name,
+        path: fullPath,
+        isDirectory: item.isDirectory(),
+        isEncrypted: item.name.endsWith('.enc'),
+        size: stats.size,
+        modified: stats.mtime,
+        created: stats.birthtime
+      });
+    }
+    
+    return contents;
+  } catch (error) {
+    console.error('Failed to read directory:', error);
+    return [];
+  }
+}
+```
+
+#### `secureDelete(filePath)`
+Securely deletes a file by overwriting with random data.
+
+```javascript
+async function secureDelete(filePath) {
+  try {
+    const stats = await fs.stat(filePath);
+    const fileSize = stats.size;
+    
+    // Overwrite with random data (3 passes)
+    for (let pass = 0; pass < 3; pass++) {
+      const randomData = crypto.randomBytes(fileSize);
+      await fs.writeFile(filePath, randomData);
+      await fs.fsync(await fs.open(filePath, 'r+'));
+    }
+    
+    // Finally delete the file
+    await fs.unlink(filePath);
+    
+    return true;
+  } catch (error) {
+    console.error('Secure delete failed:', error);
+    return false;
+  }
+}
+```
+
+## UI Component API
+
+### File List Component
+
+#### `renderFileList(files, viewMode)`
+Renders the file list in the main interface.
+
+```javascript
+function renderFileList(files, viewMode = 'list') {
+  const container = document.getElementById('fileList');
+  container.innerHTML = '';
+  
+  files.forEach(file => {
+    const element = createFileElement(file, viewMode);
+    container.appendChild(element);
+  });
+  
+  // Setup event listeners
+  setupFileActionListeners();
+}
+```
+
+#### `createFileElement(file, viewMode)`
+Creates a DOM element for a file item.
+
+```javascript
+function createFileElement(file, viewMode) {
+  const element = document.createElement('div');
+  element.className = `file-item file-item--${viewMode}`;
+  element.dataset.path = file.path;
+  
+  const icon = getFileIcon(file.name, file.isDirectory, file.isEncrypted);
+  const size = formatFileSize(file.size);
+  const date = formatDate(file.modified);
+  
+  element.innerHTML = `
+    <div class="file-icon">${icon}</div>
+    <div class="file-info">
+      <div class="file-name">${file.name}</div>
+      <div class="file-meta">
+        <span class="file-size">${size}</span>
+        <span class="file-date">${date}</span>
+      </div>
+    </div>
+    <div class="file-actions">
+      ${file.isEncrypted ? 
+        '<button class="btn-decrypt">Decrypt</button>' : 
+        '<button class="btn-encrypt">Encrypt</button>'
+      }
+    </div>
+  `;
+  
+  return element;
+}
+```
+
+### Modal Components
+
+#### `showPasswordModal(action, callback)`
+Shows password input modal for encryption/decryption.
+
+```javascript
+function showPasswordModal(action, callback) {
+  const modal = document.getElementById('passwordModal');
+  const title = document.getElementById('passwordModalTitle');
+  const input = document.getElementById('passwordInput');
+  
+  title.textContent = `${action} Password`;
+  input.value = '';
+  input.focus();
+  
+  modal.classList.remove('hidden');
+  
+  const handleSubmit = () => {
+    const password = input.value;
+    if (password.length >= 6) {
+      modal.classList.add('hidden');
+      callback(password);
+    } else {
+      showError('Password must be at least 6 characters');
+    }
+  };
+  
+  // Setup event listeners
+  document.getElementById('confirmBtn').onclick = handleSubmit;
+  input.onkeypress = (e) => {
+    if (e.key === 'Enter') handleSubmit();
+  };
+}
+```
+
+## Internationalization API
+
+### Translation Functions
+
+#### `t(key, params)`
+Translates a key to the current language.
+
+```javascript
+function t(key, params = {}) {
+  const keys = key.split('.');
+  let value = currentTranslations;
+  
+  for (const k of keys) {
+    value = value?.[k];
+  }
+  
+  if (typeof value !== 'string') {
+    console.warn(`Translation missing for key: ${key}`);
+    return key;
+  }
+  
+  // Replace parameters
+  return value.replace(/\{(\w+)\}/g, (match, param) => {
+    return params[param] || match;
+  });
+}
+```
+
+#### `setLanguage(languageCode)`
+Changes the application language.
+
+```javascript
+async function setLanguage(languageCode) {
+  try {
+    const response = await fetch(`/locales/${languageCode}.json`);
+    const translations = await response.json();
+    
+    currentTranslations = translations;
+    currentLanguage = languageCode;
+    
+    // Update all translatable elements
+    updateTranslatableElements();
+    
+    // Save preference
+    localStorage.setItem('maraikka-language', languageCode);
+    
+    // Notify other components
+    document.dispatchEvent(new CustomEvent('languageChanged', {
+      detail: { language: languageCode }
+    }));
+    
+  } catch (error) {
+    console.error('Failed to load language:', error);
+  }
+}
+```
+
+## Hardware Authentication API (Premium)
+
+### FIDO2/WebAuthn Integration
+
+#### `registerAuthenticator()`
+Registers a new FIDO2 authenticator.
+
+```javascript
+async function registerAuthenticator() {
+  try {
+    const challenge = crypto.randomBytes(32);
+    
+    const publicKeyCredentialCreationOptions = {
+      challenge: challenge,
+      rp: {
+        name: "Maraikka",
+        id: "maraikka.com",
+      },
+      user: {
+        id: crypto.randomBytes(64),
+        name: "user@maraikka.com",
+        displayName: "Maraikka User",
+      },
+      pubKeyCredParams: [{alg: -7, type: "public-key"}],
+      authenticatorSelection: {
+        authenticatorAttachment: "cross-platform",
+        userVerification: "required"
+      },
+      timeout: 60000,
+      attestation: "direct"
+    };
+    
+    const credential = await navigator.credentials.create({
+      publicKey: publicKeyCredentialCreationOptions
+    });
+    
+    // Store credential for future use
+    await storeCredential(credential);
+    
+    return credential;
+  } catch (error) {
+    console.error('Authenticator registration failed:', error);
+    throw error;
+  }
+}
+```
+
+#### `authenticateWithHardware(challenge)`
+Authenticates using registered hardware authenticator.
+
+```javascript
+async function authenticateWithHardware(challenge) {
+  try {
+    const credentials = await getStoredCredentials();
+    
+    const publicKeyCredentialRequestOptions = {
+      challenge: challenge,
+      allowCredentials: credentials.map(cred => ({
+        id: cred.id,
+        type: 'public-key',
+        transports: ['usb', 'nfc', 'ble', 'internal']
+      })),
+      timeout: 60000,
+      userVerification: "required"
+    };
+    
+    const assertion = await navigator.credentials.get({
+      publicKey: publicKeyCredentialRequestOptions
+    });
+    
+    return assertion;
+  } catch (error) {
+    console.error('Hardware authentication failed:', error);
+    throw error;
+  }
+}
+```
+
+## Error Handling
+
+### Error Types
+
+#### `EncryptionError`
+Thrown when encryption operations fail.
+
+```javascript
+class EncryptionError extends Error {
+  constructor(message, code, filePath) {
+    super(message);
+    this.name = 'EncryptionError';
+    this.code = code;
+    this.filePath = filePath;
+  }
+}
+```
+
+#### `DecryptionError`
+Thrown when decryption operations fail.
+
+```javascript
+class DecryptionError extends Error {
+  constructor(message, code, filePath) {
+    super(message);
+    this.name = 'DecryptionError';
+    this.code = code;
+    this.filePath = filePath;
+  }
+}
+```
+
+### Error Codes
+
+| Code | Description |
+|------|-------------|
+| `INVALID_PASSWORD` | Password is incorrect or too weak |
+| `FILE_NOT_FOUND` | Target file does not exist |
+| `PERMISSION_DENIED` | Insufficient permissions to access file |
+| `DISK_FULL` | Insufficient disk space for operation |
+| `FILE_CORRUPTED` | File appears to be corrupted |
+| `UNSUPPORTED_FORMAT` | File format not supported |
+
+## Events
+
+### Custom Events
+
+#### `fileEncrypted`
+Fired when a file is successfully encrypted.
+
+```javascript
+document.addEventListener('fileEncrypted', (event) => {
+  const { filePath, originalSize, encryptedSize } = event.detail;
+  console.log(`File encrypted: ${filePath}`);
+});
+```
+
+#### `fileDecrypted`
+Fired when a file is successfully decrypted.
+
+```javascript
+document.addEventListener('fileDecrypted', (event) => {
+  const { filePath, originalSize } = event.detail;
+  console.log(`File decrypted: ${filePath}`);
+});
+```
+
+#### `themeChanged`
+Fired when the application theme changes.
+
+```javascript
+document.addEventListener('themeChanged', (event) => {
+  const { theme } = event.detail;
+  document.body.className = theme === 'dark' ? 'dark-theme' : 'light-theme';
+});
+```
+
+---
+
+**Note**: This API reference covers the main internal APIs. For external integration or plugin development, please refer to the [Development Guide](/development) for more information about extending Maraikka. 

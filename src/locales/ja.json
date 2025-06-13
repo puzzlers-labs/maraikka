@@ -1,0 +1,217 @@
+{
+  "app": {
+    "title": "Maraikka",
+    "version": "バージョン 1.0.0",
+    "description": "機密データを保護するための安全なファイル暗号化アプリケーション。"
+  },
+  "sidebar": {
+    "actions": "アクション",
+    "selectDirectory": "ディレクトリを選択",
+    "encryptDirectory": "ディレクトリを暗号化",
+    "decryptDirectory": "ディレクトリを復号化",
+    "refresh": "更新",
+    "preferences": "環境設定",
+    "currentPath": "現在のパス",
+    "noDirectorySelected": "ディレクトリが選択されていません"
+  },
+  "fileList": {
+    "encrypted": "暗号化済み",
+    "directory": "ディレクトリ",
+    "noFiles": "このディレクトリにファイルがありません",
+    "selectDirectoryFirst": "ファイルを表示するにはディレクトリを選択してください"
+  },
+  "fileActions": {
+    "preview": "プレビュー",
+    "encrypt": "暗号化",
+    "decrypt": "復号化"
+  },
+  "contextMenu": {
+    "preview": "プレビュー",
+    "encrypt": "暗号化", 
+    "decrypt": "復号化",
+    "edit": "編集",
+    "annotate": "注釈"
+  },
+  "modals": {
+    "enterPassword": "パスワードを入力",
+    "encryptDirectory": "ディレクトリを暗号化",
+    "decryptDirectory": "ディレクトリを復号化",
+    "encryptFile": "ファイルを暗号化",
+    "decryptFile": "ファイルを復号化",
+    "password": "パスワード",
+    "passwordPlaceholder": "パスワードを入力してください",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "close": "閉じる"
+  },
+  "editor": {
+    "title": "テキストエディター",
+    "save": "保存",
+    "saveAs": "名前を付けて保存",
+    "unsavedChanges": "未保存の変更",
+    "unsavedChangesMessage": "未保存の変更があります。どうしますか？",
+    "saveAndClose": "保存して閉じる",
+    "closeWithoutSaving": "保存せずに閉じる",
+    "cancel": "キャンセル",
+    "enterPassword": "パスワードを入力",
+    "passwordRequired": "このファイルは暗号化されています。編集するにはパスワードを入力してください。",
+    "unlock": "ロック解除",
+    "loading": "ファイルを読み込み中...",
+    "ready": "準備完了",
+    "saveChanges": "変更を保存",
+    "discardChanges": "変更を破棄",
+    "fileSaved": "ファイルが正常に保存されました",
+    "enterPasswordToEdit": "暗号化されたファイルを編集するにはパスワードを入力してください",
+    "decryptingFile": "ファイルを復号化中...",
+    "encryptingFile": "ファイルを暗号化中...",
+    "failedToSave": "ファイルの保存に失敗しました",
+    "failedToDecrypt": "ファイルの復号化に失敗しました",
+    "failedToOpen": "テキストエディタを開くのに失敗しました",
+    "failedToOpenImage": "画像エディタを開くのに失敗しました",
+    "invalidPassword": "無効なパスワードまたは破損したファイル"
+  },
+  "imageEditor": {
+    "title": "画像エディタ",
+    "tools": {
+      "select": "選択",
+      "pen": "ペン",
+      "line": "線", 
+      "arrow": "矢印",
+      "rectangle": "四角形",
+      "circle": "円",
+      "text": "テキスト",
+      "blur": "ぼかし効果",
+      "highlight": "ハイライト"
+    },
+    "actions": {
+      "undo": "元に戻す",
+      "redo": "やり直し",
+      "delete": "選択を削除",
+      "save": "保存",
+      "export": "エクスポート"
+    },
+    "properties": {
+      "strokeColor": "線の色",
+      "fillColor": "塗りつぶしの色",
+      "strokeWidth": "幅",
+      "blurAmount": "ぼかし"
+    },
+    "status": {
+      "ready": "準備完了",
+      "loading": "画像エディタを読み込み中...",
+      "saved": "保存済み",
+      "exported": "エクスポート済み"
+    }
+  },
+  "preferences": {
+    "title": "環境設定",
+    "general": "一般",
+    "license": "ライセンス", 
+    "about": "このアプリについて",
+    "theme": "テーマ",
+    "themeLight": "ライト",
+    "themeDark": "ダーク",
+    "language": "言語",
+    "fileGridDensity": "ファイルグリッド密度",
+    "densitySpacious": "広いビュー",
+    "densityDense": "密なビュー",
+    "densityBalanced": "バランス",
+    "densityDescription": "ほとんどのユーザーに快適な間隔",
+    "security": "セキュリティ",
+    "hardwareAuth": "ハードウェア認証",
+    "hardwareAuthDescription": "パスワードの代わりに暗号化にFIDO2/WebAuthn（YubiKey、Touch ID、Windows Hello）を使用",
+    "noAuthenticatorRegistered": "認証機器が登録されていません",
+    "registerAuthenticator": "認証機器を登録",
+    "removeAuthenticator": "認証機器を削除"
+  },
+  "license": {
+    "licenseKey": "ライセンスキー",
+    "licenseKeyPlaceholder": "ライセンスキーを入力してください",
+    "validate": "検証",
+    "validating": "検証中...",
+    "noValidLicense": "有効なライセンスがありません",
+    "premiumFeatures": "プレミアム機能",
+    "fidoAuth": "FIDO2ハードウェア認証",
+    "fidoAuthDescription": "安全な暗号化のためYubiKey、Touch ID、Windows Helloを使用",
+    "bulkOperations": "バルク操作",
+    "bulkOperationsDescription": "複数のファイルとフォルダを同時に暗号化/復号化",
+    "cloudIntegration": "クラウド統合", 
+    "cloudIntegrationDescription": "クラウドサービスに保存されたファイルをシームレスに暗号化",
+    "locked": "ロック済み",
+    "unlocked": "アンロック済み",
+    "testLicenseKeys": "テスト用ライセンスキー",
+    "testKeysDescription": "テスト目的で、これらのデモキーのいずれかを使用してください："
+  },
+  "about": {
+    "developer": "開発者",
+    "developerName": "Maraikka Labs",
+    "licenseType": "ライセンス",
+    "licenseValue": "ソース利用可能",
+    "framework": "フレームワーク",
+    "frameworkValue": "Electron",
+    "github": "GitHub",
+    "website": "ウェブサイト"
+  },
+  "hardwareAuth": {
+    "title": "ハードウェア認証",
+    "register": "認証機器を登録",
+    "registerDescription": "暗号化キーを保護するためにFIDO2デバイス（YubiKey、Touch ID、Windows Hello）を使用してください。",
+    "waitingForAuthenticator": "認証機器を待機中...",
+    "registerButton": "登録"
+  },
+  "preview": {
+    "encryptedFile": "暗号化されたファイル",
+    "enterPasswordToPreview": "「{fileName}」をプレビューするにはパスワードを入力してください",
+    "enterPassword": "パスワードを入力",
+    "unlockAndPreview": "ロック解除してプレビュー",
+    "decrypting": "復号化中...",
+    "unableToPreview": "このファイルをプレビューできません",
+    "pages": "ページ"
+  },
+  "notifications": {
+    "success": "成功",
+    "error": "エラー",
+    "directoryEncryptedSuccessfully": "ディレクトリが正常に暗号化されました",
+    "directoryDecryptedSuccessfully": "ディレクトリが正常に復号化されました",
+    "fileEncryptedSuccessfully": "ファイル「{fileName}」が正常に暗号化されました",
+    "fileDecryptedSuccessfully": "ファイル「{fileName}」が正常に復号化されました",
+    "encryptionFailed": "暗号化に失敗しました",
+    "decryptionFailed": "復号化に失敗しました",
+    "pleaseEnterPassword": "パスワードを入力してください",
+    "passwordMinLength": "パスワードは6文字以上である必要があります",
+    "noDirectorySelected": "ディレクトリが選択されていません",
+    "failedToEncryptDirectory": "ディレクトリの暗号化に失敗しました",
+    "failedToDecryptDirectory": "ディレクトリの復号化に失敗しました",
+    "failedToEncryptFile": "ファイルの暗号化に失敗しました",
+    "failedToDecryptFile": "ファイルの復号化に失敗しました",
+    "licenseValidated": "ライセンス検証完了", 
+    "licenseValidatedDescription": "ライセンスキーが有効で、機能がアンロックされました！",
+    "pleaseEnterLicenseKey": "ライセンスキーを入力してください",
+    "invalidLicenseKey": "無効なライセンスキー",
+    "unableToValidateLicense": "ライセンスを検証できません。接続を確認してください。",
+    "externalLink": "外部リンク",
+    "externalLinkDescription": "リンク機能は本番ビルドで実装されます"
+  },
+
+  "fileTypes": {
+    "image": "画像",
+    "video": "動画", 
+    "document": "ドキュメント",
+    "archive": "アーカイブ",
+    "audio": "音声",
+    "code": "コード"
+  },
+  "viewModes": {
+    "list": "リスト表示",
+    "grid": "グリッド表示"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "hi": "हिन्दी",
+    "ja": "日本語",
+    "fr": "Français", 
+    "de": "Deutsch",
+    "zh": "中文"
+  }
+} 

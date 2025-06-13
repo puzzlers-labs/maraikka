@@ -1,0 +1,217 @@
+{
+  "app": {
+    "title": "Maraikka",
+    "version": "संस्करण 1.0.0",
+    "description": "आपके संवेदनशील डेटा की सुरक्षा के लिए एक सुरक्षित फ़ाइल एन्क्रिप्शन एप्लिकेशन।"
+  },
+  "sidebar": {
+    "actions": "क्रियाएं",
+    "selectDirectory": "डायरेक्टरी चुनें",
+    "encryptDirectory": "डायरेक्टरी एन्क्रिप्ट करें",
+    "decryptDirectory": "डायरेक्टरी डिक्रिप्ट करें",
+    "refresh": "ताज़ा करें",
+    "preferences": "प्राथमिकताएं",
+    "currentPath": "वर्तमान पथ",
+    "noDirectorySelected": "कोई डायरेक्टरी चयनित नहीं"
+  },
+  "fileList": {
+    "encrypted": "एन्क्रिप्टेड",
+    "directory": "डायरेक्टरी",
+    "noFiles": "इस डायरेक्टरी में कोई फ़ाइल नहीं है",
+    "selectDirectoryFirst": "फ़ाइलें देखने के लिए कृपया एक डायरेक्टरी चुनें"
+  },
+  "fileActions": {
+    "preview": "पूर्वावलोकन",
+    "encrypt": "एन्क्रिप्ट करें",
+    "decrypt": "डिक्रिप्ट करें"
+  },
+  "contextMenu": {
+    "preview": "पूर्वावलोकन",
+    "encrypt": "एन्क्रिप्ट करें", 
+    "decrypt": "डिक्रिप्ट करें",
+    "edit": "संपादित करें",
+    "annotate": "एनोटेट करें"
+  },
+    "modals": {
+    "enterPassword": "पासवर्ड दर्ज करें",
+    "encryptDirectory": "डायरेक्टरी एन्क्रिप्ट करें",
+    "decryptDirectory": "डायरेक्टरी डिक्रिप्ट करें",
+    "encryptFile": "फ़ाइल एन्क्रिप्ट करें",
+    "decryptFile": "फ़ाइल डिक्रिप्ट करें",
+    "password": "पासवर्ड",
+    "passwordPlaceholder": "अपना पासवर्ड दर्ज करें",
+    "cancel": "रद्द करें",
+    "confirm": "पुष्टि करें",
+    "close": "बंद करें"  
+  },
+  "editor": {
+    "title": "टेक्स्ट एडिटर",
+    "save": "सेव करें",
+    "saveAs": "इस नाम से सेव करें",
+    "unsavedChanges": "असेव किए गए बदलाव",
+    "unsavedChangesMessage": "आपके पास असेव किए गए बदलाव हैं। आप क्या करना चाहेंगे?",
+    "saveAndClose": "सेव करें और बंद करें",
+    "closeWithoutSaving": "बिना सेव किए बंद करें",
+    "cancel": "रद्द करें",
+    "enterPassword": "पासवर्ड दर्ज करें",
+    "passwordRequired": "यह फ़ाइल एन्क्रिप्टेड है। कृपया इसे संपादित करने के लिए पासवर्ड दर्ज करें।",
+    "unlock": "अनलॉक करें",
+    "loading": "फ़ाइल लोड हो रही है...",
+    "ready": "तैयार",
+    "saveChanges": "बदलाव सेव करें",
+    "discardChanges": "बदलाव रद्द करें",
+    "fileSaved": "फ़ाइल सफलतापूर्वक सेव हो गई",
+    "enterPasswordToEdit": "एन्क्रिप्टेड फ़ाइल को संपादित करने के लिए पासवर्ड दर्ज करें",
+    "decryptingFile": "फ़ाइल डिक्रिप्ट की जा रही है...",
+    "encryptingFile": "फ़ाइल एन्क्रिप्ट की जा रही है...",
+    "failedToSave": "फ़ाइल सेव करने में विफल",
+    "failedToDecrypt": "फ़ाइल डिक्रिप्ट करने में विफल",
+    "failedToOpen": "टेक्स्ट एडिटर खोलने में विफल",
+    "failedToOpenImage": "इमेज एडिटर खोलने में विफल",
+    "invalidPassword": "गलत पासवर्ड या क्षतिग्रस्त फ़ाइल"
+  },
+  "imageEditor": {
+    "title": "इमेज एडिटर",
+    "tools": {
+      "select": "चुनें",
+      "pen": "पेन",
+      "line": "लाइन", 
+      "arrow": "तीर",
+      "rectangle": "आयत",
+      "circle": "वृत्त",
+      "text": "टेक्स्ट",
+      "blur": "ब्लर इफेक्ट",
+      "highlight": "हाइलाइट"
+    },
+    "actions": {
+      "undo": "पूर्ववत करें",
+      "redo": "फिर से करें",
+      "delete": "चयनित को हटाएं",
+      "save": "सेव करें",
+      "export": "एक्सपोर्ट करें"
+    },
+    "properties": {
+      "strokeColor": "स्ट्रोक रंग",
+      "fillColor": "भरने का रंग",
+      "strokeWidth": "चौड़ाई",
+      "blurAmount": "ब्लर"
+    },
+    "status": {
+      "ready": "तैयार",
+      "loading": "इमेज एडिटर लोड हो रहा है...",
+      "saved": "सेव हो गया",
+      "exported": "एक्सपोर्ट हो गया"
+    }
+  },
+  "preferences": {
+    "title": "प्राथमिकताएं",
+    "general": "सामान्य",
+    "license": "लाइसेंस", 
+    "about": "के बारे में",
+    "theme": "थीम",
+    "themeLight": "हल्का",
+    "themeDark": "गहरा",
+    "language": "भाषा",
+    "fileGridDensity": "फ़ाइल ग्रिड घनत्व",
+    "densitySpacious": "विशाल दृश्य",
+    "densityDense": "सघन दृश्य",
+    "densityBalanced": "संतुलित",
+    "densityDescription": "अधिकांश उपयोगकर्ताओं के लिए आरामदायक स्थान",
+    "security": "सुरक्षा",
+    "hardwareAuth": "हार्डवेयर प्रमाणीकरण",
+    "hardwareAuthDescription": "पासवर्ड के बजाय एन्क्रिप्शन के लिए FIDO2/WebAuthn (YubiKey, Touch ID, Windows Hello) का उपयोग करें",
+    "noAuthenticatorRegistered": "कोई प्रमाणक पंजीकृत नहीं",
+    "registerAuthenticator": "प्रमाणक पंजीकृत करें",
+    "removeAuthenticator": "प्रमाणक हटाएं"
+  },
+  "license": {
+    "licenseKey": "लाइसेंस कुंजी",
+    "licenseKeyPlaceholder": "अपनी लाइसेंस कुंजी दर्ज करें",
+    "validate": "सत्यापित करें",
+    "validating": "सत्यापित कर रहे हैं...",
+    "noValidLicense": "कोई वैध लाइसेंस नहीं",
+    "premiumFeatures": "प्रीमियम सुविधाएं",
+    "fidoAuth": "FIDO2 हार्डवेयर प्रमाणीकरण",
+    "fidoAuthDescription": "सुरक्षित एन्क्रिप्शन के लिए YubiKey, Touch ID और Windows Hello का उपयोग करें",
+    "bulkOperations": "बल्क ऑपरेशन",
+    "bulkOperationsDescription": "एक साथ कई फ़ाइलों और फ़ोल्डरों को एन्क्रिप्ट/डिक्रिप्ट करें",
+    "cloudIntegration": "क्लाउड एकीकरण", 
+    "cloudIntegrationDescription": "क्लाउड सेवाओं में संग्रहीत फ़ाइलों को सहजता से एन्क्रिप्ट करें",
+    "locked": "लॉक",
+    "unlocked": "अनलॉक",
+    "testLicenseKeys": "टेस्ट लाइसेंस कुंजियां",
+    "testKeysDescription": "परीक्षण के उद्देश्यों के लिए, इन डेमो कुंजियों में से एक का उपयोग करें:"
+  },
+  "about": {
+    "developer": "डेवलपर",
+    "developerName": "Maraikka Labs",
+    "licenseType": "लाइसेंस",
+    "licenseValue": "स्रोत उपलब्ध",
+    "framework": "फ्रेमवर्क",
+    "frameworkValue": "Electron",
+    "github": "GitHub",
+    "website": "वेबसाइट"
+  },
+  "hardwareAuth": {
+    "title": "हार्डवेयर प्रमाणीकरण",
+    "register": "अपना प्रमाणक पंजीकृत करें",
+    "registerDescription": "अपनी एन्क्रिप्शन कुंजियों को सुरक्षित करने के लिए अपने FIDO2 डिवाइस (YubiKey, Touch ID, Windows Hello) का उपयोग करें।",
+    "waitingForAuthenticator": "प्रमाणक की प्रतीक्षा में...",
+    "registerButton": "पंजीकृत करें"
+  },
+  "preview": {
+    "encryptedFile": "एन्क्रिप्टेड फ़ाइल",
+    "enterPasswordToPreview": "\"{fileName}\" का पूर्वावलोकन करने के लिए पासवर्ड दर्ज करें",
+    "enterPassword": "पासवर्ड दर्ज करें",
+    "unlockAndPreview": "अनलॉक करें और पूर्वावलोकन करें",
+    "decrypting": "डिक्रिप्ट कर रहे हैं...",
+    "unableToPreview": "इस फ़ाइल का पूर्वावलोकन नहीं कर सकते",
+    "pages": "पृष्ठ"
+  },
+  "notifications": {
+    "success": "सफलता",
+    "error": "त्रुटि",
+    "directoryEncryptedSuccessfully": "डायरेक्टरी सफलतापूर्वक एन्क्रिप्ट की गई",
+    "directoryDecryptedSuccessfully": "डायरेक्टरी सफलतापूर्वक डिक्रिप्ट की गई",
+    "fileEncryptedSuccessfully": "फ़ाइल \"{fileName}\" सफलतापूर्वक एन्क्रिप्ट की गई",
+    "fileDecryptedSuccessfully": "फ़ाइल \"{fileName}\" सफलतापूर्वक डिक्रिप्ट की गई",
+    "encryptionFailed": "एन्क्रिप्शन असफल",
+    "decryptionFailed": "डिक्रिप्शन असफल",
+    "pleaseEnterPassword": "कृपया एक पासवर्ड दर्ज करें",
+    "passwordMinLength": "पासवर्ड कम से कम 6 अक्षर का होना चाहिए",
+    "noDirectorySelected": "कोई डायरेक्टरी चयनित नहीं",
+    "failedToEncryptDirectory": "डायरेक्टरी एन्क्रिप्ट करने में असफल",
+    "failedToDecryptDirectory": "डायरेक्टरी डिक्रिप्ट करने में असफल",
+    "failedToEncryptFile": "फ़ाइल एन्क्रिप्ट करने में असफल",
+    "failedToDecryptFile": "फ़ाइल डिक्रिप्ट करने में असफल",
+    "licenseValidated": "लाइसेंस सत्यापित", 
+    "licenseValidatedDescription": "लाइसेंस कुंजी वैध है और सुविधाएं अनलॉक हो गई हैं!",
+    "pleaseEnterLicenseKey": "कृपया एक लाइसेंस कुंजी दर्ज करें",
+    "invalidLicenseKey": "अमान्य लाइसेंस कुंजी",
+    "unableToValidateLicense": "लाइसेंस सत्यापित करने में असमर्थ। कृपया अपना कनेक्शन जांचें।",
+    "externalLink": "बाहरी लिंक",
+    "externalLinkDescription": "लिंक कार्यक्षमता प्रोडक्शन बिल्ड में लागू की जाएगी"
+  },
+
+  "fileTypes": {
+    "image": "छवि",
+    "video": "वीडियो", 
+    "document": "दस्तावेज़",
+    "archive": "संग्रह",
+    "audio": "ऑडियो",
+    "code": "कोड"
+  },
+  "viewModes": {
+    "list": "सूची दृश्य",
+    "grid": "ग्रिड दृश्य"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "hi": "हिन्दी",
+    "ja": "日本語",
+    "fr": "Français", 
+    "de": "Deutsch",
+    "zh": "中文"
+  }
+} 
