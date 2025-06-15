@@ -1,0 +1,212 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor AI Development Rules
+
+## 📖 **IMPORTANT: Read Project Context**
+**Before starting any work, reference README.md for complete project information including:**
+- Technology stack details
+- Repository structure
+- Development principles
+- Deployment guidelines
+- Project architecture
+
+## 📝 **MANDATORY DOCUMENTATION REQUIREMENTS**
+
+**ALL CODE CHANGES MUST BE THOROUGHLY DOCUMENTED WITH COMMENTS:**
+
+### For JavaScript/JSX Files:
+- **File-level comments** explaining the purpose and scope
+- **Function/component comments** describing parameters, return values, and behavior
+- **Complex logic comments** explaining non-obvious implementations
+- **Configuration comments** explaining settings and options
+
+### For Configuration Files:
+- **Purpose comments** explaining what the configuration does
+- **Option explanations** for non-obvious settings
+- **Dependency notes** explaining why specific versions are used
+- **Environment considerations** for different deployment scenarios
+
+## 🎨 **Code Style Guidelines**
+
+### **Comment Formatting Standards:**
+- **NO divider lines** - Avoid `====`, `----`, `***`, `###` or similar repetitive character dividers
+- **NO project name repetition** - NEVER add "for Maraikka" or similar project-specific suffixes to file headers
+- **Clean section headers** - Use descriptive comment headers without decoration
+- **Consistent spacing** - Single blank line between sections
+- **Clear hierarchy** - Use comment nesting and indentation for organization
+
+### **Preferred Comment Style:**
+```javascript
+// Main Section Title
+// Brief description of what this section does
+
+// Subsection
+// Specific explanation
+
+// Another item
+// Clear, concise explanation
+```
+
+### **Avoid These Patterns:**
+```javascript
+// ====================================
+// Section Title (DON'T USE)
+// ====================================
+
+// ------------------------------------
+// Another Section (DON'T USE)
+// ------------------------------------
+```
+
+## 🎨 **UI Component Guidelines**
+
+### **ALWAYS USE TEMPLATE COMPONENTS**
+- All UI components MUST be sourced from the `@/template` directory unless explicitly specified otherwise
+- Follow the template's design system, color palette, and component patterns
+- Maintain consistency with the template's Tailwind CSS v4 utility classes
+- Use the template's typography, spacing, and visual hierarchy
+
+### Template Component Structure
+- **Buttons**: Use template button variants (primary, secondary, danger, success)
+- **Forms**: Use template form inputs, labels, and validation patterns
+- **Cards**: Follow template card layouts and styling
+- **Modals**: Use template modal structure and animations
+- **Navigation**: Follow template navigation patterns
+- **Typography**: Use template font weights, sizes, and color schemes
+
+### Color Scheme
+- Primary: #8b5cf6 (violet-500)
+- Secondary: #6b7280 (gray-500) 
+- Success: #10b981 (emerald-500)
+- Danger: #ef4444 (red-500)
+- Dark theme: Use template's dark mode color variables
+- Light theme: Use template's light mode color variables
+
+### Layout Principles
+- Maintain the sidebar + main content layout structure
+- Use template's spacing system (rem units)
+- Follow template's border radius and shadow patterns
+- Preserve template's responsive design patterns
+
+### Component Styling
+- Button classes: `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-danger`, `.btn-success`
+- Form classes: `.form-group`, `.form-label`, `.form-input`
+- Card classes: `.card`, `.card-header`, `.card-body`, `.card-footer`
+- Modal classes: `.modal-overlay`, `.modal`, `.modal-header`, `.modal-body`, `.modal-footer`
+
+### Animation Guidelines
+- Keep existing slideInLeft and scaleIn animations for file list items
+- Use template's transition durations and easing functions
+- Maintain smooth hover and focus states from template
+
+## 🌐 **Internationalization (i18n) Guidelines**
+
+### **ALWAYS UPDATE ALL LANGUAGE FILES**
+- When adding new UI text, labels, or messages, MUST update ALL language files in `src/locales/`
+- Current supported languages: English (en.json), Spanish (es.json), Hindi (hi.json), Japanese (ja.json)
+- Never add hardcoded text strings in HTML or JavaScript - always use i18n keys
+
+### i18n File Structure
+- **Context Menu**: Add new actions to `contextMenu` section
+- **Editor Features**: Add text editor labels to `editor` section, image editor to `imageEditor` section
+- **Error Messages**: Add error messages to appropriate sections (editor, notifications, etc.)
+- **Tool Tips**: Add tool descriptions to relevant sections
+
+### Translation Requirements
+- **English (en.json)**: Primary language, must be accurate and clear
+- **Spanish (es.json)**: Professional Spanish translations
+- **Hindi (hi.json)**: Proper Hindi translations with Devanagari script
+- **Japanese (ja.json)**: Accurate Japanese translations with appropriate honorifics
+
+### Key Naming Convention
+- Use descriptive, hierarchical keys: `section.subsection.key`
+- Example: `imageEditor.tools.pen`, `contextMenu.annotate`, `editor.failedToOpenImage`
+
+### Mandatory Process
+1. Add English text first in en.json
+2. Add corresponding translations in es.json, hi.json, ja.json
+3. Test UI with different languages to ensure proper display
+4. Verify text fits in UI components across all languages
+
+## 🛠️ **AI-Specific Development Instructions**
+
+### Code Quality Requirements:
+- Follow React and Electron best practices
+- Maintain consistent code formatting
+- Use semantic HTML for accessibility
+- Optimize performance for desktop application
+- Test functionality across different operating systems
+
+### File Organization Rules:
+- Place components in appropriate directory structures
+- Use descriptive, kebab-case filenames
+- Keep related functionality grouped logically
+- Maintain clean import/export patterns
+
+### Custom Exceptions
+- File encryption/decryption functionality: Keep existing logic
+- Electron-specific integrations: Maintain current implementation
+- macOS menu integration: Preserve existing functionality
+
+## 🎯 **Context-Specific AI Instructions**
+
+### When Working with UI Components:
+- Template components take precedence over custom styling
+- Only create custom components when template lacks specific functionality
+- Always verify new components match template's design language
+- Test both light and dark themes when making changes
+
+### When Modifying Configuration:
+- Test changes in development environment first
+- Document any breaking changes or migration requirements
+- Update relevant configuration if changes affect user experience
+- Maintain backward compatibility when possible
+
+### When Adding New Features:
+- Ensure complete i18n support for all new UI text
+- Follow template design system for consistency
+- Test across different languages and themes
+- Consider desktop-specific UX patterns
+
+### Never Forget
+- Every new feature with text MUST have complete i18n support
+- Check all language files before considering a feature complete
+- Use `data-i18n` attributes in HTML for dynamic text updates
+
+## 📋 **Living Document Maintenance**
+
+### 🔄 **CRITICAL: Both This File and README.md are Living Documents**
+Both this Cursor rules file and the README.md must evolve with the codebase to remain accurate and helpful.
+
+### 🤖 **Cursor AI Maintenance Responsibilities**
+When working on this project, you must:
+
+#### **Monitor and Update This Rules File When:**
+1. **New AI-specific patterns emerge** - Add new development standards or conventions
+2. **Quality requirements change** - Update UI or code quality standards
+3. **Context-specific instructions evolve** - Modify AI-specific workflow instructions
+4. **New AI tools/features are used** - Document new AI-assisted development patterns
+
+#### **Monitor and Update README.md When:**
+1. **Technology stack changes** - Package.json updates, framework changes
+2. **Repository structure changes** - New directories, file reorganization
+3. **Development processes change** - New guidelines, build processes
+4. **Project scope expands** - New features, target audiences, deployment methods
+5. **Architecture evolves** - Significant structural changes to the project
+
+### 🔧 **Self-Maintenance Protocol**
+- **Before making significant changes**: Review if README.md or this rules file need updates
+- **After structural changes**: Update repository information in README.md
+- **When new standards emerge**: Add them to this rules file
+- **After dependency updates**: Update technology stack information in README.md
+
+### ⚠️ **Critical Requirements**
+1. **Proactively suggest updates** to both files when detecting relevant changes
+2. **Reference README.md first** for project context before starting work
+3. **Keep development requirements current** in this rules file
+4. **Maintain accuracy** of all project information across both documents
+
+This dual living document approach ensures comprehensive, up-to-date guidance for AI assistance while keeping project information centralized in README.md.
