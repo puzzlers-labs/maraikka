@@ -1,37 +1,88 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+macOS Service Bundle Configuration
+
+This Info.plist defines the bundle metadata and service registration for the "Decrypt with Maraikka"
+Automator workflow. It configures how the workflow appears and behaves as a macOS Service in Finder's
+context menu when users right-click on files or folders.
+
+Purpose:
+- Registers the workflow as a macOS Service accessible from Finder context menus
+- Defines service metadata (name, description, version) for system integration
+- Specifies service behavior (what file types it accepts, which apps can invoke it)
+- Enables the workflow to be discoverable and executable by the macOS Services system
+
+Dependencies:
+- macOS Services system for service registration and execution
+- Finder application for context menu integration
+- Automator framework for workflow execution
+- Associated document.wflow file containing the actual workflow logic
+
+Installation:
+This file is automatically installed to ~/Library/Services/ along with the parent .workflow bundle
+by the install-services.sh script, making the service available system-wide.
+-->
 <plist version="1.0">
 <dict>
+	<!-- Bundle identification and metadata -->
+	<!-- Unique identifier for this service bundle in reverse-DNS format -->
 	<key>CFBundleIdentifier</key>
 	<string>com.maraikka.decrypt-service</string>
+
+	<!-- Human-readable name displayed in Services menu and system preferences -->
 	<key>CFBundleName</key>
 	<string>Decrypt with Maraikka</string>
+
+	<!-- Version string displayed to users (semantic versioning) -->
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
+
+	<!-- Internal build version number for system tracking -->
 	<key>CFBundleVersion</key>
 	<string>1</string>
+
+	<!-- macOS Services configuration array -->
+	<!-- Defines how this workflow integrates with the Services system -->
 	<key>NSServices</key>
 	<array>
 		<dict>
+			<!-- Service menu item configuration -->
+			<!-- Defines the text that appears in Finder's Services submenu -->
 			<key>NSMenuItem</key>
 			<dict>
+				<!-- Default menu item text for all localizations -->
 				<key>default</key>
 				<string>Decrypt with Maraikka</string>
 			</dict>
+
+			<!-- Service execution method -->
+			<!-- Standard Automator workflow execution message -->
 			<key>NSMessage</key>
 			<string>runWorkflowAsService</string>
+
+			<!-- Service availability constraints -->
+			<!-- Restricts service to only appear in Finder context menus -->
 			<key>NSRequiredContext</key>
 			<dict>
+				<!-- Only show this service when invoked from Finder -->
 				<key>NSApplicationIdentifier</key>
 				<string>com.apple.finder</string>
 			</dict>
+
+			<!-- Accepted file types for service input -->
+			<!-- Defines what types of files/folders this service can process -->
 			<key>NSSendFileTypes</key>
 			<array>
+				<!-- Accept any file system item (files, folders, symlinks, etc.) -->
 				<string>public.item</string>
 			</array>
+
+			<!-- Service description for accessibility and system preferences -->
+			<!-- Displayed in System Preferences > Keyboard > Shortcuts > Services -->
 			<key>NSServiceDescription</key>
 			<string>Decrypt selected files or folders with Maraikka</string>
 		</dict>
 	</array>
 </dict>
-</plist> 
+</plist>

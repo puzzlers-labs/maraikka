@@ -1,18 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+macOS Service Workflow Definition
+
+This file defines the Automator Service workflow for the "Encrypt with Maraikka" context menu action.
+It contains the AppleScript that executes when users right-click files in Finder and select the service.
+
+Structure:
+- AMApplicationBuild/Version: Automator version information
+- actions: Array containing the workflow steps
+- action: Single AppleScript action configuration
+- AMParameterProperties: AppleScript source code for the workflow
+- workflowMetaData: Service configuration (input types, output, service behavior)
+
+The AppleScript loops through selected files and launches Maraikka with encrypt arguments.
+This file is automatically installed to ~/Library/Services/ by the install script.
+-->
 <plist version="1.0">
 <dict>
+	<!-- Automator application version that created this workflow -->
 	<key>AMApplicationBuild</key>
 	<string>521</string>
 	<key>AMApplicationVersion</key>
 	<string>2.10</string>
 	<key>AMDocumentVersion</key>
 	<string>2</string>
+
+	<!-- Array of actions that make up this workflow -->
+	<!-- Currently contains one AppleScript action that launches Maraikka -->
 	<key>actions</key>
 	<array>
 		<dict>
+			<!-- Single action definition for this workflow -->
 			<key>action</key>
 			<dict>
+				<!-- Defines what input types this action accepts -->
+				<!-- Accepts any AppleScript object as a list (files/folders from Finder) -->
 				<key>AMAccepts</key>
 				<dict>
 					<key>Container</key>
@@ -30,6 +53,8 @@
 				<array>
 					<string>Automator</string>
 				</array>
+				<!-- AppleScript source code for this action -->
+				<!-- This script launches Maraikka with encrypt arguments for each selected file -->
 				<key>AMParameterProperties</key>
 				<dict>
 					<key>source</key>
@@ -37,17 +62,19 @@
 						<key>tokenizedValue</key>
 						<array>
 							<string>on run {input, parameters}
-	
+
 	repeat with currentItem in input
 		set itemPath to (POSIX path of currentItem)
-		do shell script "'/Users/aayusharyan/puzzlers-labs/maraikka-app/macos-services/encrypt-with-maraikka.sh' " & quoted form of itemPath
+		do shell script "open -a '/Applications/Maraikka.app' --args --encrypt " & quoted form of itemPath
 	end repeat
-	
+
 	return input
 end run</string>
 						</array>
 					</dict>
 				</dict>
+				<!-- Defines what output types this action provides -->
+				<!-- Returns the same AppleScript objects it received (passthrough) -->
 				<key>AMProvides</key>
 				<dict>
 					<key>Container</key>
@@ -61,16 +88,18 @@ end run</string>
 				<string>/System/Library/Automator/Run AppleScript.action</string>
 				<key>ActionName</key>
 				<string>Run AppleScript</string>
+				<!-- Runtime parameters for the AppleScript action -->
+				<!-- Contains the actual script code that gets executed -->
 				<key>ActionParameters</key>
 				<dict>
 					<key>source</key>
 					<string>on run {input, parameters}
-	
+
 	repeat with currentItem in input
 		set itemPath to (POSIX path of currentItem)
-		do shell script "'/Users/aayusharyan/puzzlers-labs/maraikka-app/macos-services/encrypt-with-maraikka.sh' " & quoted form of itemPath
+		do shell script "open -a '/Applications/Maraikka.app' --args --encrypt " & quoted form of itemPath
 	end repeat
-	
+
 	return input
 end run</string>
 				</dict>
@@ -108,9 +137,9 @@ end run</string>
 					<dict>
 						<key>default value</key>
 						<string>on run {input, parameters}
-	
+
 	(* Your script goes here *)
-	
+
 	return input
 end run</string>
 						<key>name</key>
@@ -136,16 +165,25 @@ end run</string>
 	</array>
 	<key>connectors</key>
 	<dict/>
+	<!-- Service configuration metadata -->
+	<!-- Defines how this workflow behaves as a macOS Service -->
 	<key>workflowMetaData</key>
 	<dict>
+		<!-- Input type: file system objects (files/folders from Finder) -->
 		<key>serviceInputTypeIdentifier</key>
 		<string>com.apple.Automator.fileSystemObject</string>
+
+		<!-- Output type: nothing (action doesn't return data to workflow chain) -->
 		<key>serviceOutputTypeIdentifier</key>
 		<string>com.apple.Automator.nothing</string>
+
+		<!-- Service processes input: disabled (input handled by AppleScript) -->
 		<key>serviceProcessesInput</key>
 		<integer>0</integer>
+
+		<!-- Workflow type: appears in Services context menu -->
 		<key>workflowTypeIdentifier</key>
 		<string>com.apple.Automator.servicesMenu</string>
 	</dict>
 </dict>
-</plist> 
+</plist>
