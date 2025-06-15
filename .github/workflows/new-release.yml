@@ -1,3 +1,4 @@
+# NOTE: THIS FILE IS UNTESTED AND MAY NOT WORK
 # GitHub Actions Workflow for Multi-Platform Electron App Release
 # Builds and releases Maraikka app for macOS, Windows, and Linux platforms
 # Triggers on published GitHub releases or manual workflow dispatch
