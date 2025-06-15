@@ -1,0 +1,400 @@
+# GitHub Actions Workflow for Multi-Platform Electron App Release
+# Builds and releases Maraikka app for macOS, Windows, and Linux platforms
+# Triggers on published GitHub releases or manual workflow dispatch
+
+name: Build on Release
+
+on:
+  # Trigger Configuration
+  # Executes when a new GitHub release is published
+  # Ensures deployments only happen for official releases, not draft releases or pre-releases
+  release:
+    types: [published]
+
+  # Manual trigger with version input for testing or emergency releases
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., v1.2.3)"
+        required: true
+        type: string
+
+# Environment Variables
+# Contains sensitive credentials and tokens needed for code signing and distribution
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Apple Developer credentials for macOS code signing and notarization
+  APPLE_ID: ${{ secrets.APPLE_ID }}
+  APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+  CSC_LINK: ${{ secrets.CSC_LINK }}                    # Base64 encoded .p12 certificate
+  CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}    # Certificate password
+
+  # Windows code signing credentials (optional but recommended)
+  WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+  WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+
+jobs:
+  # Multi-Platform Build Job
+  # Uses matrix strategy to build for all supported platforms and architectures
+  build:
+    strategy:
+      fail-fast: false  # Continue building other platforms if one fails
+      matrix:
+        include:
+          # macOS builds - supports both Intel (x64) and Apple Silicon (arm64)
+          - platform: macos
+            os: macos-latest
+            arch: x64
+            build_script: "build:github"
+            artifact_pattern: "dist/*.dmg dist/*.zip dist/latest-mac.yml"
+
+          - platform: macos
+            os: macos-latest
+            arch: arm64
+            build_script: "build:github"
+            artifact_pattern: "dist/*.dmg dist/*.zip dist/latest-mac.yml"
+
+          # Windows builds - supports 64-bit and 32-bit architectures
+          - platform: windows
+            os: windows-latest
+            arch: x64
+            build_script: "build:win"
+            artifact_pattern: "dist/*.exe dist/*.zip dist/latest.yml"
+
+          - platform: windows
+            os: windows-latest
+            arch: ia32
+            build_script: "build:win"
+            artifact_pattern: "dist/*.exe dist/*.zip dist/latest.yml"
+
+          # Linux builds - primarily x64 architecture
+          - platform: linux
+            os: ubuntu-latest
+            arch: x64
+            build_script: "build:linux"
+            artifact_pattern: "dist/*.AppImage dist/*.deb dist/*.rpm dist/latest-linux.yml"
+
+    runs-on: ${{ matrix.os }}
+    name: Build ${{ matrix.platform }} (${{ matrix.arch }})
+
+    steps:
+      # Source Code Setup
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Node.js Environment Setup
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "pnpm"
+
+      # Package Manager Setup
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      # Version Management
+      # Updates package.json version to match the release tag
+      - name: Update package version
+        run: |
+          # Extract version from release event or manual input
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+            # Remove 'v' prefix if present (e.g., v1.2.3 -> 1.2.3)
+            VERSION=${VERSION#v}
+          else
+            VERSION="${{ github.event.inputs.version }}"
+            # Remove 'v' prefix if present
+            VERSION=${VERSION#v}
+          fi
+
+          echo "Setting package version to: $VERSION"
+          pnpm version $VERSION --no-git-tag-version --allow-same-version
+
+          # Verify the version was set correctly
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Package version is now: $CURRENT_VERSION"
+        shell: bash
+
+      # Dependency Installation
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Platform-Specific Asset Preparation
+      # Creates necessary entitlement files and icons for each platform
+
+      # macOS Asset Preparation
+      # Creates Apple-required entitlement files for code signing and sandboxing
+      - name: Prepare macOS assets
+        if: matrix.platform == 'macos'
+        run: |
+          mkdir -p assets
+
+          # Create main application entitlements file
+          # Allows JIT compilation and debugging for development features
+          if [ ! -f "assets/entitlements.mac.plist" ]; then
+            cat > assets/entitlements.mac.plist << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+  <key>com.apple.security.cs.debugger</key>
+  <true/>
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+</dict>
+</plist>
+EOF
+          fi
+
+          # Create Mac App Store entitlements file
+          # Required for App Store distribution with sandboxing
+          if [ ! -f "assets/entitlements.mas.plist" ]; then
+            cat > assets/entitlements.mas.plist << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.app-sandbox</key>
+  <true/>
+  <key>com.apple.security.files.user-selected.read-write</key>
+  <true/>
+  <key>com.apple.security.files.downloads.read-write</key>
+  <true/>
+</dict>
+</plist>
+EOF
+          fi
+
+          # Create inheritance entitlements for child processes
+          if [ ! -f "assets/entitlements.mas.inherit.plist" ]; then
+            cat > assets/entitlements.mas.inherit.plist << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.app-sandbox</key>
+  <true/>
+  <key>com.apple.security.inherit</key>
+  <true/>
+</dict>
+</plist>
+EOF
+          fi
+
+      # Windows Asset Preparation
+      # Ensures required icon files exist for Windows builds
+      - name: Prepare Windows assets
+        if: matrix.platform == 'windows'
+        run: |
+          # Create necessary directories
+          New-Item -ItemType Directory -Force -Path "assets"
+
+          # Check for required icon files and warn if missing
+          # Note: These should be actual .ico files, not empty placeholders
+          $iconFiles = @("icon.ico", "installer.ico", "uninstaller.ico", "installer-header.ico")
+          $missingIcons = @()
+
+          foreach ($iconFile in $iconFiles) {
+            $iconPath = "assets/$iconFile"
+            if (-not (Test-Path $iconPath)) {
+              $missingIcons += $iconFile
+              Write-Warning "Missing icon file: $iconFile"
+            }
+          }
+
+          if ($missingIcons.Count -gt 0) {
+            Write-Host "Warning: Missing icon files. Build may fail or use default icons."
+            Write-Host "Missing files: $($missingIcons -join ', ')"
+          }
+        shell: powershell
+
+      # Linux Asset Preparation
+      # Checks for Linux application icons
+      - name: Prepare Linux assets
+        if: matrix.platform == 'linux'
+        run: |
+          mkdir -p assets
+
+          # Check for application icon
+          if [ ! -f "assets/icon.png" ]; then
+            echo "Warning: Missing assets/icon.png - Linux build may use default icon"
+          fi
+
+      # Architecture Configuration
+      # Sets target architecture for electron-builder
+      - name: Set build environment
+        run: |
+          echo "TARGET_ARCH=${{ matrix.arch }}" >> $GITHUB_ENV
+          echo "Building for architecture: ${{ matrix.arch }}"
+        shell: bash
+
+      # Main Application Build
+      # Executes the platform-specific build script
+      - name: Build application
+        run: pnpm run ${{ matrix.build_script }}
+        env:
+          ELECTRON_BUILDER_ARCH: ${{ matrix.arch }}
+
+      # Additional Store Builds
+      # Creates additional builds for app stores with different requirements
+
+      # Mac App Store Build
+      # Sandboxed version for Mac App Store distribution
+      - name: Build for Mac App Store
+        if: matrix.platform == 'macos'
+        run: pnpm run build:mas
+        env:
+          ELECTRON_BUILDER_ARCH: ${{ matrix.arch }}
+        continue-on-error: true  # Don't fail if MAS build fails
+
+      # Windows Store Build
+      # APPX package for Microsoft Store distribution
+      - name: Build for Windows Store
+        if: matrix.platform == 'windows'
+        run: pnpm run build:win-store
+        env:
+          ELECTRON_BUILDER_ARCH: ${{ matrix.arch }}
+        continue-on-error: true  # Don't fail if Store build fails
+
+      # Artifact Upload
+      # Stores build outputs for the release job
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.arch }}-builds
+          path: |
+            dist/
+          retention-days: 30
+
+  # Release Creation Job
+  # Downloads all platform builds and creates a comprehensive GitHub release
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    # Only run if at least one build succeeded
+    if: always() && contains(needs.build.result, 'success')
+
+    steps:
+      # Setup for release creation
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Download all build artifacts
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-all
+
+      # Organize Release Files
+      # Consolidates all platform builds into a single directory
+      - name: Organize release files
+        run: |
+          mkdir -p release-files
+
+          echo "Organizing release files from all platform builds..."
+
+          # Process each artifact directory
+          for artifact_dir in dist-all/*/; do
+            if [ -d "$artifact_dir" ]; then
+              echo "Processing artifact directory: $artifact_dir"
+
+              # Copy all relevant distribution files
+              find "$artifact_dir" -type f \( \
+                -name "*.dmg" -o \
+                -name "*.zip" -o \
+                -name "*.exe" -o \
+                -name "*.AppImage" -o \
+                -name "*.deb" -o \
+                -name "*.rpm" -o \
+                -name "*.appx" -o \
+                -name "latest*.yml" \
+              \) -exec cp {} release-files/ \; 2>/dev/null || true
+            fi
+          done
+
+          # Verify release files were created
+          if [ "$(ls -A release-files)" ]; then
+            echo "✅ Release files prepared successfully:"
+            ls -la release-files/
+          else
+            echo "❌ No release files found!"
+            exit 1
+          fi
+
+      # GitHub Release Creation
+      # Creates or updates the GitHub release with all platform builds
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ github.event.inputs.version || github.event.release.tag_name }}
+          name: Release ${{ github.event.inputs.version || github.event.release.tag_name }}
+          files: release-files/*
+          body: |
+            ## 🚀 Maraikka Release ${{ github.event.inputs.version || github.event.release.tag_name }}
+
+            ### 📦 Installation Options
+
+            **macOS (Intel & Apple Silicon):**
+            - 📥 **Direct Download**: `.dmg` installer with auto-updates
+            - 🏪 **Mac App Store**: Available separately (sandboxed version)
+
+            **Windows (x64 & x86):**
+            - 📥 **Installer**: `.exe` NSIS installer with context menu integration
+            - 📱 **Portable**: `.zip` portable version
+            - 🏪 **Microsoft Store**: Available separately
+
+            **Linux (x64):**
+            - 📥 **AppImage**: Universal Linux application
+            - 📦 **Debian/Ubuntu**: `.deb` package
+            - 📦 **Fedora/RHEL**: `.rpm` package
+
+            ### ✨ Features
+            - 🔒 Cross-platform file encryption and decryption
+            - 🖱️ Context menu integration for all platforms
+            - 🔄 Auto-update system for direct downloads
+            - 🎨 Modern, responsive UI with dark/light themes
+            - 🌍 Multi-language support (English, Spanish, Hindi, Japanese)
+            - 🔐 Hardware authentication support (Touch ID, Windows Hello)
+
+            ### 📋 System Requirements
+            - **macOS**: 10.15+ (Catalina or later)
+            - **Windows**: Windows 10 (1903+) or Windows 11
+            - **Linux**: Most modern distributions (x64)
+
+            ### 🔐 Security
+            - Code signing and notarization (macOS)
+            - Digital signatures (Windows)
+            - Secure auto-update channels
+            - Hardware-backed authentication where available
+
+          draft: false
+
+  # Build Completion Notification
+  # Provides status updates and reminders for manual store submissions
+  notify-completion:
+    needs: create-release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+
+    steps:
+      - name: Build completion notification
+        run: |
+          echo "::notice::🎉 Multi-platform builds completed successfully!"
+          echo "::notice::📦 Artifacts available for:"
+          echo "::notice::  • macOS (Intel & Apple Silicon)"
+          echo "::notice::  • Windows (x64 & x86)"
+          echo "::notice::  • Linux (x64)"
+          echo "::notice::🏪 Store submission reminders:"
+          echo "::notice::  • Mac App Store: Upload via App Store Connect"
+          echo "::notice::  • Microsoft Store: Upload via Partner Center"
+          echo "::notice::  • Linux stores: Consider Snap Store, Flathub"
