@@ -15,19 +15,34 @@ alwaysApply: true
 
 ## 📝 **MANDATORY DOCUMENTATION REQUIREMENTS**
 
-**ALL CODE CHANGES MUST BE THOROUGHLY DOCUMENTED WITH COMMENTS:**
+**ALL FILES AND CODE CHANGES MUST BE COMPREHENSIVELY DOCUMENTED:**
+
+### Universal Documentation Standards
+**EVERY FILE must have:**
+- **Top-of-file header** explaining purpose, context, and functionality
+- **Dependency explanations** when files interact with external systems
+- **File structure notes** for complex configurations or data files
+- **Context comments** explaining why specific approaches were chosen
 
 ### For JavaScript/JSX Files:
-- **File-level comments** explaining the purpose and scope
-- **Function/component comments** describing parameters, return values, and behavior
-- **Complex logic comments** explaining non-obvious implementations
-- **Configuration comments** explaining settings and options
+- **File header** describing component/module purpose, dependencies, and usage context
+- **Function/component documentation** with parameters, return values, and behavior
+- **Inline comments** for complex logic, algorithms, and business rules
+- **Configuration explanations** for settings, options, and environment variables
+- **Import/export documentation** explaining external dependencies and exports
 
-### For Configuration Files:
-- **Purpose comments** explaining what the configuration does
-- **Option explanations** for non-obvious settings
-- **Dependency notes** explaining why specific versions are used
+### For Configuration Files (JSON, XML, plist, etc.):
+- **File header** explaining the configuration's purpose and scope
+- **Section comments** describing groups of related settings
+- **Key-value explanations** for non-obvious configuration options
+- **Dependency notes** explaining why specific versions or values are used
 - **Environment considerations** for different deployment scenarios
+
+### For Data/Markup Files (workflows, schemas, etc.):
+- **Purpose documentation** explaining what the file defines or controls
+- **Structure explanations** describing data hierarchy and relationships
+- **Field documentation** for complex or non-standard properties
+- **Usage context** explaining how the file integrates with the system
 
 ## 🎨 **Code Style Guidelines**
 
