@@ -1,0 +1,52 @@
+{
+  // VSCode Extensions Configuration
+  // Defines the recommended extensions for contributors
+  // Ensures consistent development environment and tooling across the team
+
+  "recommendations": [
+    // Markdown Support
+    // Enhanced markdown editing and preview capabilities for documentation work
+    // Provides live preview, math support, diagrams, and export functionality
+    "shd101wyy.markdown-preview-enhanced",
+
+    // Code Quality and Formatting
+    // Essential tools for maintaining consistent code style and clean documentation
+
+    // Prettier - Code formatter for consistent styling across all file types
+    // Integrates with prettier.config.js for documentation-optimized formatting
+    "esbenp.prettier-vscode",
+
+    // Trailing Spaces - Highlights and removes unwanted whitespace
+    // Prevents Git diff noise and maintains clean file formatting
+    // Configured in settings.json with red highlighting and auto-trim on save
+    "shardulm94.trailing-spaces",
+
+    // GitHub Actions Support
+    // Workflow management and authoring assistance for CI/CD pipelines
+    // Provides syntax highlighting, validation, code completion, and workflow monitoring
+    // Essential for managing the build and release automation workflows
+    "GitHub.vscode-github-actions",
+
+    // ESLint Support
+    // JavaScript/TypeScript linting and error detection
+    // Integrates with eslint.config.js for real-time code quality feedback
+    // Essential for maintaining code standards and catching errors early
+    "dbaeumer.vscode-eslint"
+  ]
+
+  // Extension Selection Rationale
+  // This minimal set of 5 extensions provides maximum value with minimal overhead
+  // Each extension serves a specific purpose for development and quality assurance
+  //
+  // Core Development Tools Covered:
+  // - Documentation authoring and preview (Markdown Preview Enhanced)
+  // - Code formatting and consistency (Prettier)
+  // - Code quality and linting (ESLint)
+  // - Clean file maintenance (Trailing Spaces)
+  // - CI/CD workflow management (GitHub Actions)
+  //
+  // Excluded Extensions
+  // Many common extensions are intentionally omitted to keep the setup lightweight
+  // Contributors can install additional extensions based on personal preference
+  // The core functionality for development and deployment workflows is covered by these 5 extensions
+}
