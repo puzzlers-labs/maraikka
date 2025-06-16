@@ -48,9 +48,7 @@
 const CryptoJS = require("crypto-js");
 const fs = require("fs-extra");
 const path = require("path");
-
-// Encryption constants
-const ENCRYPTION_PREFIX = "MARAIKKA_ENCRYPTED:";
+const { ENCRYPTION_PREFIX, CRYPTO_ERRORS } = require("@constants/crypto");
 
 /**
  * Decrypts a single file encrypted with CryptoJS AES

@@ -50,6 +50,7 @@
 const fs = require("fs-extra");
 const path = require("path");
 const decryptFile = require("./decrypt-file");
+const { ENCRYPTION_PREFIX } = require("@constants/crypto");
 
 /**
  * Recursively decrypts all encrypted files in a directory
@@ -117,7 +118,7 @@ async function decryptDirectory(dirPath, password) {
           // Check if file is encrypted by reading first part of file
           try {
             const fileContent = await fs.readFile(itemPath, "utf8");
-            if (fileContent.startsWith("MARAIKKA_ENCRYPTED:")) {
+            if (fileContent.startsWith(ENCRYPTION_PREFIX)) {
               // Decrypt encrypted file
               const result = await decryptFile(itemPath, password);
               if (result.success) {
