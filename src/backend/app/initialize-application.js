@@ -38,10 +38,10 @@
 // 4. Register IPC communication channels
 // 5. Process command line arguments
 
-const windowManager = require("../windows/window-manager");
-const ipcHandlers = require("../ipc/ipc-handlers");
-const menuManager = require("../menu/menu-manager");
-const UpdateManager = require("../../updater");
+const windowManager = require("@backend/windows/window-manager");
+const ipcHandlers = require("@backend/ipc/ipc-handlers");
+const menuManager = require("@backend/menu/menu-manager");
+const UpdateManager = require("@updater");
 
 /**
  * Initializes the application and its core components
