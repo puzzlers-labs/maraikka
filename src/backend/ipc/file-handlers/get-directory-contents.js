@@ -59,7 +59,7 @@ const { ENCRYPTION_PREFIX } = require("@constants/crypto");
  * Provides comprehensive file information including encryption status, sizes, and modification dates
  * for use in file explorer UI components and directory statistics
  *
- * @param {Object} event - IPC event object (automatically provided by Electron)
+ * @param {Object} _event - IPC event object (automatically provided by Electron)
  * @param {string} dirPath - Absolute path to directory to analyze and list contents
  * @returns {Promise<Array<Object>>} Array of file/directory objects with detailed metadata
  * @property {string} name - File or directory name without path
@@ -86,7 +86,7 @@ const { ENCRYPTION_PREFIX } = require("@constants/crypto");
  *   }
  * });
  */
-async function handleGetDirectoryContents(event, dirPath) {
+async function handleGetDirectoryContents(_event, dirPath) {
   try {
     const items = await fs.readdir(dirPath, { withFileTypes: true });
     const contents = [];

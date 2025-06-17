@@ -57,7 +57,7 @@ const { BINARY_EXTENSIONS, MAX_PREVIEW_FILE_SIZE } = require("@constants/file");
  * Handles decrypting file content for preview purposes with size validation
  * Provides in-memory decryption without writing to disk
  *
- * @param {Event} event - IPC event object from renderer process
+ * @param {Event} _event - IPC event object from renderer process
  * @param {string} filePath - Absolute path to the encrypted file
  * @param {string} password - Decryption password
  * @returns {Promise<Object>} Decryption result
