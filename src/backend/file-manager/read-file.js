@@ -11,13 +11,16 @@
 // - Detect Maraikka-encrypted files, separate their metadata from the encrypted
 //   payload, and expose both to callers.
 // - Enforce `MAX_FILE_SIZE` to avoid excessive memory usage.
+// - Provide a lightweight *header-only* mode (via `returnOnlyHeader` option) so
+//   callers can quickly inspect encryption status and metadata without reading
+//   full file contents.
 //
 // Dependencies:
 // - fs-extra:          Async filesystem helpers (`pathExists`, `stat`, `readFile`).
 // - path:              File extension utilities for MIME lookup.
 // - mime:              Third-party MIME type resolver (`mime.getType`).
 // - isbinaryfile:      Heuristic binary detector (`isBinaryFile`).
-// - @constants/file:   Provides strong `MAX_FILE_SIZE` limit.
+// - @constants/file:   Provides `MAX_FILE_SIZE` and `MAX_HEADER_BYTES` limits.
 // - @constants/crypto: Encryption prefix constant (`ENCRYPTION_PREFIX`).
 //
 // Usage Examples:
@@ -41,6 +44,12 @@
 // if (enc.success && enc.isEncrypted) {
 //   decrypt(enc.content, enc.metadata);
 // }
+//
+// // 4) Header-only metadata inspection (no full file read)
+// const info = await readFile('/media/large-video.mp4', { returnOnlyHeader: true });
+// if (info.isEncrypted) {
+//   console.log('Encrypted with', info.metadata.algorithm);
+// }
 // ```
 //
 // Integration Points:
@@ -62,7 +71,7 @@ const fs = require("fs-extra");
 const path = require("path");
 const mime = require("mime");
 const { isBinaryFile } = require("isbinaryfile");
-const { MAX_FILE_SIZE } = require("@constants/file");
+const { MAX_FILE_SIZE, MAX_HEADER_BYTES } = require("@constants/file");
 const { ENCRYPTION_PREFIX } = require("@constants/crypto");
 
 /**
@@ -71,6 +80,10 @@ const { ENCRYPTION_PREFIX } = require("@constants/crypto");
  *
  * @param {string} filePath
  *   Absolute path to the target file.
+ * @param {Object} options
+ *   Optional behavior flags and settings.
+ * @property {boolean} [options.returnOnlyHeader]
+ *   If true, only reads the file header and returns a result object without content.
  *
  * @returns {Promise<Object>} Result object
  * @property {boolean}   success       Indicates overall success.
@@ -92,8 +105,11 @@ const { ENCRYPTION_PREFIX } = require("@constants/crypto");
  * const res = await readFile('/tmp/report.pdf');
  * if (res.success) console.log('Loaded', res.size, 'bytes');
  */
-async function readFile(filePath) {
+async function readFile(filePath, options = {}) {
   try {
+    // Handle optional behaviour flags
+    const { returnOnlyHeader = false } = options;
+
     // 1. Validate filePath
     if (!filePath) {
       throw new Error("File path is required");
@@ -104,9 +120,10 @@ async function readFile(filePath) {
       throw new Error(`File does not exist: ${filePath}`);
     }
 
-    // Fetch stats and enforce size limit
+    // Fetch stats (size is useful regardless of mode) and enforce size limit when doing a full read
     const stats = await fs.stat(filePath);
-    if (stats.size > MAX_FILE_SIZE) {
+
+    if (!returnOnlyHeader && stats.size > MAX_FILE_SIZE) {
       throw new Error(
         `File too large (${stats.size} bytes). Maximum allowed: ${MAX_FILE_SIZE} bytes`,
       );
@@ -114,6 +131,67 @@ async function readFile(filePath) {
 
     // 3. MIME detection using `mime` package
     const mimeType = mime.getType(filePath) || "application/octet-stream";
+
+    // Short-circuit when caller only wants header information
+    if (returnOnlyHeader) {
+      const bytesToRead = Math.min(stats.size, MAX_HEADER_BYTES);
+
+      // Read the leading portion of the file once
+      const fd = fs.openSync(filePath, "r");
+      let headerBuffer;
+      try {
+        headerBuffer = Buffer.alloc(bytesToRead);
+        const bytesRead = fs.readSync(fd, headerBuffer, 0, bytesToRead, 0);
+        headerBuffer = headerBuffer.subarray(0, bytesRead);
+      } finally {
+        fs.closeSync(fd);
+      }
+
+      // Encryption detection identical to full-read path but scoped to the partial buffer
+      const encryptionHeader = `[${ENCRYPTION_PREFIX}]`;
+      const headerLength = Buffer.byteLength(encryptionHeader, "utf8");
+      const possibleHeader = headerBuffer.toString("utf8", 0, headerLength);
+      const isEncrypted = possibleHeader === encryptionHeader;
+
+      let metadata;
+      if (isEncrypted) {
+        // Attempt to locate the end of the metadata JSON within our buffer
+        const bufferUtf8 = headerBuffer.toString("utf8");
+        const jsonStart = headerLength;
+        const jsonEnd = bufferUtf8.indexOf("}", jsonStart);
+        if (jsonEnd === -1) {
+          throw new Error(
+            "Unable to parse encrypted file metadata from header – increase header read size if necessary",
+          );
+        }
+
+        const metadataJson = bufferUtf8.slice(jsonStart, jsonEnd + 1);
+        try {
+          metadata = JSON.parse(metadataJson);
+        } catch (_err) {
+          throw new Error("Unable to parse encrypted file metadata");
+        }
+      }
+
+      // Binary heuristic on the limited buffer for caller convenience
+      let encoding = "utf8";
+      try {
+        const binaryGuess = await isBinaryFile(headerBuffer, stats.size);
+        encoding = binaryGuess ? "binary" : "utf8";
+      } catch (_err) {
+        encoding = mimeType.startsWith("text/") ? "utf8" : "binary";
+      }
+
+      // Note: intentionally omitting `content` to honour returnOnlyHeader contract
+      return {
+        success: true,
+        metadata,
+        mimeType,
+        isEncrypted,
+        size: stats.size,
+        encoding,
+      };
+    }
 
     // 5. Always read as Buffer – gives full fidelity and lets us decide later
     const fileBuffer = await fs.readFile(filePath);
