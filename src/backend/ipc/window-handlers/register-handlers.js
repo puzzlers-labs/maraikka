@@ -32,9 +32,6 @@ const { ipcMain } = require("electron");
 
 // Text Editor Window Handlers
 const {
-  handleOpenTextEditor,
-} = require("@backend/ipc/window-handlers/open-text-editor");
-const {
   handleOpenTextEditorWindow,
 } = require("@backend/ipc/window-handlers/open-text-editor-window");
 
@@ -84,7 +81,6 @@ function registerWindowHandlers() {
    * Manage creation and lifecycle of editor windows
    * Implements proper security measures and resource management
    */
-  ipcMain.handle("open-text-editor", handleOpenTextEditor);
   ipcMain.handle("open-text-editor-window", handleOpenTextEditorWindow);
   ipcMain.handle("open-image-editor-window", handleOpenImageEditorWindow);
 
