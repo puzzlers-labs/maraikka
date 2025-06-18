@@ -116,7 +116,7 @@ async function writeFile(filePath, content, options = {}) {
         .update(
           isBinary
             ? dataBuffer
-            : Buffer.from(dataString, options.encoding || "utf8"),
+            : Buffer.from(dataBuffer, options.encoding || "utf8"),
         )
         .digest("hex");
 

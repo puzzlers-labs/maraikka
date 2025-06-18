@@ -39,7 +39,7 @@
 // }
 //
 // // 3) Encrypted file
-// const enc = await readFile('/secret/file.enc');
+// const enc = await readFile('/secret/file.txt');
 // if (enc.success && enc.isEncrypted) {
 //   decrypt(enc.content, enc.metadata);
 // }
@@ -171,15 +171,6 @@ async function readFile(filePath, options = {}) {
         }
       }
 
-      // Binary heuristic on the limited buffer for caller convenience
-      let encoding = "utf8";
-      try {
-        const binaryGuess = await isBinaryFile(headerBuffer, stats.size);
-        encoding = binaryGuess ? "binary" : "utf8";
-      } catch (_err) {
-        encoding = mimeType.startsWith("text/") ? "utf8" : "binary";
-      }
-
       // Note: intentionally omitting `content` to honour returnOnlyHeader contract
       return {
         success: true,
@@ -187,21 +178,12 @@ async function readFile(filePath, options = {}) {
         mimeType,
         isEncrypted,
         size: stats.size,
-        encoding,
+        encoding: metadata.encoding || "utf8",
       };
     }
 
     // 5. Always read as Buffer – gives full fidelity and lets us decide later
     const fileBuffer = await fs.readFile(filePath);
-
-    // 4. Binary detection using heuristic rather than extension list
-    let isBinaryContent = false;
-    try {
-      isBinaryContent = await isBinaryFile(fileBuffer, stats.size);
-    } catch (_err) {
-      // Fallback: treat as binary when mime type is not text/*
-      isBinaryContent = !mimeType.startsWith("text/");
-    }
 
     // Detect Maraikka-encrypted content (header: "[MARAIKKA_ENCRYPTED:]{json}")
     const encryptionHeader = `[${ENCRYPTION_PREFIX}]`;
@@ -234,7 +216,10 @@ async function readFile(filePath, options = {}) {
         encryptionHeader + metadataJson,
         "utf8",
       );
-      const encryptedPayload = fileBuffer.subarray(headerByteLen);
+      let encryptedPayload = fileBuffer.subarray(headerByteLen);
+      if (metadata.encoding !== "binary") {
+        encryptedPayload = encryptedPayload.toString(metadata.encoding);
+      }
 
       return {
         success: true,
@@ -243,8 +228,17 @@ async function readFile(filePath, options = {}) {
         mimeType,
         isEncrypted: true,
         size: stats.size,
-        encoding: "binary",
+        encoding: metadata.encoding || "utf8",
       };
+    }
+
+    // 4. Binary detection using heuristic rather than extension list
+    let isBinaryContent = false;
+    try {
+      isBinaryContent = await isBinaryFile(fileBuffer, stats.size);
+    } catch (_err) {
+      // Fallback: treat as binary when mime type is not text/*
+      isBinaryContent = !mimeType.startsWith("text/");
     }
 
     const content = isBinaryContent ? fileBuffer : fileBuffer.toString("utf8");

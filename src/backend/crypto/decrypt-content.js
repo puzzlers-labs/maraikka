@@ -84,26 +84,17 @@ async function decryptContent(content, password) {
     const isBinary = Buffer.isBuffer(content);
 
     // Convert cipher content to base64 string for CryptoJS input
-    const cipherBase64 = isBinary ? content.toString("base64") : content;
+    const encryptedString = isBinary ? content.toString("base64") : content;
 
-    let base64Plain;
-    try {
-      // Perform AES decryption
-      const bytes = CryptoJS.AES.decrypt(cipherBase64, password);
-      base64Plain = bytes.toString(CryptoJS.enc.Utf8);
-
-      // CryptoJS returns an empty string when decryption fails (e.g. wrong password)
-      if (!base64Plain) {
-        throw new Error(CRYPTO_ERRORS.DECRYPTION_FAILED);
-      }
-    } catch (_err) {
-      throw new Error(CRYPTO_ERRORS.DECRYPTION_FAILED);
-    }
+    const decryptedString = CryptoJS.AES.decrypt(
+      encryptedString,
+      password,
+    ).toString();
 
     // Convert plain base64 string back to original form (Buffer or UTF-8 string)
     const decryptedOutput = isBinary
-      ? Buffer.from(base64Plain, "base64")
-      : Buffer.from(base64Plain, "base64").toString("utf8");
+      ? Buffer.from(decryptedString, "hex")
+      : Buffer.from(decryptedString, "hex").toString("utf-8");
 
     return {
       success: true,

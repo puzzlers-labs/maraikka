@@ -86,22 +86,23 @@ async function encryptContent(content, password) {
     const isBinary = Buffer.isBuffer(content);
 
     // Convert plain content to base64 string for CryptoJS input
-    const base64Plain = isBinary
-      ? content.toString("base64")
-      : Buffer.from(content, "utf8").toString("base64");
+    const contentString = isBinary ? content.toString("base64") : content;
 
     // Encrypt base64 string with AES
-    let encryptedBase64;
+    let encryptedContentString;
     try {
-      encryptedBase64 = CryptoJS.AES.encrypt(base64Plain, password).toString();
+      encryptedContentString = CryptoJS.AES.encrypt(
+        contentString,
+        password,
+      ).toString();
     } catch (_err) {
       throw new Error(CRYPTO_ERRORS.ENCRYPTION_FAILED);
     }
 
     // Return Buffer for binary input, base64 string for text input
     const encryptedOutput = isBinary
-      ? Buffer.from(encryptedBase64, "base64")
-      : encryptedBase64;
+      ? Buffer.from(encryptedContentString, "base64")
+      : encryptedContentString;
 
     return {
       success: true,

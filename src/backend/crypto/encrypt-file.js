@@ -48,9 +48,8 @@
 // 1. Validate input parameters (file path and password)
 // 2. Read file contents using the unified backend file-manager utility
 // 3. Abort if file is already encrypted (flag provided by readFile)
-// 4. Encrypt original file content producing cipher Buffer via encryptContent
-// 5. Persist encrypted buffer via writeFile with `isEncrypted` flag (header auto-prepended)
-// 6. Return success/error status
+// 4. Persist encrypted buffer via writeFile with `isEncrypted` flag (header auto-prepended)
+// 5. Return success/error status
 
 const { CRYPTO_ERRORS } = require("@constants/crypto");
 const { readFile } = require("@backend/file-manager/read-file");
@@ -116,29 +115,19 @@ async function encryptFile(filePath, password) {
       throw new Error(CRYPTO_ERRORS.FILE_ALREADY_ENCRYPTED);
     }
 
-    // Encrypt content via shared in-memory utility to keep logic consistent application-wide
-    let cipherBuffer;
-    try {
-      const encResult = await encryptContent(originalContent, password);
+    const encResult = await encryptContent(originalContent, password);
 
-      if (!encResult.success) {
-        throw new Error(encResult.error || CRYPTO_ERRORS.ENCRYPTION_FAILED);
-      }
-
-      // Convert to Buffer if needed (text output is base64 string)
-      cipherBuffer = Buffer.isBuffer(encResult.content)
-        ? encResult.content
-        : Buffer.from(encResult.content, "base64");
-    } catch (_error) {
-      throw new Error(CRYPTO_ERRORS.ENCRYPTION_FAILED);
+    if (!encResult.success) {
+      throw new Error(encResult.error || CRYPTO_ERRORS.ENCRYPTION_FAILED);
     }
 
     // Persist encrypted data using the unified writeFile utility.
     // Header preparation and metadata inclusion are delegated to writeFile
     // via the `isEncrypted` flag.
-    const writeResult = await writeFile(filePath, cipherBuffer, {
-      isBinary: true,
+    const writeResult = await writeFile(filePath, encResult.content, {
+      isBinary: encResult.isBinary,
       isEncrypted: true,
+      encoding: readResult.encoding,
     });
 
     if (!writeResult.success) {
