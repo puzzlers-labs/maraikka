@@ -33,7 +33,7 @@
 // ```
 //
 // Integration Points:
-// - IPC System: Called by decrypt-directory-handler for renderer requests
+// - IPC System: Called by decrypt-directory for renderer requests
 // - Frontend: Integrated with UI progress tracking and notifications
 // - Batch Operations: Used by directory-level encryption workflows
 // - File System: Interacts with fs-extra for file operations

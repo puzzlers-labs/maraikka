@@ -39,7 +39,7 @@ const {
 } = require("@backend/ipc/crypto-handlers/encrypt-directory-handler");
 const {
   handleDecryptDirectory,
-} = require("@backend/ipc/crypto-handlers/decrypt-directory-handler");
+} = require("@backend/ipc/crypto-handlers/decrypt-directory");
 
 // Preview and Edit Operation Handlers
 const {
