@@ -2,21 +2,22 @@
 // Handles recursive decryption of files within directories
 //
 // Purpose:
-// - Provides batch decryption functionality for entire directories
-// - Recursively processes encrypted files while preserving structure
-// - Validates file encryption status using MARAIKKA_ENCRYPTED prefix
-// - Maintains detailed statistics and error tracking during process
-// - Ensures secure and consistent decryption across file types
-//
+// - Primary function: Recursively decrypt all encrypted files in a directory structure
+// - Key features: Directory traversal, encryption state detection, accurate statistics collection
+// - Important behaviors: Preserves directory layout, skips non-encrypted files, aggregates errors
+// - Quality considerations: Leverages header-aware directory listing to minimise I/O and ensure
+//   consistent encryption detection.
+
 // Dependencies:
-// - fs-extra: Enhanced file system operations for recursive handling
-// - path: File path manipulation and directory traversal
-// - decrypt-file: Individual file decryption functionality
-//
+// - fs-extra: Enhanced file system operations for directory validation (path existence, stats)
+// - @backend/file-manager/get-directory-contents: Header-aware directory lister (provides isEncrypted flag)
+// - decrypt-file: Individual file decryption utility that writes plaintext back to disk
+
 // Usage Examples:
-// ```
+// ```javascript
 // // Basic directory decryption
-// const result = await decryptDirectory('/path/to/dir', 'password123');
+// const { decryptDirectory } = require('@backend/crypto/decrypt-directory');
+// const result = await decryptDirectory('/path/to/secret', 'password123');
 // if (result.success) {
 //   console.log(`Decrypted ${result.statistics.decryptedCount} files`);
 // }
@@ -25,32 +26,34 @@
 // try {
 //   const result = await decryptDirectory(dirPath, password);
 //   if (result.statistics.failedCount > 0) {
-//     console.log('Some files failed:', result.statistics.errors);
+//     console.warn('Some files failed:', result.statistics.errors);
 //   }
 // } catch (error) {
 //   console.error('Decryption failed:', error.message);
 // }
 // ```
-//
+
 // Integration Points:
-// - IPC System: Called by decrypt-directory for renderer requests
+// - IPC System: Called by decrypt-directory-handler for renderer requests
 // - Frontend: Integrated with UI progress tracking and notifications
 // - Batch Operations: Used by directory-level encryption workflows
-// - File System: Interacts with fs-extra for file operations
-//
-// Decryption Flow:
+// - File System: Interacts with fs-extra for validation and traversal
+
+// Process/Operation Flow:
 // 1. Validate directory path and password inputs
-// 2. Recursively traverse directory structure
-// 3. For each file:
-//    - Check for MARAIKKA_ENCRYPTED prefix
-//    - Decrypt if encrypted using decrypt-file
-//    - Track success/failure statistics
+// 2. Recursively traverse directory structure using `getDirectoryContents` (header-only reads)
+// 3. For each entry returned:
+//    a. Recurse into sub-directories.
+//    b. Decrypt files where `isEncrypted` is **true** via `decryptFile`.
+//    c. Skip non-encrypted files.
+//    d. Track success / failure / skipped statistics.
 // 4. Return comprehensive result object with statistics
 
 const fs = require("fs-extra");
-const path = require("path");
 const { decryptFile } = require("@backend/crypto/decrypt-file");
-const { ENCRYPTION_PREFIX } = require("@constants/crypto");
+const {
+  getDirectoryContents,
+} = require("@backend/file-manager/get-directory-contents");
 
 /**
  * Recursively decrypts all encrypted files in a directory
@@ -64,6 +67,7 @@ const { ENCRYPTION_PREFIX } = require("@constants/crypto");
  * @property {Object} statistics - Detailed operation statistics
  * @property {number} statistics.decryptedCount - Number of successfully decrypted files
  * @property {number} statistics.failedCount - Number of files that failed to decrypt
+ * @property {number} statistics.skippedCount - Number of files that were skipped
  * @property {Array<string>} statistics.errors - List of error messages with file paths
  *
  * @example
@@ -72,7 +76,7 @@ const { ENCRYPTION_PREFIX } = require("@constants/crypto");
  *   const result = await decryptDirectory('/encrypted/files', 'userPassword');
  *   if (result.success) {
  *     // Handle successful decryption
- *     const { decryptedCount, failedCount } = result.statistics;
+ *     const { decryptedCount, failedCount, skippedCount } = result.statistics;
  *   } else {
  *     // Handle decryption failure
  *     console.error(result.error);
@@ -101,37 +105,37 @@ async function decryptDirectory(dirPath, password) {
 
     let decryptedCount = 0;
     let failedCount = 0;
+    let skippedCount = 0;
     const errors = [];
 
-    // Recursively process all encrypted files in directory
+    // Recursively process directories leveraging getDirectoryContents
     async function processDirectory(currentPath) {
-      const items = await fs.readdir(currentPath);
+      let entries;
+      try {
+        entries = await getDirectoryContents(currentPath);
+      } catch (err) {
+        failedCount++;
+        errors.push(`${currentPath}: ${err.message}`);
+        return;
+      }
 
-      for (const item of items) {
-        const itemPath = path.join(currentPath, item);
-        const itemStats = await fs.stat(itemPath);
+      for (const entry of entries) {
+        if (entry.isDirectory) {
+          await processDirectory(entry.path);
+          continue;
+        }
 
-        if (itemStats.isDirectory()) {
-          // Recursively process subdirectory
-          await processDirectory(itemPath);
-        } else if (itemStats.isFile()) {
-          // Check if file is encrypted by reading first part of file
-          try {
-            const fileContent = await fs.readFile(itemPath, "utf8");
-            if (fileContent.startsWith(ENCRYPTION_PREFIX)) {
-              // Decrypt encrypted file
-              const result = await decryptFile(itemPath, password);
-              if (result.success) {
-                decryptedCount++;
-              } else {
-                failedCount++;
-                errors.push(`${itemPath}: ${result.error}`);
-              }
-            }
-          } catch (error) {
-            // Skip binary or unreadable files silently
-            continue;
-          }
+        if (!entry.isEncrypted) {
+          skippedCount++;
+          continue;
+        }
+
+        const result = await decryptFile(entry.path, password);
+        if (result.success) {
+          decryptedCount++;
+        } else {
+          failedCount++;
+          errors.push(`${entry.path}: ${result.error}`);
         }
       }
     }
@@ -141,7 +145,7 @@ async function decryptDirectory(dirPath, password) {
     return {
       success: true,
       message: `Directory decrypted: ${decryptedCount} files processed`,
-      statistics: { decryptedCount, failedCount, errors },
+      statistics: { decryptedCount, failedCount, skippedCount, errors },
     };
   } catch (error) {
     return {
