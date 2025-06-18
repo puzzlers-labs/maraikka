@@ -41,34 +41,33 @@
  * 4. Return formatted result to renderer
  */
 
-const decryptDirectory = require("@backend/crypto/decrypt-directory");
+const { decryptDirectory } = require("@backend/crypto/decrypt-directory");
 
 /**
- * Handles directory decryption IPC requests from renderer process
- * Validates inputs and delegates to core decryption functionality
+ * Handles directory decryption IPC requests from the renderer process.
+ * Delegates all heavy-lifting to `decryptDirectory`.
  *
- * @param {IpcMainEvent} _event - Electron IPC event object (unused)
- * @param {string} dirPath - Absolute path to directory to decrypt
- * @param {string} password - Decryption password or authentication key
- * @returns {Promise<Object>} Decryption result
- * @property {boolean} success - Whether decryption was successful
- * @property {string} message - Success or error message
- * @property {Object} [statistics] - Decryption statistics if successful
- * @property {number} [statistics.decryptedCount] - Number of files decrypted
- * @property {number} [statistics.failedCount] - Number of failed decryptions
- * @property {Array<string>} [statistics.errors] - List of specific file errors
+ * @param {Object} _event    - Electron IPC event object (unused).
+ * @param {string} dirPath   - Absolute path to the directory to decrypt.
+ * @param {string} password  - Decryption password.
+ * @returns {Promise<Object>} Result object. See `decryptDirectory` for schema.
  *
  * @example
- * // Success case
- * const result = await handleDecryptDirectory(_event, '/path/to/dir', 'password123');
- * // Returns: { success: true, message: 'Directory decrypted', statistics: {...} }
- *
- * @example
- * // Error case
- * const result = await handleDecryptDirectory(_event, '', 'password123');
- * // Returns: { success: false, error: 'Invalid directory path' }
+ * const result = await handleDecryptDirectory(_event, '/secret', 'pass');
+ * if (result.success) {
+ *   console.log(`Decrypted: ${result.statistics.decryptedCount} files`);
+ * } else {
+ *   console.error(result.error);
+ * }
  */
 async function handleDecryptDirectory(_event, dirPath, password) {
+  if (!dirPath) {
+    throw new Error("Directory path is required");
+  }
+  if (!password) {
+    throw new Error("Password is required");
+  }
+
   return await decryptDirectory(dirPath, password);
 }
 
