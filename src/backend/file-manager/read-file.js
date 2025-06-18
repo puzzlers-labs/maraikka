@@ -17,7 +17,6 @@
 //
 // Dependencies:
 // - fs-extra:          Async filesystem helpers (`pathExists`, `stat`, `readFile`).
-// - path:              File extension utilities for MIME lookup.
 // - mime:              Third-party MIME type resolver (`mime.getType`).
 // - isbinaryfile:      Heuristic binary detector (`isBinaryFile`).
 // - @constants/file:   Provides `MAX_FILE_SIZE` and `MAX_HEADER_BYTES` limits.
@@ -68,7 +67,6 @@
 // 7. Build and return a unified result object.
 
 const fs = require("fs-extra");
-const path = require("path");
 const mime = require("mime");
 const { isBinaryFile } = require("isbinaryfile");
 const { MAX_FILE_SIZE, MAX_HEADER_BYTES } = require("@constants/file");
