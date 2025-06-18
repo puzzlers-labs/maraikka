@@ -48,7 +48,7 @@
 
 const fs = require("fs-extra");
 const path = require("path");
-const encryptFile = require("@backend/crypto/encrypt-file");
+const { encryptFile } = require("@backend/crypto/encrypt-file");
 const { ENCRYPTION_PREFIX } = require("@constants/crypto");
 
 /**
@@ -135,4 +135,4 @@ async function encryptDirectory(dirPath, password) {
   }
 }
 
-module.exports = encryptDirectory;
+module.exports = { encryptDirectory };

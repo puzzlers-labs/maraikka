@@ -112,4 +112,4 @@ async function encryptFile(filePath, password) {
   }
 }
 
-module.exports = encryptFile;
+module.exports = { encryptFile };
