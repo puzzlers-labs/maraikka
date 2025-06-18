@@ -13,15 +13,16 @@
  * - createTextEditorWindow: Core window creation utility
  * - BrowserWindow: Electron window management
  * - ipcMain: Electron IPC system (registered in register-handlers.js)
+ * - isEncryptedFile: File encryption status detection
  *
  * Usage Examples:
  * ```
  * // From renderer process
- * const result = await window.electronAPI.openTextEditorWindow(filePath, isEncrypted);
+ * const result = await window.electronAPI.openTextEditorWindow(filePath);
  * if (result.success) {
  *   // Window opened successfully
  * } else {
- *   console.error(result.error);
+ *   // Handle error: result.error
  * }
  * ```
  *
@@ -33,55 +34,82 @@
  *
  * Process Flow:
  * 1. Validate input parameters
- * 2. Check for existing window instance
- * 3. Create new window if needed
- * 4. Setup window event handlers
+ * 2. Check file encryption status
+ * 3. Create or focus text editor window with encryption info
+ * 4. Wait for window ready state
  * 5. Return operation status
+ *
+ * Error Handling:
+ * - Invalid/missing file path
+ * - Window creation failures
+ * - Encryption check failures
+ * - System resource errors
  */
 
 const {
   createTextEditorWindow,
 } = require("@backend/windows/create-text-editor");
+const { isEncryptedFile } = require("@backend/utils/file-utils");
 
 /**
- * Handles opening text editor window requests
- * Single entry point for creating or focusing text editor windows
+ * Opens a text file in the text editor window
+ * Creates a new window or focuses existing one for text editing
  *
  * @param {Event} _event - IPC event object
- * @param {string} filePath - Path to file to edit
- * @param {boolean} isEncrypted - Whether the file is encrypted
- * @returns {Object} Result object with success status and optional error
- * @property {boolean} success - Whether the operation was successful
+ * @param {string} filePath - Absolute path to the text file
+ * @returns {Promise<Object>} Operation result
+ * @property {boolean} success - Whether the operation succeeded
  * @property {string} [error] - Error message if operation failed
+ *
+ * @throws {Error} When window creation fails
+ * @throws {Error} When file encryption check fails
+ * @throws {Error} When file path is invalid
  *
  * @example
  * // Success case
- * { success: true }
+ * const result = await handleOpenTextEditorWindow(event, '/path/to/file.txt');
+ * // { success: true }
  *
- * // Error case
- * { success: false, error: "File path is required" }
+ * // Error case - missing path
+ * const result = await handleOpenTextEditorWindow(event);
+ * // { success: false, error: "File path is required" }
+ *
+ * // Error case - creation failed
+ * const result = await handleOpenTextEditorWindow(event, '/invalid/path.txt');
+ * // { success: false, error: "Failed to create text editor window" }
  */
-async function handleOpenTextEditorWindow(_event, filePath, isEncrypted) {
-  console.log("IPC: Open text editor window request:", {
-    filePath,
-    isEncrypted,
-  });
-
-  // Add validation for undefined filePath
+async function handleOpenTextEditorWindow(_event, filePath) {
+  // Validate required parameters
   if (!filePath || filePath === undefined) {
-    console.error("IPC handler: filePath is undefined or empty!");
     return { success: false, error: "File path is required" };
   }
 
   try {
-    const editorWindow = createTextEditorWindow(filePath, isEncrypted);
-    if (!editorWindow) {
-      return { success: false, error: "Failed to create editor window" };
+    // Check if file is encrypted
+    const isEncrypted = await isEncryptedFile(filePath);
+
+    // Create or focus text editor window with encryption info
+    const window = createTextEditorWindow(filePath, isEncrypted);
+
+    if (!window) {
+      throw new Error("Failed to create text editor window");
     }
+
+    // Wait for window to be ready
+    await new Promise((resolve) => {
+      window.once("ready-to-show", () => {
+        window.show();
+        resolve();
+      });
+    });
+
     return { success: true };
   } catch (error) {
-    console.error("IPC: Error opening text editor window:", error);
-    return { success: false, error: error.message };
+    return {
+      success: false,
+      error:
+        error.message || "Unknown error occurred while opening text editor",
+    };
   }
 }
 
