@@ -44,7 +44,7 @@
  * 4. Handle any errors and return appropriate response
  */
 
-const encryptFile = require("@backend/crypto/encrypt-file");
+const { encryptFile } = require("@backend/crypto/encrypt-file");
 
 /**
  * Handles file encryption IPC requests from renderer process

@@ -113,4 +113,4 @@ async function encryptAndSaveTextFile(_event, filePath, content, password) {
   }
 }
 
-module.exports = encryptAndSaveTextFile;
+module.exports = { encryptAndSaveTextFile };

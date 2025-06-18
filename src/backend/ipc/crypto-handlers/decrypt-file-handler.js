@@ -42,7 +42,7 @@
  * 4. Handle any errors and return appropriate response
  */
 
-const decryptFile = require("@backend/crypto/decrypt-file");
+const { decryptFile } = require("@backend/crypto/decrypt-file");
 
 /**
  * Handles file decryption IPC requests from renderer process

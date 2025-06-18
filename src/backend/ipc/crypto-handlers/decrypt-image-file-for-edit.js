@@ -179,4 +179,4 @@ async function decryptImageFileForEdit(_event, filePath, password) {
   }
 }
 
-module.exports = decryptImageFileForEdit;
+module.exports = { decryptImageFileForEdit };

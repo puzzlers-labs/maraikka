@@ -101,4 +101,4 @@ async function encryptAndSaveImageFile(_event, filePath, content, password) {
   }
 }
 
-module.exports = encryptAndSaveImageFile;
+module.exports = { encryptAndSaveImageFile };
