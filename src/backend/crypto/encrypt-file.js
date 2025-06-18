@@ -4,13 +4,18 @@
 // Purpose:
 // - Primary function: Encrypt individual files with password protection
 // - Key features: AES encryption, base64 encoding, encryption status tracking
-// - Important behaviors: Adds encryption prefix, prevents double encryption
+// - Important behaviors: Delegates header construction to write-file utility, prevents double encryption
 // - Quality considerations: Maintains encryption security and format consistency
 
 // Dependencies:
-// - crypto-js: CryptoJS library for AES encryption
-// - fs-extra: Enhanced file system operations
+// - crypto-js@^4.2.0: CryptoJS library for AES encryption
+//   Used for: Core encryption operations
+// - @backend/file-manager/read-file: Unified file reader
+//   Used for: Safe file reading with type detection
+// - @backend/file-manager/write-file: Unified file writer
+//   Used for: Safe file writing with automatic encryption header handling
 // - @constants/crypto: Encryption-related constants
+//   Used for: Standardized error messages
 
 // Usage Examples:
 // ```
@@ -18,6 +23,8 @@
 // const result = await encryptFile('/path/to/file', 'password123');
 // if (result.success) {
 //   console.log('File encrypted:', result.message);
+//   console.log('Saved to:', result.savedPath);
+//   console.log('Size:', result.size, 'bytes');
 // }
 //
 // // Error handling
@@ -35,20 +42,21 @@
 // - IPC System: Called by encrypt-file-handler for renderer requests
 // - Directory Operations: Used by encrypt-directory for batch processing
 // - Frontend: Integrated with UI progress tracking
-// - File System: Direct interaction for file operations
+// - File System: Uses readFile and writeFile utilities for safe operations
 
 // Process/Operation Flow:
 // 1. Validate input parameters (file path and password)
-// 2. Read file content in UTF-8 encoding
-// 3. Check for existing encryption (MARAIKKA_ENCRYPTED prefix)
-// 4. Perform AES encryption on content
-// 5. Add encryption prefix to encrypted content
-// 6. Write encrypted content back to file
-// 7. Return success/error status with message
+// 2. Read file contents using the unified backend file-manager utility
+// 3. Abort if file is already encrypted (flag provided by readFile)
+// 4. Encrypt original file content producing cipher Buffer via encryptContent
+// 5. Persist encrypted buffer via writeFile with `isEncrypted` flag (header auto-prepended)
+// 6. Return success/error status
 
-const CryptoJS = require("crypto-js");
-const fs = require("fs-extra");
-const { ENCRYPTION_PREFIX, CRYPTO_ERRORS } = require("@constants/crypto");
+const { CRYPTO_ERRORS } = require("@constants/crypto");
+const { readFile } = require("@backend/file-manager/read-file");
+const { writeFile } = require("@backend/file-manager/write-file");
+const { encryptContent } = require("@backend/crypto/encrypt-content");
+const path = require("path");
 
 /**
  * Encrypts a single file using CryptoJS AES encryption
@@ -57,57 +65,101 @@ const { ENCRYPTION_PREFIX, CRYPTO_ERRORS } = require("@constants/crypto");
  * @param {string} password - Encryption password
  * @returns {Promise<Object>} Encryption result with success status
  * @property {boolean} success - Whether the encryption was successful
- * @property {string} message - Success message if encryption succeeded
- * @property {string} error - Error message if encryption failed
+ * @property {string} [message] - Success message if encryption succeeded
+ * @property {string} [savedPath] - Full path where encrypted file was saved
+ * @property {number} [size] - Size of the encrypted file in bytes
+ * @property {string} [error] - Error message if encryption failed
  *
- * @throws {Error} INVALID_PASSWORD - If password is missing or invalid
- * @throws {Error} FILE_ALREADY_ENCRYPTED - If file is already encrypted
- * @throws {Error} ENCRYPTION_FAILED - If encryption process fails
+ * @throws {Error} CRYPTO_ERRORS.PASSWORD_REQUIRED - If password is missing
+ * @throws {Error} CRYPTO_ERRORS.FILE_PATH_REQUIRED - If file path is missing
+ * @throws {Error} CRYPTO_ERRORS.FILE_ALREADY_ENCRYPTED - If file is already encrypted
+ * @throws {Error} CRYPTO_ERRORS.ENCRYPTION_FAILED - If encryption process fails
  *
  * @example
  * // Successful encryption
  * const result = await encryptFile('document.txt', 'securePass123');
  * if (result.success) {
- *   console.log(result.message); // "File encrypted successfully"
+ *   console.log(result.message);
+ *   console.log(`Saved to: ${result.savedPath}`);
+ *   console.log(`Size: ${result.size} bytes`);
  * }
  *
  * @example
  * // Handling encryption errors
  * const result = await encryptFile('document.txt', '');
  * if (!result.success) {
- *   console.error(result.error); // "Invalid password provided"
+ *   console.error(result.error); // "Password is required"
  * }
  */
 async function encryptFile(filePath, password) {
   try {
     // Validate inputs
-    if (!filePath || !password) {
-      throw new Error(CRYPTO_ERRORS.INVALID_PASSWORD);
+    if (!filePath) {
+      throw new Error(CRYPTO_ERRORS.FILE_PATH_REQUIRED);
     }
 
-    // Read file content
-    const content = await fs.readFile(filePath, "utf8");
+    if (!password) {
+      throw new Error(CRYPTO_ERRORS.PASSWORD_REQUIRED);
+    }
 
-    // Check if already encrypted
-    if (content.startsWith(ENCRYPTION_PREFIX)) {
+    // Read file contents using the unified backend file-manager utility
+    const readResult = await readFile(filePath);
+
+    if (!readResult.success) {
+      throw new Error(readResult.error);
+    }
+
+    const originalContent = readResult.content; // Buffer | string
+
+    // Abort when file is already encrypted (readResult exposes this flag)
+    if (readResult.isEncrypted) {
       throw new Error(CRYPTO_ERRORS.FILE_ALREADY_ENCRYPTED);
     }
 
-    // Encrypt content
-    const encrypted = CryptoJS.AES.encrypt(content, password).toString();
-    const encryptedContent = ENCRYPTION_PREFIX + encrypted;
+    // Encrypt content via shared in-memory utility to keep logic consistent application-wide
+    let cipherBuffer;
+    try {
+      const encResult = await encryptContent(originalContent, password);
 
-    // Write encrypted content back to file
-    await fs.writeFile(filePath, encryptedContent, "utf8");
+      if (!encResult.success) {
+        throw new Error(encResult.error || CRYPTO_ERRORS.ENCRYPTION_FAILED);
+      }
+
+      // Convert to Buffer if needed (text output is base64 string)
+      cipherBuffer = Buffer.isBuffer(encResult.content)
+        ? encResult.content
+        : Buffer.from(encResult.content, "base64");
+    } catch (_error) {
+      throw new Error(CRYPTO_ERRORS.ENCRYPTION_FAILED);
+    }
+
+    // Persist encrypted data using the unified writeFile utility.
+    // Header preparation and metadata inclusion are delegated to writeFile
+    // via the `isEncrypted` flag.
+    const writeResult = await writeFile(filePath, cipherBuffer, {
+      isBinary: true,
+      isEncrypted: true,
+    });
+
+    if (!writeResult.success) {
+      throw new Error(writeResult.error);
+    }
 
     return {
       success: true,
-      message: "File encrypted successfully",
+      message: `File encrypted: ${path.basename(filePath)}`,
+      savedPath: writeResult.savedPath,
+      size: writeResult.size,
     };
   } catch (error) {
+    // Map any internal errors to user-friendly messages if they exist in CRYPTO_ERRORS
+    const errorMessage = Object.values(CRYPTO_ERRORS).includes(error.message)
+      ? error.message
+      : `Failed to encrypt ${path.basename(filePath)}: ${error.message}`;
+
     return {
       success: false,
-      error: error.message || CRYPTO_ERRORS.ENCRYPTION_FAILED,
+      error: errorMessage,
     };
   }
 }
