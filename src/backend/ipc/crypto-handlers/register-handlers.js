@@ -30,7 +30,7 @@ const { ipcMain } = require("electron");
 // File Operation Handlers
 const {
   handleEncryptFile,
-} = require("@backend/ipc/crypto-handlers/encrypt-file");
+} = require("@backend/ipc/crypto-handlers/encrypt-file-handler");
 const {
   handleDecryptFile,
 } = require("@backend/ipc/crypto-handlers/decrypt-file-handler");
@@ -101,7 +101,7 @@ function registerCryptoHandlers() {
    * Implements secure handling of decrypted content in memory
    */
   ipcMain.handle("decrypt-file-for-preview", handleDecryptFileForPreview);
-  ipcMain.handle("decrypt-file-for-edit", decryptTextFileForEdit);
+  ipcMain.handle("decrypt-text-file-for-edit", decryptTextFileForEdit);
   ipcMain.handle("decrypt-image-file-for-edit", decryptImageFileForEdit);
 
   /**
