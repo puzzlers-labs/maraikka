@@ -149,4 +149,4 @@ async function decryptFile(filePath, password) {
   }
 }
 
-module.exports = decryptFile;
+module.exports = { decryptFile };

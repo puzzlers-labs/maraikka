@@ -49,7 +49,7 @@
 
 const fs = require("fs-extra");
 const path = require("path");
-const decryptFile = require("@backend/crypto/decrypt-file");
+const { decryptFile } = require("@backend/crypto/decrypt-file");
 const { ENCRYPTION_PREFIX } = require("@constants/crypto");
 
 /**
@@ -151,4 +151,4 @@ async function decryptDirectory(dirPath, password) {
   }
 }
 
-module.exports = decryptDirectory;
+module.exports = { decryptDirectory };
