@@ -9,7 +9,7 @@
 //
 // Dependencies:
 // - electron.dialog: Native directory selection dialog
-// - electron.BrowserWindow: Main window reference for dialog parent
+// - electron.BrowserWindow: Parent window derivation from event.sender
 //
 // Integration Points:
 // - Frontend: Called via window.electronAPI.selectDirectory()
@@ -19,28 +19,33 @@
 //
 // Process Flow:
 // 1. Renderer requests directory selection
-// 2. Shows native OS directory picker
-// 3. User selects directory or cancels
-// 4. Returns path or null to renderer
+// 2. Retrieves parent window from event.sender
+// 3. Validates that the parent window exists and is not destroyed
+// 4. If validation fails, logs a warning and returns null (no dialog shown)
+// 5. Shows native OS directory picker modal to the validated parent window
+// 6. User selects directory or cancels
+// 7. Returns selected path or null to renderer
 //
 // Security Considerations:
 // - Runs in main process with full system access
-// - Validates window reference before showing dialog
+// - Derives parent window dynamically for proper modal behaviour
+// - Gracefully handles invalid sender window to prevent unexpected UI behaviour
 // - Returns only necessary directory path data
 // - Maintains Electron's context isolation
 
-const { dialog } = require("electron");
+const { dialog, BrowserWindow } = require("electron");
 
 /**
- * Creates an IPC handler for directory selection requests
- * Presents native directory selection dialog to user
+ * IPC handler for directory selection requests.
+ * Presents a native directory selection dialog, modal to the window that
+ * originated the request.
  *
- * @param {BrowserWindow} mainWindow - Main application window reference
- * @returns {Function} IPC handler function
+ * @param {Electron.IpcMainInvokeEvent} event - IPC invoke event carrying the sender WebContents
+ * @returns {Promise<string|null>} Selected directory path or null if cancelled, or if parent window is invalid
  *
  * @example
  * // Registration in IPC handler registry
- * ipcMain.handle('select-directory', handleSelectDirectory(mainWindow));
+ * ipcMain.handle('select-directory', handleSelectDirectory);
  *
  * @example
  * // Usage in renderer process
@@ -48,21 +53,27 @@ const { dialog } = require("electron");
  * if (path) {
  *   // Handle selected directory
  * }
- *
- * @throws {Error} If mainWindow reference is invalid
- * @returns {Promise<string|null>} Selected directory path or null if cancelled
  */
-function handleSelectDirectory(mainWindow) {
-  return async function (_event) {
-    const result = await dialog.showOpenDialog(mainWindow, {
-      properties: ["openDirectory"],
-    });
+async function handleSelectDirectory(event) {
+  // Determine the parent window from the sender WebContents for proper modal behaviour
+  const parentWindow = BrowserWindow.fromWebContents(event.sender);
 
-    if (!result.canceled && result.filePaths.length > 0) {
-      return result.filePaths[0];
-    }
+  // Validate parent window; if unavailable or destroyed, skip dialog
+  if (!parentWindow || parentWindow.isDestroyed()) {
+    console.warn(
+      "Select-directory: Sender window invalid or destroyed. Skipping directory dialog.",
+    );
     return null;
-  };
+  }
+
+  const result = await dialog.showOpenDialog(parentWindow, {
+    properties: ["openDirectory"],
+  });
+
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+  return null;
 }
 
 module.exports = { handleSelectDirectory };
