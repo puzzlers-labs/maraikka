@@ -53,10 +53,10 @@
 // 5. Convert decrypted data from base64
 // 6. Write original data using handleWriteFile
 
-const CryptoJS = require("crypto-js");
-const { ENCRYPTION_PREFIX, CRYPTO_ERRORS } = require("@constants/crypto");
-const { handleReadFile } = require("@backend/ipc/file-handlers/read-file");
-const { handleWriteFile } = require("@backend/ipc/file-handlers/write-file");
+const { CRYPTO_ERRORS } = require("@constants/crypto");
+const { readFile } = require("@backend/file-manager/read-file");
+const { writeFile } = require("@backend/file-manager/write-file");
+const { decryptContent } = require("@backend/crypto/decrypt-content");
 const path = require("path");
 
 /**
@@ -92,7 +92,7 @@ const path = require("path");
  */
 async function decryptFile(filePath, password) {
   try {
-    // Validate input parameters
+    // 1. Validate inputs
     if (!filePath) {
       throw new Error(CRYPTO_ERRORS.FILE_PATH_REQUIRED);
     }
@@ -101,59 +101,36 @@ async function decryptFile(filePath, password) {
       throw new Error(CRYPTO_ERRORS.PASSWORD_REQUIRED);
     }
 
-    // Read the file using handleReadFile
-    const readResult = await handleReadFile(null, filePath);
+    // 2. Read file using the unified file-manager utility
+    const readResult = await readFile(filePath);
 
     if (!readResult.success) {
       throw new Error(readResult.error);
     }
 
-    const fileContent = readResult.content;
-
-    // Check if file is encrypted by looking for Maraikka prefix
-    if (!fileContent.startsWith(ENCRYPTION_PREFIX)) {
+    if (!readResult.isEncrypted) {
       throw new Error(CRYPTO_ERRORS.FILE_NOT_ENCRYPTED);
     }
 
-    // Extract the encrypted data (remove the prefix)
-    const encryptedData = fileContent.substring(ENCRYPTION_PREFIX.length);
+    // 3. Decrypt cipher payload using shared decryptContent
+    const decResult = await decryptContent(readResult.content, password);
 
-    if (!encryptedData || encryptedData.trim().length === 0) {
-      throw new Error(CRYPTO_ERRORS.CORRUPTED_DATA);
+    if (!decResult.success) {
+      throw new Error(decResult.error);
     }
 
-    // Decrypt the data using CryptoJS
-    let decrypted;
-    try {
-      decrypted = CryptoJS.AES.decrypt(encryptedData, password);
-    } catch (error) {
-      throw new Error(CRYPTO_ERRORS.INVALID_PASSWORD);
-    }
+    const { content: originalData, isBinary } = decResult;
 
-    // Convert decrypted data to UTF8 string
-    const decryptedString = decrypted.toString(CryptoJS.enc.Utf8);
-
-    if (!decryptedString || decryptedString.length === 0) {
-      throw new Error(CRYPTO_ERRORS.INVALID_PASSWORD);
-    }
-
-    // Convert base64 back to binary data
-    let originalData;
-    try {
-      originalData = Buffer.from(decryptedString, "base64");
-    } catch (error) {
-      throw new Error(CRYPTO_ERRORS.CORRUPTED_DATA);
-    }
-
-    // Write the decrypted data using handleWriteFile
-    const writeResult = await handleWriteFile(null, filePath, originalData, {
-      ensureDir: true, // Ensure parent directory exists
+    // 4. Persist decrypted data (overwriting original file)
+    const writeResult = await writeFile(filePath, originalData, {
+      isBinary,
     });
 
     if (!writeResult.success) {
       throw new Error(writeResult.error);
     }
 
+    // 5. Return unified success object
     return {
       success: true,
       message: `File decrypted: ${path.basename(filePath)}`,
