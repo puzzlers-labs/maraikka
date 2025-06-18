@@ -8,9 +8,9 @@
 // - Quality considerations: Maintains encryption consistency and security standards
 
 // Dependencies:
-// - fs-extra: Enhanced file system operations for recursive directory handling
-// - path: File path manipulation and directory traversal utilities
-// - encrypt-file: Individual file encryption functionality with MARAIKKA_ENCRYPTED prefix
+// - fs-extra: Enhanced file system operations for directory validation (path existence, stats)
+// - @backend/file-manager/get-directory-contents: Header-aware directory lister (provides isEncrypted flag)
+// - encrypt-file: Individual file encryption utility that delegates header prep to write-file
 
 // Usage Examples:
 // ```
@@ -39,17 +39,18 @@
 
 // Process/Operation Flow:
 // 1. Validate directory path and password inputs
-// 2. Recursively traverse directory structure
-// 3. For each file:
-//    - Check for MARAIKKA_ENCRYPTED prefix
-//    - Encrypt if not already encrypted
-//    - Track success/failure statistics
+// 2. Recursively traverse directory structure using `getDirectoryContents` (header-only reads)
+// 3. For each entry returned:
+//    a. Recurse into sub-directories.
+//    b. Encrypt files where `isEncrypted` is **false** via `encryptFile`.
+//    c. Track success / failure statistics.
 // 4. Return comprehensive result object with statistics
 
 const fs = require("fs-extra");
-const path = require("path");
 const { encryptFile } = require("@backend/crypto/encrypt-file");
-const { ENCRYPTION_PREFIX } = require("@constants/crypto");
+const {
+  getDirectoryContents,
+} = require("@backend/file-manager/get-directory-contents");
 
 /**
  * Recursively encrypts all files in a directory structure
@@ -61,6 +62,7 @@ const { ENCRYPTION_PREFIX } = require("@constants/crypto");
  * @property {Object} statistics - Encryption statistics
  * @property {number} statistics.encryptedCount - Number of files encrypted
  * @property {number} statistics.failedCount - Number of files that failed
+ * @property {number} statistics.skippedCount - Number of files that were skipped
  * @property {Array<string>} statistics.errors - List of encryption errors
  */
 async function encryptDirectory(dirPath, password) {
@@ -82,40 +84,38 @@ async function encryptDirectory(dirPath, password) {
 
     let encryptedCount = 0;
     let failedCount = 0;
+    let skippedCount = 0;
     const errors = [];
 
-    // Recursively process all files in directory
+    // Recursively process all files/directories leveraging getDirectoryContents
     async function processDirectory(currentPath) {
-      const items = await fs.readdir(currentPath);
+      let entries;
+      try {
+        entries = await getDirectoryContents(currentPath);
+      } catch (err) {
+        failedCount++;
+        errors.push(`${currentPath}: ${err.message}`);
+        return;
+      }
 
-      for (const item of items) {
-        const itemPath = path.join(currentPath, item);
-        const itemStats = await fs.stat(itemPath);
+      for (const entry of entries) {
+        if (entry.isDirectory) {
+          await processDirectory(entry.path);
+          continue;
+        }
 
-        if (itemStats.isDirectory()) {
-          // Recursively process subdirectory
-          await processDirectory(itemPath);
-        } else if (itemStats.isFile()) {
-          // Check if file is already encrypted
-          let isAlreadyEncrypted = false;
-          try {
-            const fileContent = await fs.readFile(itemPath, "utf8");
-            isAlreadyEncrypted = fileContent.startsWith(ENCRYPTION_PREFIX);
-          } catch (error) {
-            // If we can't read as text, assume it's not encrypted and try to encrypt
-            isAlreadyEncrypted = false;
-          }
+        // Skip files that are already encrypted
+        if (entry.isEncrypted) {
+          skippedCount++;
+          continue;
+        }
 
-          if (!isAlreadyEncrypted) {
-            // Encrypt file if not already encrypted
-            const result = await encryptFile(itemPath, password);
-            if (result.success) {
-              encryptedCount++;
-            } else {
-              failedCount++;
-              errors.push(`${itemPath}: ${result.error}`);
-            }
-          }
+        const result = await encryptFile(entry.path, password);
+        if (result.success) {
+          encryptedCount++;
+        } else {
+          failedCount++;
+          errors.push(`${entry.path}: ${result.error}`);
         }
       }
     }
@@ -125,7 +125,7 @@ async function encryptDirectory(dirPath, password) {
     return {
       success: true,
       message: `Directory encrypted: ${encryptedCount} files processed`,
-      statistics: { encryptedCount, failedCount, errors },
+      statistics: { encryptedCount, failedCount, skippedCount, errors },
     };
   } catch (error) {
     return {
