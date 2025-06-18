@@ -113,7 +113,6 @@ async function readFile(filePath) {
     }
 
     // 3. MIME detection using `mime` package
-    const fileExt = path.extname(filePath).toLowerCase();
     const mimeType = mime.getType(filePath) || "application/octet-stream";
 
     // 5. Always read as Buffer – gives full fidelity and lets us decide later
