@@ -119,12 +119,10 @@ async function decryptFile(filePath, password) {
       throw new Error(decResult.error);
     }
 
-    const { content: originalData, isBinary } = decResult;
+    const { content: originalData } = decResult;
 
     // 4. Persist decrypted data (overwriting original file)
-    const writeResult = await writeFile(filePath, originalData, {
-      isBinary,
-    });
+    const writeResult = await writeFile(filePath, originalData);
 
     if (!writeResult.success) {
       throw new Error(writeResult.error);

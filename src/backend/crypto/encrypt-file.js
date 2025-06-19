@@ -125,9 +125,8 @@ async function encryptFile(filePath, password) {
     // Header preparation and metadata inclusion are delegated to writeFile
     // via the `isEncrypted` flag.
     const writeResult = await writeFile(filePath, encResult.content, {
-      isBinary: encResult.isBinary,
       isEncrypted: true,
-      encoding: readResult.encoding,
+      encoding: encResult.encoding,
     });
 
     if (!writeResult.success) {

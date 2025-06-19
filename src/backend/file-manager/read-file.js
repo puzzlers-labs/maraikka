@@ -96,7 +96,7 @@ const { ENCRYPTION_PREFIX } = require("@constants/crypto");
  *                                    is detected.
  * @property {number}    [size]        File size in bytes.
  * @property {string}    [encoding]    "binary" or "utf8" depending on the form
- *                                    of `content`.
+ *                                    of `content`. Defaults to "binary" if not detected.
  *
  * @example
  * // Quick usage
@@ -178,7 +178,7 @@ async function readFile(filePath, options = {}) {
         mimeType,
         isEncrypted,
         size: stats.size,
-        encoding: metadata.encoding || "utf8",
+        encoding: metadata.encoding || "binary",
       };
     }
 
@@ -216,37 +216,38 @@ async function readFile(filePath, options = {}) {
         encryptionHeader + metadataJson,
         "utf8",
       );
+      let isBuffer = true;
       let encryptedPayload = fileBuffer.subarray(headerByteLen);
       if (metadata.encoding !== "binary") {
+        isBuffer = false;
         encryptedPayload = encryptedPayload.toString(metadata.encoding);
       }
 
       return {
         success: true,
         content: encryptedPayload,
+        isBuffer,
         metadata,
         mimeType,
         isEncrypted: true,
         size: stats.size,
-        encoding: metadata.encoding || "utf8",
+        encoding: metadata.encoding || "binary",
       };
     }
 
-    // 4. Binary detection using heuristic rather than extension list
-    let isBinaryContent = false;
-    try {
-      isBinaryContent = await isBinaryFile(fileBuffer, stats.size);
-    } catch (_err) {
-      // Fallback: treat as binary when mime type is not text/*
-      isBinaryContent = !mimeType.startsWith("text/");
-    }
+    const encoding = chardet.detect(fileBuffer) || "binary";
+    let content = fileBuffer;
+    let isBuffer = true;
 
-    const content = isBinaryContent ? fileBuffer : fileBuffer.toString("utf8");
-    const encoding = isBinaryContent ? "binary" : "utf8";
+    if (encoding && encoding !== "binary") {
+      content = fileBuffer.toString(encoding);
+      isBuffer = false;
+    }
 
     return {
       success: true,
       content,
+      isBuffer,
       mimeType,
       isEncrypted: false,
       size: stats.size,

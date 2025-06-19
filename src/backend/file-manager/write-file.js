@@ -129,6 +129,7 @@ async function writeFile(filePath, content, options = {}) {
     // 4. Persist to disk with appropriate encoding
     await fs.writeFile(normalisedPath, finalOutput);
     const sizeWritten = finalOutput.length;
+    const encoding = chardet.detect(finalOutput) || "binary";
 
     return {
       success: true,
@@ -136,7 +137,7 @@ async function writeFile(filePath, content, options = {}) {
       size: sizeWritten,
       isBuffer,
       isEncrypted: !!options.isEncrypted,
-      encoding: options.encoding || "binary",
+      encoding,
     };
   } catch (error) {
     return {
