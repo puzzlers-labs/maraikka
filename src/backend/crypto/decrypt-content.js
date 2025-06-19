@@ -46,7 +46,7 @@
 // 7. Return decrypted data (Buffer or UTF-8 string), plus metadata (`encoding`, `isBuffer`)
 
 const crypto = require("crypto");
-const chardet = require("chardet");
+const { detectEncoding } = require("@backend/file-manager/detect-encoding");
 
 /**
  * Decrypt arbitrary content previously encrypted with AES.
@@ -111,7 +111,7 @@ async function decryptContent(content, password) {
         decipher.final(),
       ]);
 
-      let encoding = chardet.detect(decryptedBuffer);
+      let encoding = detectEncoding(decryptedBuffer);
 
       const decryptedOutput = isBuffer
         ? decryptedBuffer

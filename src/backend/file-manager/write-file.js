@@ -65,7 +65,7 @@ const fs = require("fs-extra");
 const path = require("path");
 const crypto = require("crypto");
 const { ENCRYPTION_PREFIX } = require("@constants/crypto");
-const chardet = require("chardet");
+const { detectEncoding } = require("@backend/file-manager/detect-encoding");
 
 /**
  * Write arbitrary content to disk with optional binary mode and encryption header.
@@ -127,9 +127,9 @@ async function writeFile(filePath, content, options = {}) {
     }
 
     // 4. Persist to disk with appropriate encoding
+    const encoding = detectEncoding(finalOutput);
     await fs.writeFile(normalisedPath, finalOutput);
     const sizeWritten = finalOutput.length;
-    const encoding = chardet.detect(finalOutput) || "binary";
 
     return {
       success: true,

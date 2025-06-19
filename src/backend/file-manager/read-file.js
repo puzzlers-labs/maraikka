@@ -68,9 +68,12 @@
 
 const fs = require("fs-extra");
 const mime = require("mime");
-const { isBinaryFile } = require("isbinaryfile");
 const { MAX_FILE_SIZE, MAX_HEADER_BYTES } = require("@constants/file");
 const { ENCRYPTION_PREFIX } = require("@constants/crypto");
+const { detectEncoding } = require("@backend/file-manager/detect-encoding");
+const {
+  normaliseEncoding,
+} = require("@backend/file-manager/normalize-encoding");
 
 /**
  * Read a file from disk with automated type detection and optional encryption
@@ -150,6 +153,7 @@ async function readFile(filePath, options = {}) {
       const headerLength = Buffer.byteLength(encryptionHeader, "utf8");
       const possibleHeader = headerBuffer.toString("utf8", 0, headerLength);
       const isEncrypted = possibleHeader === encryptionHeader;
+      let encoding = detectEncoding(headerBuffer);
 
       let metadata;
       if (isEncrypted) {
@@ -159,13 +163,14 @@ async function readFile(filePath, options = {}) {
         const jsonEnd = bufferUtf8.indexOf("}", jsonStart);
         if (jsonEnd === -1) {
           throw new Error(
-            "Unable to parse encrypted file metadata from header – increase header read size if necessary",
+            "Unable to parse encrypted file metadata from header - increase header read size if necessary",
           );
         }
 
         const metadataJson = bufferUtf8.slice(jsonStart, jsonEnd + 1);
         try {
           metadata = JSON.parse(metadataJson);
+          encoding = normaliseEncoding(metadata.encoding);
         } catch (_err) {
           throw new Error("Unable to parse encrypted file metadata");
         }
@@ -178,7 +183,7 @@ async function readFile(filePath, options = {}) {
         mimeType,
         isEncrypted,
         size: stats.size,
-        encoding: metadata.encoding || "binary",
+        encoding,
       };
     }
 
@@ -235,7 +240,7 @@ async function readFile(filePath, options = {}) {
       };
     }
 
-    const encoding = chardet.detect(fileBuffer) || "binary";
+    let encoding = detectEncoding(fileBuffer);
     let content = fileBuffer;
     let isBuffer = true;
 

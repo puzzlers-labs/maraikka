@@ -136,14 +136,9 @@ async function decryptFile(filePath, password) {
       size: writeResult.size,
     };
   } catch (error) {
-    // Map any internal errors to user-friendly messages if they exist in CRYPTO_ERRORS
-    const errorMessage = Object.values(CRYPTO_ERRORS).includes(error.message)
-      ? error.message
-      : `Failed to decrypt ${path.basename(filePath)}: ${error.message}`;
-
     return {
       success: false,
-      error: errorMessage,
+      error: error.message,
     };
   }
 }

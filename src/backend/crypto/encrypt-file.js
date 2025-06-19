@@ -51,7 +51,6 @@
 // 4. Persist encrypted buffer via writeFile with `isEncrypted` flag (header auto-prepended)
 // 5. Return success/error status
 
-const { CRYPTO_ERRORS } = require("@constants/crypto");
 const { readFile } = require("@backend/file-manager/read-file");
 const { writeFile } = require("@backend/file-manager/write-file");
 const { encryptContent } = require("@backend/crypto/encrypt-content");
@@ -126,7 +125,7 @@ async function encryptFile(filePath, password) {
     // via the `isEncrypted` flag.
     const writeResult = await writeFile(filePath, encResult.content, {
       isEncrypted: true,
-      encoding: encResult.encoding,
+      encoding: readResult.encoding,
     });
 
     if (!writeResult.success) {
@@ -140,14 +139,9 @@ async function encryptFile(filePath, password) {
       size: writeResult.size,
     };
   } catch (error) {
-    // Map any internal errors to user-friendly messages if they exist in CRYPTO_ERRORS
-    const errorMessage = Object.values(CRYPTO_ERRORS).includes(error.message)
-      ? error.message
-      : `Failed to encrypt ${path.basename(filePath)}: ${error.message}`;
-
     return {
       success: false,
-      error: errorMessage,
+      error: error.message,
     };
   }
 }
