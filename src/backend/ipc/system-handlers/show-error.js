@@ -49,35 +49,21 @@ const { dialog } = require("electron");
  * const showError = handleShowError(mainWindow);
  * showError('Network Error', 'Unable to reach server.');
  */
-function handleShowError(parentWindow = null) {
-  /**
-   * Shows an error dialog using Electron's native API.
-   *
-   * @param {string} title    - Dialog title.
-   * @param {string} message  - Main error message.
-   *
-   * @example
-   * showError('Failed', 'Operation couldn\'t complete');
-   *
-   * @example
-   * showError('Connection Error', 'Unable to connect to server.');
-   */
-  return function showError(title, message) {
-    try {
-      const dialogOptions = {
-        type: "error",
-        title,
-        message,
-        buttons: ["OK"],
-        noLink: true,
-      };
+function handleShowError(title, message, parentWindow = null) {
+  try {
+    const dialogOptions = {
+      type: "error",
+      title,
+      message,
+      buttons: ["OK"],
+      noLink: true,
+    };
 
-      // Synchronous display ensures execution pauses until user responds.
-      dialog.showMessageBoxSync(parentWindow ?? undefined, dialogOptions);
-    } catch (err) {
-      // If this fails, we cannot do anything about it.
-    }
-  };
+    // Synchronous display ensures execution pauses until user responds.
+    dialog.showMessageBoxSync(parentWindow ?? undefined, dialogOptions);
+  } catch (err) {
+    // If this fails, we cannot do anything about it.
+  }
 }
 
 module.exports = { handleShowError };

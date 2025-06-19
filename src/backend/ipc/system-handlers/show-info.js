@@ -49,26 +49,18 @@ const { dialog } = require("electron");
  * const showInfo = handleShowInfo(mainWindow);
  * showInfo('Sync Complete', 'Your files are up to date.');
  */
-function handleShowInfo(parentWindow = null) {
-  /**
-   * Shows an information dialog using Electron's native API.
-   *
-   * @param {string} title   - Dialog title.
-   * @param {string} message - Informational message to display.
-   */
-  return function showInfo(title, message) {
-    try {
-      dialog.showMessageBoxSync(parentWindow ?? undefined, {
-        type: "info",
-        title,
-        message,
-        buttons: ["OK"],
-        noLink: true,
-      });
-    } catch (err) {
-      // If this fails, we cannot do anything about it.
-    }
-  };
+function handleShowInfo(title, message, parentWindow = null) {
+  try {
+    dialog.showMessageBoxSync(parentWindow ?? undefined, {
+      type: "info",
+      title,
+      message,
+      buttons: ["OK"],
+      noLink: true,
+    });
+  } catch (err) {
+    // If this fails, we cannot do anything about it.
+  }
 }
 
 module.exports = { handleShowInfo };
