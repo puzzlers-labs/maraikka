@@ -1,65 +1,73 @@
 // Encrypt Content Utility
-// High-level helper for AES-encrypting any arbitrary content with automatic type handling
+// One-stop helper that AES-encrypts arbitrary data (text or binary) while maintaining the
+// original data shape and recording its detected encoding.
 
 // Purpose:
-// - Provide a single utility for encrypting both text and binary data
+// - Provide a single entry-point for encrypting both text and binary inputs
 // - Automatically detect Buffer (binary) versus string (text) inputs
-// - Return encrypted output in the same conceptual form (Buffer for binary, base64 string for text)
-// - Centralise CryptoJS AES usage and error mapping for consistent behaviour across the backend
+// - Persist character encoding information for text inputs using `chardet`
+// - Return encrypted output in the same conceptual form
+//   – Buffer for binary inputs
+//   – Base-64 string for text inputs (to avoid unsafe characters)
+// - Centralise `node:crypto` AES usage (AES-256-CBC + scrypt-derived key)
+// - Surface simple, hard-coded error messages so callers are library-agnostic
 
 // Dependencies:
-// - crypto-js: Performs AES encryption and produces base-64 text output
-// - @constants/crypto: Provides standardised error messages consumed by this module
+// - node:crypto – Symmetric encryption (AES-256-CBC)
+// - chardet – Best-effort character-set detection for text inputs
 
 // Usage Examples:
 // ```javascript
-// // Import utility
 // const { encryptContent } = require('@backend/crypto/encrypt-content');
 //
-// // Text encryption (UTF-8 string in, base64 string out)
-// const textResult = await encryptContent('Hello World', 'p@ssw0rd');
-// if (textResult.success) {
-//   console.log('Encrypted text:', textResult.content); // Encrypted base64 string
+// // Text ➜ base64 string
+// const textRes = await encryptContent('Hello World', 'myp4ss');
+// if (textRes.success) {
+//   console.log(textRes.encoding); // e.g. "UTF-8"
+//   console.log(textRes.content);  // base-64 cipher text
 // }
 //
-// // Binary encryption (Buffer in, Buffer out)
-// const imageBuffer = await fs.readFile('/path/image.png');
-// const binResult = await encryptContent(imageBuffer, 'p@ssw0rd');
-// if (binResult.success && Buffer.isBuffer(binResult.content)) {
-//   console.log('Encrypted binary size:', binResult.content.length);
+// // Binary ➜ Buffer
+// const img = await fs.readFile('./photo.jpg');
+// const binRes = await encryptContent(img, 'myp4ss');
+// if (binRes.success && Buffer.isBuffer(binRes.content)) {
+//   fs.writeFileSync('./photo.enc', binRes.content);
 // }
 // ```
 
 // Integration Points:
-// - File encryption workflow (`encrypt-file.js`) for on-disk encryption
-// - Any in-memory encryption requirement where content type may vary
-// - Potential future IPC handlers that need uniform encryption logic
+// - File encryption workflow (`encrypt-file.js`)
+// - Any IPC handler that needs uniform encryption logic
+// - In-memory encryption for temporary data processing
 
 // Process/Operation Flow:
-// 1. Validate inputs (content presence and password)
-// 2. Determine if input is Buffer (binary) or string (text)
-// 3. Convert content to base64 string for AES processing
-// 4. Run CryptoJS AES encryption and capture base64 cipher text
-// 5. Convert cipher text to Buffer if original was binary, else leave as string
-// 6. Return unified success object or mapped error object
+// 1. Validate `content` and `password` inputs
+// 2. Determine if `content` is a Buffer
+// 3. Convert non-buffer text content to Buffer
+// 4. Detect text encoding via `chardet`
+// 5. Generate a 16-byte Salt and IV, derive 32-byte key with `crypto.scryptSync`
+// 6. Encrypt using AES-256-CBC and prepend `[salt | iv]` to cipher bytes
+// 7. Return: Buffer (binary) or base-64 string (text) plus metadata (`encoding`, `isBuffer`)
 
-const CryptoJS = require("crypto-js");
-const { CRYPTO_ERRORS } = require("@constants/crypto");
+const crypto = require("crypto");
+const chardet = require("chardet");
 
 /**
  * Encrypt arbitrary content using AES.
  * Detects Buffer vs string and returns corresponding encrypted format.
  *
- * @param {string|Buffer} content - Plain content to encrypt (string for text, Buffer for binary).
- * @param {string} password - AES encryption password.
+ * @param {string|Buffer} content – Plain content to encrypt. Strings will be treated as text; Buffers as binary.
+ * @param {string} password – User-supplied password for key derivation (AES-256-CBC).
  * @returns {Promise<Object>} Result object
- * @property {boolean} success - Indicates if encryption succeeded
- * @property {string|Buffer} [content] - Encrypted output (Buffer if input was binary, base64 string otherwise)
- * @property {boolean} [isBinary] - true if original content was binary
- * @property {string} [error] - Populated when success is false, contains user-friendly error message
+ * @property {boolean} success – `true` when encryption succeeds
+ * @property {string|Buffer} [content] – Cipher text (Buffer for binary input, base-64 string for text input)
+ * @property {string|null} [encoding] – Detected character encoding for text inputs, `null` for binary
+ * @property {boolean} [isBuffer] – `true` if the original input was a Buffer
+ * @property {string} [error] – Present when `success === false`, contains user-friendly error description
  *
- * @throws {Error} CRYPTO_ERRORS.INVALID_PASSWORD - When password is missing or empty
- * @throws {Error} CRYPTO_ERRORS.ENCRYPTION_FAILED - On validation failure or CryptoJS errors
+ * @throws {Error} "Invalid content provided" – When `content` is `null`/`undefined`
+ * @throws {Error} "Invalid password provided" – When `password` is falsy
+ * @throws {Error} "Encryption failed" – Any unexpected runtime failure
  *
  * @example
  * // Text encryption
@@ -71,52 +79,61 @@ const { CRYPTO_ERRORS } = require("@constants/crypto");
  * const buf = await fs.readFile('image.jpg');
  * const res = await encryptContent(buf, 'secret');
  * if (res.success && Buffer.isBuffer(res.content)) {
- *   // `res.content` is a Buffer
+ *   // res.content is the encrypted Buffer
  * }
  */
+
+// We store encoded string in base64 format to avoid issues with special characters
+
 async function encryptContent(content, password) {
   try {
     if (content === undefined || content === null) {
-      throw new Error(CRYPTO_ERRORS.ENCRYPTION_FAILED);
+      throw new Error("Invalid content provided");
     }
     if (!password) {
-      throw new Error(CRYPTO_ERRORS.INVALID_PASSWORD);
+      throw new Error("Invalid password provided");
     }
 
-    const isBinary = Buffer.isBuffer(content);
+    const isBuffer = Buffer.isBuffer(content);
 
-    // Convert plain content to base64 string for CryptoJS input
-    const contentString = isBinary ? content.toString("base64") : content;
+    // Ensure we operate on a Buffer instance for the cipher
+    const plainBuffer = isBuffer ? content : Buffer.from(content);
+    const encoding = chardet.detect(plainBuffer);
 
-    // Encrypt base64 string with AES
-    let encryptedContentString;
     try {
-      encryptedContentString = CryptoJS.AES.encrypt(
-        contentString,
-        password,
-      ).toString();
+      // 16-byte salt and IV for AES-256-CBC
+      const salt = crypto.randomBytes(16);
+      const iv = crypto.randomBytes(16);
+
+      // Derive a 32-byte key using scrypt (synchronous for simplicity)
+      const key = crypto.scryptSync(password, salt, 32);
+
+      const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+      const encryptedBuffer = Buffer.concat([
+        salt,
+        iv,
+        cipher.update(plainBuffer),
+        cipher.final(),
+      ]);
+
+      // Return Buffer for binary input, base64 string for text input
+      const encryptedOutput = isBuffer
+        ? encryptedBuffer
+        : encryptedBuffer.toString("base64");
+
+      return {
+        success: true,
+        content: encryptedOutput,
+        encoding,
+        isBuffer,
+      };
     } catch (_err) {
-      throw new Error(CRYPTO_ERRORS.ENCRYPTION_FAILED);
+      throw new Error("Encryption failed");
     }
-
-    // Return Buffer for binary input, base64 string for text input
-    const encryptedOutput = isBinary
-      ? Buffer.from(encryptedContentString, "base64")
-      : encryptedContentString;
-
-    return {
-      success: true,
-      content: encryptedOutput,
-      isBinary: isBinary,
-    };
   } catch (error) {
-    const message = Object.values(CRYPTO_ERRORS).includes(error.message)
-      ? error.message
-      : CRYPTO_ERRORS.ENCRYPTION_FAILED;
-
     return {
       success: false,
-      error: message,
+      error: error.message,
     };
   }
 }
