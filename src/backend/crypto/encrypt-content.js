@@ -98,7 +98,7 @@ async function encryptContent(content, password) {
 
     // Ensure we operate on a Buffer instance for the cipher
     const plainBuffer = isBuffer ? content : Buffer.from(content);
-    const encoding = chardet.detect(plainBuffer);
+    const encoding = chardet.detect(plainBuffer) || "binary";
 
     try {
       // 16-byte salt and IV for AES-256-CBC
