@@ -65,6 +65,7 @@ const fs = require("fs-extra");
 const path = require("path");
 const crypto = require("crypto");
 const { ENCRYPTION_PREFIX } = require("@constants/crypto");
+const chardet = require("chardet");
 
 /**
  * Write arbitrary content to disk with optional binary mode and encryption header.
@@ -72,9 +73,8 @@ const { ENCRYPTION_PREFIX } = require("@constants/crypto");
  * @param {string} filePath                          Absolute path to output file.
  * @param {string|Buffer} content                    Data to write (string for text, Buffer for binary).
  * @param {Object} [options]                         Additional behaviour flags.
- * @param {boolean} [options.isBinary]               Force binary write when true, text when false. When omitted, auto-detects using Buffer.isBuffer().
  * @param {boolean} [options.isEncrypted]            Prepend Maraikka encryption header + metadata when true.
- * @param {string}  [options.encoding="utf8"]        Text encoding to apply when `isBinary` is false.
+ * @param {string}  [options.encoding="binary"]      Encoding to use when content is encrypted. Defaults to "binary" if not provided.
  * @returns {Promise<Object>}                        Unified result object.
  * @property {boolean} success                       Indicates overall success.
  * @property {string}  [savedPath]                   Written file path (present when success).
@@ -100,29 +100,22 @@ async function writeFile(filePath, content, options = {}) {
     await fs.ensureDir(path.dirname(normalisedPath));
 
     // 2. Determine if we are writing binary or text
-    const isBinary =
-      typeof options.isBinary === "boolean"
-        ? options.isBinary
-        : Buffer.isBuffer(content);
+    const isBuffer = Buffer.isBuffer(content);
+    const dataBuffer = isBuffer ? content : Buffer.from(content);
 
     // 3. Optionally prepend Maraikka encryption header + metadata
     let finalOutput;
     if (options.isEncrypted) {
-      const dataBuffer = isBinary ? content : Buffer.from(content);
-
       // Build metadata similar to encrypt-file.js
       const signature = crypto
         .createHash("md5")
-        .update(
-          isBinary
-            ? dataBuffer
-            : Buffer.from(dataBuffer, options.encoding || "utf8"),
-        )
+        .update(dataBuffer)
         .digest("hex");
 
       const metadata = {
         filename: path.basename(normalisedPath),
-        encoding: isBinary ? "binary" : options.encoding || "utf8",
+        encoding: options.encoding || "binary",
+        version: 1, // Note: increment this when we change the header format
         signature,
       };
 
@@ -134,22 +127,16 @@ async function writeFile(filePath, content, options = {}) {
     }
 
     // 4. Persist to disk with appropriate encoding
-    let sizeWritten;
-    if (isBinary || Buffer.isBuffer(finalOutput)) {
-      await fs.writeFile(normalisedPath, finalOutput);
-      sizeWritten = finalOutput.length;
-    } else {
-      const enc = options.encoding || "utf8";
-      await fs.writeFile(normalisedPath, finalOutput, enc);
-      sizeWritten = Buffer.byteLength(finalOutput, enc);
-    }
+    await fs.writeFile(normalisedPath, finalOutput);
+    const sizeWritten = finalOutput.length;
 
     return {
       success: true,
       savedPath: normalisedPath,
       size: sizeWritten,
-      isBinary,
+      isBuffer,
       isEncrypted: !!options.isEncrypted,
+      encoding: options.encoding || "binary",
     };
   } catch (error) {
     return {
